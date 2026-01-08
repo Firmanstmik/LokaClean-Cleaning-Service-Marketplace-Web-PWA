@@ -1,0 +1,41 @@
+/**
+ * Vite config for LokaClean frontend.
+ *
+ * Mobile-first web app that can be wrapped as a PWA/Hybrid shell later.
+ */
+
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    // "PWA-ready" foundation: installable web app + offline caching can be enabled gradually.
+    VitePWA({
+      registerType: "autoUpdate",
+      manifest: {
+        name: "LokaClean",
+        short_name: "LokaClean",
+        description: "Room cleaning marketplace (Phase 1)",
+        theme_color: "#0ea5e9",
+        background_color: "#f8fafc",
+        display: "standalone",
+        start_url: "/",
+        icons: [
+          {
+            src: "/img/Logo LocaClean2.jpg",
+            sizes: "any",
+            type: "image/png",
+            purpose: "any maskable"
+          }
+        ]
+      }
+    })
+  ],
+  server: {
+    port: 5173
+  }
+});
+
+

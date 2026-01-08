@@ -1,0 +1,600 @@
+/**
+ * Tailwind entry + Lombok-themed base styles and animations.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply transition-colors duration-200;
+  }
+
+  body {
+    @apply antialiased scrollbar-hide;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  /* Smooth scroll behavior */
+  html {
+    scroll-behavior: smooth;
+    @apply scrollbar-hide;
+  }
+
+  /* Better focus styles */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-lombok-ocean-500 ring-2 ring-lombok-ocean-500/20;
+  }
+}
+
+@layer components {
+  /* Lombok-themed buttons with innovative liquid hover effects */
+  .btn-lombok {
+    @apply relative overflow-hidden rounded-xl bg-lombok-gradient px-6 py-3 font-semibold text-white shadow-lombok-md transition-all duration-700 hover:scale-[1.04] hover:shadow-[0_16px_48px_rgba(26,188,156,0.5),0_8px_20px_rgba(52,152,219,0.4)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    isolation: isolate;
+  }
+
+  /* Liquid gradient background yang bergerak */
+  .btn-lombok::before {
+    content: "";
+    @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-700;
+    background: linear-gradient(
+      135deg,
+      rgba(26, 188, 156, 0.4) 0%,
+      rgba(52, 152, 219, 0.4) 33%,
+      rgba(244, 208, 63, 0.3) 66%,
+      rgba(26, 188, 156, 0.4) 100%
+    );
+    background-size: 300% 300%;
+    animation: liquid-wave 6s ease-in-out infinite;
+    filter: blur(15px);
+    z-index: 0;
+  }
+
+  .btn-lombok:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Shimmer effect yang bergerak */
+  .btn-lombok::after {
+    content: "";
+    @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-700;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 25%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0.3) 75%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-sweep 2s linear infinite;
+    z-index: 1;
+  }
+
+  .btn-lombok:hover::after {
+    @apply opacity-100;
+  }
+
+  .btn-lombok-ocean {
+    @apply relative overflow-hidden rounded-xl bg-lombok-ocean-gradient px-6 py-3 font-semibold text-white shadow-lombok-md transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_12px_40px_rgba(52,152,219,0.4),0_6px_16px_rgba(93,173,226,0.3)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+
+  .btn-lombok-ocean::before {
+    content: "";
+    @apply absolute inset-0 rounded-xl opacity-0 transition-opacity duration-500;
+    background: radial-gradient(circle at center, rgba(52, 152, 219, 0.4) 0%, transparent 70%);
+    filter: blur(25px);
+    transform: scale(1.3);
+  }
+
+  .btn-lombok-ocean:hover::before {
+    @apply opacity-100;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Lombok-themed cards with innovative liquid wave hover effects */
+  .card-lombok {
+    @apply relative overflow-hidden rounded-2xl sm:rounded-3xl border-2 border-white/60 bg-gradient-to-br from-tropical-50/80 via-ocean-50/60 to-sand-50/70 backdrop-blur-sm p-4 sm:p-5 lg:p-6 shadow-[0_8px_24px_rgba(0,0,0,0.1),0_4px_8px_rgba(0,0,0,0.06),0_2px_4px_rgba(0,0,0,0.04)] transition-all duration-700 max-w-full;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    will-change: transform, box-shadow;
+    isolation: isolate;
+  }
+
+  .card-lombok:hover {
+    @apply border-lombok-ocean-200;
+    box-shadow: 0_24px_56px_rgba(0,0,0,0.2), 0_12px_24px_rgba(26,188,156,0.2), 0_6px_12px_rgba(52,152,219,0.15);
+    transform: translateY(-6px) scale(1.02);
+  }
+
+  /* Liquid wave gradient background - seperti ombak */
+  .card-lombok::before {
+    content: "";
+    @apply absolute inset-0 rounded-2xl sm:rounded-3xl opacity-0 transition-opacity duration-700;
+    background: linear-gradient(
+      135deg,
+      rgba(26, 188, 156, 0.08) 0%,
+      rgba(52, 152, 219, 0.1) 25%,
+      rgba(244, 208, 63, 0.08) 50%,
+      rgba(26, 188, 156, 0.1) 75%,
+      rgba(52, 152, 219, 0.08) 100%
+    );
+    background-size: 400% 400%;
+    animation: liquid-wave 8s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  .card-lombok:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Animated border yang bergerak mengelilingi card */
+  .card-lombok::after {
+    content: "";
+    @apply absolute inset-0 rounded-2xl sm:rounded-3xl opacity-0 transition-opacity duration-700;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(26, 188, 156, 0.3) 60deg,
+      rgba(52, 152, 219, 0.3) 120deg,
+      rgba(244, 208, 63, 0.3) 180deg,
+      rgba(26, 188, 156, 0.3) 240deg,
+      rgba(52, 152, 219, 0.3) 300deg,
+      transparent 360deg
+    );
+    background-size: 200% 200%;
+    animation: rotating-border 4s linear infinite;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+    padding: 2px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .card-lombok:hover::after {
+    @apply opacity-100;
+  }
+
+  /* Ripple effect for buttons */
+  .ripple-effect {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ripple-effect::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .ripple-effect:active::after {
+    width: 300px;
+    height: 300px;
+  }
+
+  /* Smooth transitions for interactive elements */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  /* Loading shimmer effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+}
+
+/* Keyframes for animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Premium hover animations - Innovative & Clean */
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% -200%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes gradient-rotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+/* Liquid wave animation - seperti ombak bergerak */
+@keyframes liquid-wave {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+}
+
+/* Rotating border animation - border yang bergerak */
+@keyframes rotating-border {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
+/* Floating particles effect */
+@keyframes float-particles {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) scale(1.2);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-10px) translateX(-10px) scale(0.8);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translateY(-30px) translateX(5px) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+/* Color morphing animation */
+@keyframes color-morph {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(180deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* Smooth scale pulse */
+@keyframes smooth-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes magnetic-pull {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0));
+  }
+}
+
+@layer utilities {
+  /* Animation delays for staggered effects */
+  .animate-delay-75 {
+    animation-delay: 75ms;
+  }
+  .animate-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animate-delay-150 {
+    animation-delay: 150ms;
+  }
+  .animate-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animate-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animate-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  /* Grid pattern background for admin login */
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* Hide scrollbar for modern mobile app look - Universal browser support */
+  /* 
+   * Universal cross-browser scrollbar hiding using vendor prefixes.
+   * Compatible with Chrome, Safari, Edge, Opera, Firefox, and IE/Edge Legacy.
+   * Note: scrollbar-width is Firefox-specific, WebKit fallback below handles other browsers.
+   * 
+   * Warning about scrollbar-width compatibility can be safely ignored:
+   * - scrollbar-width is Firefox-only (64+)
+   * - Chrome/Safari/Edge use ::-webkit-scrollbar (handled below)
+   * - This is intentional cross-browser support pattern
+   */
+  .scrollbar-hide {
+    /* IE and Edge Legacy support */
+    -ms-overflow-style: none;
+  }
+
+  /* Firefox support - scrollbar-width is supported in Firefox 64+ */
+  @supports (scrollbar-width: none) {
+    .scrollbar-hide {
+      /* Firefox 64+ - fallback to WebKit below for other browsers */
+      /* stylelint-disable-next-line compat-api/css */
+      scrollbar-width: none;
+    }
+  }
+
+  /* WebKit support - Chrome, Safari, Edge, Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+
+  /* Status color utilities for dynamic colors in charts */
+  .status-color-border {
+    border-color: var(--status-color, #6b7280);
+    opacity: 0.25;
+  }
+
+  .status-color-bg {
+    background-color: var(--status-color, #6b7280);
+    opacity: 0.1;
+  }
+
+  .status-color-text {
+    color: var(--status-color, #6b7280);
+  }
+
+  .status-color-indicator {
+    background-color: var(--status-color, #6b7280);
+    box-shadow: 0 0 12px var(--status-color-shadow, rgba(107, 114, 128, 0.5));
+  }
+
+  /* Dynamic status card styles using CSS variables */
+  .status-card-wrapper {
+    border-color: var(--status-color-border, rgba(107, 114, 128, 0.25));
+  }
+
+  .status-card-bg {
+    background-color: var(--status-color-bg, rgba(107, 114, 128, 0.1));
+  }
+
+  .status-indicator-dot {
+    background-color: var(--status-color, #6b7280);
+    box-shadow: 0 0 12px var(--status-color-shadow, rgba(107, 114, 128, 0.5));
+  }
+
+  .status-count-text {
+    color: var(--status-color, #6b7280);
+  }
+
+  /* 3D shadow effect gradient */
+  .chart-shadow-glow {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 50%, transparent 100%);
+  }
+
+  /* Notification modal content max height */
+  .notification-modal-content {
+    max-height: calc(100vh - 180px);
+  }
+
+  /* 3D transform utilities for AnimatedCard */
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .transform-z-0 {
+    transform: translateZ(0);
+  }
+
+  /* Innovative icon hover effects - clean & modern */
+  .icon-hover-lombok {
+    @apply transition-all duration-500;
+    position: relative;
+  }
+
+  .icon-hover-lombok::before {
+    content: "";
+    @apply absolute inset-0 rounded-full opacity-0 transition-opacity duration-500;
+    background: radial-gradient(circle, rgba(26, 188, 156, 0.3) 0%, transparent 70%);
+    filter: blur(12px);
+    transform: scale(1.5);
+  }
+
+  .icon-hover-lombok:hover::before {
+    @apply opacity-100;
+    animation: smooth-pulse 2s ease-in-out infinite;
+  }
+
+  .icon-hover-lombok:hover {
+    transform: scale(1.15) rotate(5deg);
+    filter: drop-shadow(0 4px 12px rgba(26, 188, 156, 0.4));
+  }
+
+  /* Interactive button dengan liquid effect */
+  .btn-interactive {
+    @apply relative overflow-hidden transition-all duration-700;
+    isolation: isolate;
+  }
+
+  .btn-interactive::before {
+    content: "";
+    @apply absolute inset-0 opacity-0 transition-opacity duration-700;
+    background: linear-gradient(
+      135deg,
+      rgba(26, 188, 156, 0.1) 0%,
+      rgba(52, 152, 219, 0.1) 50%,
+      rgba(244, 208, 63, 0.1) 100%
+    );
+    background-size: 200% 200%;
+    animation: liquid-wave 4s ease-in-out infinite;
+  }
+
+  .btn-interactive:hover::before {
+    @apply opacity-100;
+  }
+
+  .btn-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(26, 188, 156, 0.25), 0 6px 16px rgba(52, 152, 219, 0.2);
+  }
+
+  /* PromoBadge ribbon styles - moved from inline styles */
+  .promo-badge-container {
+    transform-origin: top right;
+    perspective: 1000px;
+  }
+
+  .promo-badge-ribbon-container {
+    transform-style: preserve-3d;
+  }
+
+  .promo-badge-ribbon-body {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+    border-radius: 0 0 0 8px;
+    transform: translateZ(10px);
+  }
+
+  .promo-badge-ribbon-body-top-highlight {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, calc(100% - 14px) 50%, 0 50%);
+  }
+
+  .promo-badge-ribbon-body-bottom-shadow {
+    clip-path: polygon(0 50%, calc(100% - 14px) 50%, calc(100% - 14px) 100%, 0 100%);
+  }
+
+  .promo-badge-ribbon-fold {
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    transform: translateZ(5px);
+    filter: brightness(0.7);
+  }
+
+  .promo-badge-ribbon-fold-highlight {
+    clip-path: polygon(100% 0, 100% 50%, 0 50%);
+  }
+
+  .promo-badge-ribbon-fold-shadow {
+    clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+  }
+
+  .promo-badge-crease-line {
+    transform: translateX(-14px) rotate(45deg);
+    transform-origin: top right;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.6), 0 0 2px rgba(0,0,0,0.3);
+  }
+
+  .promo-badge-shadow {
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+    transform: translateY(2px) translateX(2px);
+    filter: blur(4px);
+    z-index: -1;
+  }
+
+  .promo-badge-crease-highlight {
+    transform: translateX(-14px) rotate(45deg);
+    transform-origin: top right;
+  }
+
+  .promo-badge-bottom-edge-shadow {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, calc(100% - 14px) 100%, 0 100%);
+    transform: translateY(1px);
+  }
+
+  .promo-badge-liquid-wave {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  }
+
+  /* Package card clip-path utilities */
+  .clip-path-package-selected {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 92%, 96% 100%, 0% 100%);
+  }
+
+  .clip-path-package-default {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  }
+
+  /* Payment card clip-path utilities */
+  .clip-path-payment-selected {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 88%, 94% 100%, 0% 100%);
+  }
+
+  .clip-path-payment-default {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  }
+
+  /* 3D transform utilities for icons */
+  .transform-3d-package-icon {
+    transform: perspective(1000px) rotateX(5deg);
+  }
+
+  .transform-3d-payment-icon {
+    transform: perspective(1000px) rotateY(5deg);
+  }
+}
+
+

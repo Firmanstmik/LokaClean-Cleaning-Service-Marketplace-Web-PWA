@@ -1,0 +1,166 @@
+// Prisma schema for LokaClean.
+// IMPORTANT: This schema is designed to match the provided ERD strictly.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Roles used for JWT/RBAC.
+// NOTE: The ERD specifies User.role = USER and Admin.role = ADMIN.
+// We keep a single enum for simplicity, and enforce defaults at the model level.
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum PaymentMethod {
+  QRIS
+  DANA
+  TRANSFER
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+}
+
+model User {
+  id                Int      @id @default(autoincrement())
+  full_name         String
+  email             String   @unique
+  phone_number      String
+  // Stored bcrypt hash for user login.
+  password_hash     String?
+  profile_photo     String?
+  default_latitude  Float?
+  default_longitude Float?
+  role              Role     @default(USER)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // Relationships
+  pesanan       Pesanan[]
+  notifications Notification[]
+}
+
+model Admin {
+  id         Int      @id @default(autoincrement())
+  full_name  String
+  email      String   @unique
+  password   String
+  role       Role     @default(ADMIN)
+  created_at DateTime @default(now())
+
+  // Relationships
+  pesanan Pesanan[]
+}
+
+model PaketCleaning {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  name_en            String?
+  description        String
+  description_en     String?
+  price              Int
+  estimated_duration Int
+  image              String?  // Optional image path for package
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relationships
+  pesanan Pesanan[]
+}
+
+model Pesanan {
+  id                 Int         @id @default(autoincrement())
+  order_number       Int         @unique // Sequential order number (1, 2, 3, ...) - stays consistent even if orders are deleted
+  user_id            Int
+  admin_id           Int?
+  paket_id           Int
+  status             OrderStatus @default(PENDING)
+  room_photo_before  String
+  room_photo_after   String?
+  location_latitude  Float
+  location_longitude Float
+  address            String
+  scheduled_date     DateTime
+  created_at         DateTime    @default(now())
+  updated_at         DateTime    @updatedAt
+
+  // Relationships (strictly following ERD cardinalities)
+  user  User          @relation(fields: [user_id], references: [id])
+  admin Admin?        @relation(fields: [admin_id], references: [id])
+  paket PaketCleaning @relation(fields: [paket_id], references: [id])
+
+  // Prisma cannot enforce a required 1:1 from Pesanan -> Pembayaran at the DB level
+  // because the foreign key lives on Pembayaran. We keep this optional in schema and
+  // enforce "must exist" in application logic when creating an order.
+  pembayaran    Pembayaran?
+  rating        Rating?
+  tip           Tip?
+  notifications Notification[]
+
+  @@index([user_id])
+  @@index([admin_id])
+  @@index([paket_id])
+}
+
+model Pembayaran {
+  id                Int           @id @default(autoincrement())
+  pesanan_id        Int           @unique
+  method            PaymentMethod
+  amount            Int
+  status            PaymentStatus @default(PENDING)
+  midtrans_order_id String? // Midtrans order ID (for NON-CASH payments)
+  created_at        DateTime      @default(now())
+
+  pesanan Pesanan @relation(fields: [pesanan_id], references: [id])
+}
+
+model Rating {
+  id           Int      @id @default(autoincrement())
+  pesanan_id   Int      @unique
+  rating_value Int
+  review       String?
+  created_at   DateTime @default(now())
+
+  pesanan Pesanan @relation(fields: [pesanan_id], references: [id])
+}
+
+model Tip {
+  id         Int      @id @default(autoincrement())
+  pesanan_id Int      @unique
+  amount     Int
+  created_at DateTime @default(now())
+
+  pesanan Pesanan @relation(fields: [pesanan_id], references: [id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  pesanan_id Int?
+  title      String
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  user    User     @relation(fields: [user_id], references: [id])
+  pesanan Pesanan? @relation(fields: [pesanan_id], references: [id])
+
+  @@index([user_id])
+  @@index([pesanan_id])
+}
