@@ -16,7 +16,7 @@
 ![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=Leaflet&logoColor=white)
 
 <div align="center">
-  <img src="docs/img/screenshot.png" alt="LokaClean Screenshot" width="800" />
+  <img src="docs/img/screenshot.png" alt="LokaClean Screenshot" width="320" style="border-radius: 10px; box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);" />
   <p><em>Tampilan Aplikasi LokaClean</em></p>
 </div>
 
