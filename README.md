@@ -1,5 +1,9 @@
 # LokaClean — Cleaning Service Marketplace (Web & PWA)
 
+<div align="center">
+  <img src="docs/img/logo.png" alt="LokaClean Logo" width="150" height="150" />
+</div>
+
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
@@ -10,6 +14,11 @@
 ![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
 ![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=Leaflet&logoColor=white)
+
+<div align="center">
+  <img src="docs/img/screenshot.png" alt="LokaClean Screenshot" width="800" />
+  <p><em>Tampilan Aplikasi LokaClean</em></p>
+</div>
 
 **LokaClean** adalah platform marketplace jasa kebersihan berbasis web dan PWA (Progressive Web App) yang menghubungkan pengguna dengan penyedia layanan kebersihan profesional. Aplikasi ini dirancang dengan pendekatan *mobile-first* untuk memberikan pengalaman pengguna yang mulus, lengkap dengan fitur pemilihan lokasi berbasis peta, manajemen pesanan real-time, dan dukungan multibahasa.
 
