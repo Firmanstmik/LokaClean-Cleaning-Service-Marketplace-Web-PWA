@@ -185,11 +185,8 @@ export function PromotionalMascot({ onDismiss, className = "" }: PromotionalMasc
             {/* Animated Character - Modern with Cultural Value */}
             <motion.div
               className="relative cursor-grab active:cursor-grabbing pointer-events-auto z-10"
-              onTap={(e, info) => {
-                // Only trigger click if it's a tap (not a drag) - delta should be 0
-                if (Math.abs(info.delta.x) < 5 && Math.abs(info.delta.y) < 5) {
-                  handleClick();
-                }
+              onTap={() => {
+                handleClick();
               }}
               animate={{
                 y: [0, -10, 0],
@@ -456,6 +453,10 @@ export function PromotionalMascot({ onDismiss, className = "" }: PromotionalMasc
                   const xPos = 110 + Math.cos(angle) * radius;
                   const yPos = 110 + Math.sin(angle) * radius;
                   
+                  // Defensive check to prevent "M undefined undefined" error
+                  const safeX = (xPos === undefined || isNaN(xPos)) ? 110 : xPos;
+                  const safeY = (yPos === undefined || isNaN(yPos)) ? 110 : yPos;
+                  
                   return (
                     <motion.g
                       key={i}
@@ -473,7 +474,7 @@ export function PromotionalMascot({ onDismiss, className = "" }: PromotionalMasc
                       }}
                     >
                       <path
-                        d={`M ${xPos} ${yPos} L ${xPos + 3} ${yPos - 6} L ${xPos + 6} ${yPos} L ${xPos + 3} ${yPos + 6} Z`}
+                        d={`M ${safeX} ${safeY} L ${safeX + 3} ${safeY - 6} L ${safeX + 6} ${safeY} L ${safeX + 3} ${safeY + 6} Z`}
                         fill="#ffd93d"
                         opacity={0.9}
                       />

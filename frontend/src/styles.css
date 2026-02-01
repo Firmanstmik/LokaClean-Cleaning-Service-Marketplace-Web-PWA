@@ -6,6 +6,29 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+  .mt-safe {
+    margin-top: env(safe-area-inset-top);
+  }
+  .h-safe-screen {
+    height: 100vh; /* Fallback */
+    height: 100dvh;
+  }
+  .min-h-safe-screen {
+    min-height: 100vh; /* Fallback */
+    min-height: 100dvh;
+  }
+}
+
 @layer base {
   * {
     @apply transition-colors duration-200;

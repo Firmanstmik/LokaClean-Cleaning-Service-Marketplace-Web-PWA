@@ -6,7 +6,7 @@
 
 export type Role = "USER" | "ADMIN";
 
-export type OrderStatus = "PENDING" | "PROCESSING" | "IN_PROGRESS" | "COMPLETED";
+export type OrderStatus = "PENDING" | "PROCESSING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type PaymentMethod = "QRIS" | "DANA" | "TRANSFER" | "CASH";
 export type PaymentStatus = "PENDING" | "PAID";
 
@@ -40,6 +40,8 @@ export type PaketCleaning = {
   price: number;
   estimated_duration: number;
   image?: string | null; // Optional image path for package
+  category: string; // "SERVICE" | "PRODUCT"
+  stock: number;
   created_at: string;
   updated_at: string;
   averageRating?: number | null; // Average rating (1-5), null if no ratings yet

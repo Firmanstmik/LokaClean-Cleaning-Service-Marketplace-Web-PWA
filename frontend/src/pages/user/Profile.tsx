@@ -17,6 +17,7 @@ import { DeleteAccountVerificationDialog } from "../../components/DeleteAccountV
 import { MapPicker, type LatLng } from "../../components/MapPicker";
 import { PageHeaderCard } from "../../components/PageHeaderCard";
 import { api } from "../../lib/api";
+import { useAuth } from "../../lib/auth";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { normalizeWhatsAppPhone } from "../../lib/phone";
 import { toAbsoluteUrl } from "../../lib/urls";
@@ -45,6 +46,7 @@ export function ProfilePage() {
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // Listen for language changes
   useEffect(() => {
@@ -131,7 +133,7 @@ export function ProfilePage() {
         glowColor="rgba(26,188,156"
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-5 lg:px-6 py-5 sm:py-6 lg:py-7">
+      <div className="max-w-7xl mx-auto px-4 sm:px-5 lg:px-6 pt-5 pb-4 sm:py-6 lg:py-7">
         {/* Success Message */}
         <AnimatePresence>
           {successMessage && (
@@ -642,6 +644,32 @@ export function ProfilePage() {
             </div>
 
             <div className="space-y-3">
+              <motion.button
+                whileHover={{ scale: 1.02, x: 2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  logout();
+                  navigate("/login", { replace: true });
+                }}
+                className="w-full flex items-center justify-between gap-3 rounded-xl border-2 border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 p-4 transition-all hover:border-slate-300 hover:from-slate-100 hover:to-slate-200 shadow-sm hover:shadow-md"
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-slate-600 to-slate-800 shadow-md">
+                    <LogOut className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <div className="text-sm sm:text-base font-bold text-slate-800">
+                      {currentLanguage === "id" ? "Keluar Akun" : "Log Out"}
+                    </div>
+                    <div className="text-xs text-slate-600 mt-0.5">
+                      {currentLanguage === "id"
+                        ? "Keluar dari aplikasi LokaClean pada perangkat ini"
+                        : "Sign out from LokaClean on this device"}
+                    </div>
+                  </div>
+                </div>
+              </motion.button>
+
               {/* Delete Account Button */}
               <motion.button
                 whileHover={{ scale: 1.02, x: 2 }}

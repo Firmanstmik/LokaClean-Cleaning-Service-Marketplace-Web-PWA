@@ -148,7 +148,7 @@ export function AdminLogin() {
                 transition={{ duration: 0.3 }}
               >
                 <img
-                  src="/img/logo.png"
+                  src="/img/logo.jpg"
                   alt="LokaClean Logo"
                   className="h-full w-full object-contain p-1 scale-110"
                 />

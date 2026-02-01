@@ -3,7 +3,8 @@
  */
 
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate, MotionValue } from "framer-motion";
-import { ReactNode, useRef, useState } from "react";
+import type { ReactNode, MouseEvent as ReactMouseEvent } from "react";
+import { useRef, useState } from "react";
 
 function GlowTrail({ x, y }: { x: MotionValue<number>; y: MotionValue<number> }) {
   const xPercent = useTransform(x, [-0.5, 0.5], [0, 100]);
@@ -31,9 +32,10 @@ interface AnimatedCardProps {
   className?: string;
   delay?: number;
   onClick?: () => void;
+  disableHover?: boolean;
 }
 
-export function AnimatedCard({ children, className = "", delay = 0, onClick }: AnimatedCardProps) {
+export function AnimatedCard({ children, className = "", delay = 0, onClick, disableHover = false }: AnimatedCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -46,7 +48,8 @@ export function AnimatedCard({ children, className = "", delay = 0, onClick }: A
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["5deg", "-5deg"]);
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-5deg", "5deg"]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (disableHover) return;
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const width = rect.width;
@@ -73,10 +76,14 @@ export function AnimatedCard({ children, className = "", delay = 0, onClick }: A
   };
 
   const handleMouseEnter = () => {
+    if (disableHover) return;
     setIsHovered(true);
   };
 
   const handleMouseLeave = () => {
+    if (disableHover) {
+      return;
+    }
     x.set(0);
     y.set(0);
     setIsHovered(false);
@@ -92,20 +99,28 @@ export function AnimatedCard({ children, className = "", delay = 0, onClick }: A
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      style={{
-        rotateX,
-        rotateY,
-      }}
-      whileHover={{ 
-        scale: 1.02,
-        transition: { duration: 0.4, type: "spring", stiffness: 300, damping: 25 }
-      }}
-      whileTap={{ scale: 0.98 }}
+      style={
+        disableHover
+          ? undefined
+          : {
+              rotateX,
+              rotateY,
+            }
+      }
+      whileHover={
+        disableHover
+          ? undefined
+          : {
+              scale: 1.02,
+              transition: { duration: 0.4, type: "spring", stiffness: 300, damping: 25 },
+            }
+      }
+      whileTap={disableHover ? undefined : { scale: 0.98 }}
       className={`${className} preserve-3d relative`}
       onClick={onClick}
     >
       {/* Floating particles that follow cursor */}
-      {particles.map((particle) => (
+      {!disableHover && particles.map((particle) => (
         <motion.div
           key={particle.id}
           className="absolute pointer-events-none z-50"
@@ -135,7 +150,7 @@ export function AnimatedCard({ children, className = "", delay = 0, onClick }: A
       ))}
       
       {/* Glow trail effect - menggunakan motion template */}
-      {isHovered && (
+      {!disableHover && isHovered && (
         <GlowTrail x={mouseXSpring} y={mouseYSpring} />
       )}
 

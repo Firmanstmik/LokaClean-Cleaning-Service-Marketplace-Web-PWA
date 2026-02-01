@@ -19,6 +19,8 @@ const packageSelect = {
   price: true,
   estimated_duration: true,
   image: true,
+  category: true,
+  stock: true,
   created_at: true,
   updated_at: true
 };

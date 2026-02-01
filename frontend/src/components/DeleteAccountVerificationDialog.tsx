@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X, Eye, EyeOff, Mail, Phone, Lock } from "lucide-react";
 
@@ -91,7 +92,7 @@ export function DeleteAccountVerificationDialog({
     }
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget && !isLoading) {
       handleClose();
     }

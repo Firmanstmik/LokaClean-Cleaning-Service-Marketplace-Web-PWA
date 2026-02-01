@@ -14,6 +14,7 @@ import { UserLogin } from "./pages/user/Login";
 import { UserRegister } from "./pages/user/Register";
 import { CompleteProfilePage } from "./pages/user/CompleteProfile";
 import { PackagesPage } from "./pages/user/Packages";
+import { AllPackagesPage } from "./pages/user/AllPackages";
 import { NewOrderPage } from "./pages/user/NewOrder";
 import { OrdersPage } from "./pages/user/Orders";
 import { OrderDetailPage } from "./pages/user/OrderDetail";
@@ -63,6 +64,7 @@ export function AppRoutes() {
         {/* Marketplace requires completed profile */}
         <Route element={<RequireUserProfileComplete />}>
           <Route path="/packages" element={<PackagesPage />} />
+          <Route path="/packages/all" element={<AllPackagesPage />} />
           <Route path="/orders/new" element={<NewOrderPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />

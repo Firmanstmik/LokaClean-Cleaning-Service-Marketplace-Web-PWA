@@ -1,20 +1,73 @@
 /**
- * Modern LocaClean Mascot - Premium Smart Clean Assistant
- * A professional, modern, tech-inspired mascot for LocaClean
- * Designed for scalability, trust, and user engagement
- * 
- * Design Philosophy:
- * - Modern, minimal, tech-inspired
- * - Semi-flat / soft 3D illustration
- * - Clean shapes, smooth curves, rounded edges
- * - Professional but friendly
- * - Gender-neutral, trustworthy
+ * Modern LokaClean Mascot - Premium 3D-Style Robot Assistant ("LokaBot")
+ * A professional, high-end mascot for LokaClean
+ * Designed for "Big App" feel: 3D-ish, fluid animation, expressive.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { t, getLanguage } from "../lib/i18n";
+
+// --- Particle Effects Components ---
+const SparkleEffect = ({ delay, x, y }: { delay: number; x: number; y: number }) => (
+  <motion.div
+    className="absolute text-yellow-400 z-20 pointer-events-none"
+    style={{ left: x, top: y }}
+    initial={{ opacity: 0, scale: 0 }}
+    animate={{ 
+      opacity: [0, 1, 0], 
+      scale: [0, 1.2, 0], 
+      rotate: [0, 45, 90]
+    }}
+    transition={{ 
+      duration: 2, 
+      repeat: Infinity, 
+      delay: delay,
+      repeatDelay: Math.random() * 3
+    }}
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+    </svg>
+  </motion.div>
+);
+
+const BubbleEffect = ({ delay, x, y }: { delay: number; x: number; y: number }) => (
+  <motion.div
+    className="absolute bg-blue-300/60 rounded-full z-0 pointer-events-none border border-blue-100/50"
+    style={{ left: x, top: y }}
+    initial={{ opacity: 0, y: 0, scale: 0 }}
+    animate={{ 
+      opacity: [0, 0.8, 0], 
+      y: -60, 
+      scale: [0.5, 1.2, 0.8] 
+    }}
+    transition={{ 
+      duration: 2.5, 
+      repeat: Infinity, 
+      delay: delay,
+      ease: "easeOut",
+      repeatDelay: Math.random() * 2
+    }}
+  >
+    <div className="w-3 h-3 rounded-full" />
+  </motion.div>
+);
+
+const TypingIndicator = () => (
+  <div className="flex space-x-1 justify-center items-center h-5 px-2">
+    {[0, 1, 2].map((i) => (
+      <motion.div
+        key={i}
+        className="w-1.5 h-1.5 bg-blue-400 rounded-full"
+        animate={{ y: [0, -4, 0], opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+      />
+    ))}
+  </div>
+);
 
 interface ModernMascotProps {
   onDismiss?: () => void;
@@ -23,435 +76,288 @@ interface ModernMascotProps {
   size?: "small" | "medium" | "large";
 }
 
+  const sizes = {
+    small: { character: 80, bubble: "text-[9px] min-w-[90px]" },
+    medium: { character: 120, bubble: "text-[9px] sm:text-xs min-w-[120px] sm:min-w-[160px]" },
+    large: { character: 160, bubble: "text-sm sm:text-base min-w-[150px] sm:min-w-[220px]" }
+  };
+
 export function ModernMascot({ 
   onDismiss, 
   className = "",
   variant = "default",
   size = "medium"
 }: ModernMascotProps) {
-  const [isVisible, setIsVisible] = useState(true);
-  const navigate = useNavigate();
-  const constraintsRef = useRef<HTMLDivElement>(null);
-  
-  const [currentLanguage, setCurrentLanguage] = useState<"id" | "en">(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("lokaclean_language");
-      return (stored === "en" || stored === "id") ? stored : "id";
+  const [isVisible, setIsVisible] = useState(() => {
+    try {
+      return localStorage.getItem("mascotHidden") !== "1";
+    } catch {
+      return true;
     }
-    return "id";
   });
+  const [isHovered, setIsHovered] = useState(false);
+  const [isTyping, setIsTyping] = useState(true);
+  const navigate = useNavigate();
+  
+  const [, setLang] = useState(getLanguage());
+  
+  const currentSize = sizes[size];
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleLanguageChange = () => {
-      const stored = localStorage.getItem("lokaclean_language");
-      setCurrentLanguage((stored === "en" || stored === "id") ? stored : "id");
-    };
+    const handleLanguageChange = () => setLang(getLanguage());
     window.addEventListener("languagechange", handleLanguageChange);
-    return () => window.removeEventListener("languagechange", handleLanguageChange);
+    
+    // Typing animation timer
+    const typingTimer = setTimeout(() => {
+      setIsTyping(false);
+    }, 2000);
+
+    return () => {
+      window.removeEventListener("languagechange", handleLanguageChange);
+      clearTimeout(typingTimer);
+    };
   }, []);
 
   const handleDismiss = () => {
     setIsVisible(false);
+    try {
+      localStorage.setItem("mascotHidden", "1");
+    } catch {}
     setTimeout(() => {
       onDismiss?.();
     }, 300);
   };
 
   const handleClick = () => {
-    navigate("/packages");
-    handleDismiss();
-  };
-
-  const speechText = currentLanguage === "en" 
-    ? "Ready to Clean? 🧹✨" 
-    : "Siap Bersihkan? 🧹✨";
-
-  const sizes = {
-    small: { character: 60, bubble: "text-[9px] min-w-[90px]" },
-    medium: { character: 80, bubble: "text-[10px] sm:text-sm min-w-[110px] sm:min-w-[170px]" },
-    large: { character: 110, bubble: "text-sm sm:text-base min-w-[140px] sm:min-w-[200px]" }
-  };
-
-  const currentSize = sizes[size];
-  const getInitialPosition = () => {
-    if (typeof window !== "undefined") {
-      const isMobile = window.innerWidth < 640;
-      return {
-        x: window.innerWidth - (isMobile ? 90 : 130),
-        y: window.innerHeight - (isMobile ? 140 : 130)
-      };
+    // Add simple interaction animation logic here if needed
+    if (!isHovered) { // Prevent accidental clicks when just dragging
+       navigate("/packages");
+       handleDismiss();
     }
-    return { x: 0, y: 0 };
   };
+
+  const speechText = t('home.mascot.speech');
+
+  // --- Animations ---
   
-  const initialPos = getInitialPosition();
-
-  // Animation variants based on state - subtle and professional
-  const characterAnimations = {
-    default: { y: [0, -6, 0], rotate: 0 },
-    greeting: { y: [0, -8, 0], rotate: [0, 1.5, -1.5, 0] },
-    action: { y: [0, -5, 0], scale: [1, 1.01, 1] },
-    success: { y: [0, -10, 0], rotate: [0, 3, -3, 0] },
-    reminder: { y: [0, -5, 0], opacity: [1, 0.95, 1] },
-    help: { y: [0, -6, 0], rotate: [0, 2, -2, 0] }
+  // Floating / Hovering (General Idle)
+  const hoverAnimation = {
+    y: [0, -12, 0],
+    rotate: [0, 3, -3, 0], // More fluid sway
+    transition: {
+      duration: 5,
+      repeat: Infinity,
+      ease: "easeInOut" as const
+    }
   };
 
-  const animation = characterAnimations[variant] || characterAnimations.default;
+  // Greeting / Waving Simulation (Quick wiggle)
+  const greetingAnimation = {
+    rotate: [0, 15, -10, 10, 0],
+    scale: [1, 1.1, 1],
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      repeatDelay: 3,
+      ease: "easeInOut" as const
+    }
+  };
+
+  // Mopping Simulation (Side to side slide with tilt)
+  const moppingAnimation = {
+    x: [-15, 15, -15],
+    rotate: [-5, 5, -5],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut" as const
+    }
+  };
+
+  // Shadow scaling (matches hover)
+  const shadowAnimation = {
+    scale: [1, 0.85, 1],
+    opacity: [0.3, 0.15, 0.3],
+    transition: {
+      duration: 5,
+      repeat: Infinity,
+      ease: "easeInOut" as const
+    }
+  };
+
+  // Determine animation based on variant
+  const getAnimation = () => {
+    switch (variant) {
+      case "greeting": return greetingAnimation;
+      case "action": return moppingAnimation; // 'action' can be mopping
+      default: return hoverAnimation;
+    }
+  };
 
   return (
-    <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[9999]">
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            className={`absolute ${className}`}
+            className={`absolute bottom-[80px] right-[60px] sm:bottom-[180px] sm:right-[150px] ${className} pointer-events-auto`}
+            style={{ cursor: "grab", width: currentSize.character, height: currentSize.character, touchAction: "none" }}
             initial={{ 
               opacity: 0, 
-              scale: 0.8,
-              x: initialPos.x + 50,
-              y: initialPos.y + 50
+              scale: 0.5,
+              x: 100,
+              y: 100
             }}
             animate={{ 
               opacity: 1, 
               scale: 1,
-              x: initialPos.x,
-              y: initialPos.y
+              x: 0,
+              y: 0
             }}
             exit={{ 
               opacity: 0, 
-              scale: 0.8,
-              x: initialPos.x + 300,
-              y: initialPos.y,
+              scale: 0.5,
               rotate: 15 
             }}
             transition={{
               type: "spring",
-              damping: 25,
-              stiffness: 300,
-              duration: 0.6
+              damping: 20,
+              stiffness: 150
             }}
             drag
-            dragConstraints={constraintsRef}
-            dragElastic={0.05}
             dragMomentum={false}
-            whileDrag={{ 
-              cursor: "grabbing",
-              scale: 1.1,
-              zIndex: 50
-            }}
-            style={{
-              cursor: "grab"
-            }}
-            onDragStart={(e) => {
-              e.stopPropagation();
-            }}
+            whileDrag={{ scale: 1.1, cursor: "grabbing" }}
+            whileHover={{ scale: 1.05 }}
+            onHoverStart={() => setIsHovered(true)}
+            onHoverEnd={() => setIsHovered(false)}
           >
-            {/* Modern WhatsApp-style Speech Bubble */}
-            <motion.div
-              className="absolute -top-10 sm:-top-12 right-0 z-50 pointer-events-auto"
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ 
-                opacity: 1, 
-                y: [0, -3, 0],
-                scale: 1
-              }}
-              transition={{ 
-                delay: 0.4, 
-                duration: 0.5,
-                y: {
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }
-              }}
-            >
-              <div className={`relative bg-white rounded-2xl rounded-tr-none shadow-lg ${currentSize.bubble} max-w-[200px] sm:max-w-[250px]`}>
-                <button
+            {/* --- CLOSE BUTTON (Visible on Hover) --- */}
+            <AnimatePresence>
+              {isHovered && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0 }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDismiss();
                   }}
-                  className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center hover:from-rose-600 hover:to-rose-700 transition-all shadow-lg z-20 hover:scale-110 active:scale-95 pointer-events-auto"
-                  aria-label="Close"
+                  className="absolute -top-4 -right-4 z-[60] w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 pointer-events-auto hidden sm:flex"
                 >
-                  <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                </button>
+                  <X className="w-4 h-4" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+            {/* Mobile Close Button (always visible) */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDismiss();
+              }}
+              className="absolute -top-4 -right-4 z-[60] w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 pointer-events-auto sm:hidden"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Speech Bubble */}
+            <motion.div
+              className="absolute -top-16 sm:-top-20 -right-2 z-50 pointer-events-auto origin-bottom-right"
+              initial={{ opacity: 0, y: 10, scale: 0.8, rotate: -5 }}
+              animate={{ opacity: 1, y: [0, -5, 0], scale: 1, rotate: 0 }}
+              transition={{ 
+                opacity: { delay: 0.5, duration: 0.3 },
+                y: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }
+              }}
+            >
+              <div className={`relative bg-gradient-to-br from-white via-white to-blue-50 backdrop-blur-md rounded-[20px] rounded-br-sm shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-blue-100 ${currentSize.bubble} p-3 sm:p-4`}>
                 
-                <div className="px-3 py-2 sm:px-4 sm:py-2.5">
-                  <motion.p
-                    className={`${currentSize.bubble} font-semibold text-slate-800 text-left leading-tight cursor-pointer select-none pointer-events-auto`}
-                    onClick={handleClick}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {speechText}
-                  </motion.p>
+                <div 
+                  className="cursor-pointer select-none text-center leading-snug flex items-center justify-center min-h-[24px]"
+                  onClick={handleClick}
+                >
+                  <AnimatePresence mode="wait">
+                    {isTyping ? (
+                      <motion.div
+                        key="typing"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        <TypingIndicator />
+                      </motion.div>
+                    ) : (
+                      <motion.p
+                        key="text"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="font-bold text-slate-800"
+                      >
+                        {speechText}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
-                
-                {/* Modern tail pointing to character */}
-                <div className="absolute -bottom-2 right-4 sm:right-5">
-                  <svg 
-                    width="12" 
-                    height="8" 
-                    viewBox="0 0 12 8" 
-                    className="sm:w-4 sm:h-3"
-                  >
-                    <path 
-                      d="M0,0 L12,0 L8,8 Z" 
-                      fill="white"
-                      className="drop-shadow-sm"
-                    />
-                  </svg>
+
+                {/* Bubble Tail - CSS Shape */}
+                <div className="absolute -bottom-[10px] right-[18px] w-0 h-0 
+                  border-l-[12px] border-l-transparent
+                  border-t-[12px] border-t-blue-50
+                  border-r-[0px] border-r-transparent 
+                  filter drop-shadow-sm">
                 </div>
               </div>
             </motion.div>
 
-            {/* Premium Modern Character - Smart Clean Assistant */}
-            <motion.div
-              className="relative cursor-grab active:cursor-grabbing pointer-events-auto z-10"
-              onTap={(e, info) => {
-                if (Math.abs(info.delta.x) < 5 && Math.abs(info.delta.y) < 5) {
-                  handleClick();
-                }
-              }}
-              animate={animation}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              whileHover={{ 
-                scale: 1.1, 
-                y: -8,
-                transition: { duration: 0.2 }
-              }}
-            >
-              {/* Subtle glow - represents cleanliness and quality */}
+            {/* --- MASCOT IMAGE --- */}
+            <div className="relative pointer-events-auto" onClick={handleClick}>
+              
+              {/* Particle Effects (Sparkles & Bubbles) */}
+              <div className="absolute inset-0 -z-10 pointer-events-none">
+                <SparkleEffect delay={0} x={-20} y={10} />
+                <SparkleEffect delay={1.5} x={currentSize.character + 10} y={20} />
+                <SparkleEffect delay={0.8} x={currentSize.character / 2} y={-30} />
+                
+                <BubbleEffect delay={0.5} x={-10} y={currentSize.character} />
+                <BubbleEffect delay={2.2} x={currentSize.character + 5} y={currentSize.character - 20} />
+              </div>
+
+              {/* Animated Glow/Aura */}
               <motion.div
-                className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-400/15 via-blue-400/15 to-teal-400/15 blur-2xl -z-10"
-                animate={{
-                  scale: [1, 1.1, 1],
-                  opacity: [0.2, 0.35, 0.2],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
+                className="absolute inset-0 bg-blue-400/30 rounded-full blur-2xl -z-10"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
+                transition={{ duration: 3, repeat: Infinity }}
               />
 
-              <svg
-                width={currentSize.character}
-                height={currentSize.character}
-                viewBox="0 0 200 200"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="drop-shadow-lg"
+              <motion.div 
+                animate={getAnimation()} 
+                whileTap={{ scale: 0.9, rotate: -5 }}
+                className="relative z-10"
               >
-                {/* Modern Premium Character - Semi-flat, Soft 3D Style */}
-                
-                {/* Head - Modern, rounded, natural proportions */}
-                <motion.ellipse
-                  cx="100"
-                  cy="75"
-                  rx="34"
-                  ry="36"
-                  fill="url(#modern-skin)"
-                  animate={{
-                    scale: [1, 1.008, 1],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-                
-                {/* Tech-inspired headband - Modern, minimal */}
-                <motion.path
-                  d="M 72 52 Q 100 46 128 52 L 128 68 L 72 68 Z"
-                  fill="url(#modern-headband)"
-                  animate={{
-                    y: [0, -1, 0],
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-                
-                {/* Tech accent indicators - Subtle, modern */}
-                <circle cx="90" cy="58" r="2" fill="#1abc9c" opacity="0.7" />
-                <circle cx="110" cy="58" r="2" fill="#3498db" opacity="0.7" />
-                
-                {/* Modern eyes - Professional, friendly, not exaggerated */}
-                <motion.g
-                  animate={{
-                    scaleY: [1, 0.08, 1],
-                  }}
-                  transition={{
-                    duration: 0.15,
-                    repeat: Infinity,
-                    repeatDelay: 4.5,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <ellipse cx="86" cy="70" rx="4.5" ry="5.5" fill="#2c3e50" />
-                  <ellipse cx="86" cy="70" rx="1.8" ry="2" fill="#ffffff" />
-                </motion.g>
-                <ellipse cx="114" cy="70" rx="4.5" ry="5.5" fill="#2c3e50" />
-                <ellipse cx="114" cy="70" rx="1.8" ry="2" fill="#ffffff" />
-                
-                {/* Subtle smile - Professional, warm */}
-                <motion.path
-                  d="M 84 86 Q 100 91 116 86"
-                  stroke="#2c3e50"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  fill="none"
-                  animate={{
-                    d: [
-                      "M 84 86 Q 100 91 116 86",
-                      "M 84 87 Q 100 92 116 87",
-                      "M 84 86 Q 100 91 116 86",
-                    ],
-                  }}
-                  transition={{
-                    duration: 3.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-                
-                {/* Body - Modern uniform, clean lines, soft 3D effect */}
-                <motion.ellipse
-                  cx="100"
-                  cy="132"
-                  rx="46"
-                  ry="40"
-                  fill="url(#modern-uniform)"
-                  animate={{
-                    y: [0, -1.5, 0],
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.1
-                  }}
-                />
-                
-                {/* Subtle body highlight for soft 3D effect */}
-                <ellipse
-                  cx="100"
-                  cy="125"
-                  rx="35"
-                  ry="25"
-                  fill="url(#body-highlight)"
-                  opacity="0.3"
-                />
-                
-                {/* Left arm - Modern, clean, professional */}
-                <motion.g
-                  animate={{
-                    x: [0, -4, 0],
-                    rotate: [-6, 2, -6],
-                  }}
-                  transition={{
-                    duration: 2.2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <ellipse cx="50" cy="128" rx="9" ry="22" fill="url(#modern-skin)" />
-                  <rect x="38" y="120" width="14" height="16" rx="2.5" fill="url(#modern-tool)" />
-                  <circle cx="45" cy="133" r="4.5" fill="url(#modern-tool)" />
-                </motion.g>
-                
-                {/* Right arm - Modern, clean, professional */}
-                <motion.g
-                  animate={{
-                    x: [0, 4, 0],
-                    rotate: [6, -2, 6],
-                  }}
-                  transition={{
-                    duration: 2.2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.3
-                  }}
-                >
-                  <ellipse cx="150" cy="128" rx="9" ry="22" fill="url(#modern-skin)" />
-                  <rect x="148" y="120" width="14" height="16" rx="2.5" fill="url(#modern-tool)" />
-                  <circle cx="155" cy="133" r="4.5" fill="url(#modern-tool)" />
-                </motion.g>
-                
-                {/* Subtle sparkles - Clean, minimal, represents quality */}
-                {[1, 2, 3].map((i) => {
-                  const angle = (i * 120) * Math.PI / 180;
-                  const radius = 62;
-                  const x = 100 + Math.cos(angle) * radius;
-                  const y = 100 + Math.sin(angle) * radius;
-                  
-                  return (
-                    <motion.circle
-                      key={i}
-                      cx={x}
-                      cy={y}
-                      r="1.8"
-                      fill="#ffd93d"
-                      opacity={0.5}
-                      animate={{
-                        scale: [0.4, 1.1, 0.4],
-                        opacity: [0.2, 0.7, 0.2],
+                 {/* Image Container */}
+                 <div className="relative">
+                    <img 
+                      src="/img/maskot.jpg" 
+                      alt="LokaClean Mascot" 
+                      draggable={false}
+                      style={{ 
+                        width: currentSize.character, 
+                        height: "auto",
+                        objectFit: "contain",
+                        mixBlendMode: "multiply" 
                       }}
-                      transition={{
-                        duration: 2.5 + i * 0.3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: i * 0.25
-                      }}
+                      className="block hover:brightness-105 transition-all select-none pointer-events-none"
                     />
-                  );
-                })}
+                 </div>
+              </motion.div>
 
-                {/* Premium Gradient Definitions - Brand Colors */}
-                <defs>
-                  {/* Soft Sand / Sun Yellow for skin */}
-                  <linearGradient id="modern-skin" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#fff8f0" />
-                    <stop offset="50%" stopColor="#ffeacc" />
-                    <stop offset="100%" stopColor="#ffdb99" />
-                  </linearGradient>
-                  
-                  {/* Teal / Tropical Green for headband */}
-                  <linearGradient id="modern-headband" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#1abc9c" />
-                    <stop offset="50%" stopColor="#16a085" />
-                    <stop offset="100%" stopColor="#1abc9c" />
-                  </linearGradient>
-                  
-                  {/* Ocean Blue for uniform */}
-                  <linearGradient id="modern-uniform" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#3498db" />
-                    <stop offset="50%" stopColor="#2980b9" />
-                    <stop offset="100%" stopColor="#3498db" />
-                  </linearGradient>
-                  
-                  {/* Body highlight for soft 3D effect */}
-                  <linearGradient id="body-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                  </linearGradient>
-                  
-                  {/* Teal for cleaning tools */}
-                  <linearGradient id="modern-tool" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#1abc9c" />
-                    <stop offset="100%" stopColor="#16a085" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </motion.div>
+              {/* --- SHADOW --- */}
+              <motion.div 
+                className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2/3 h-3 bg-black/20 rounded-full blur-md"
+                animate={shadowAnimation}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

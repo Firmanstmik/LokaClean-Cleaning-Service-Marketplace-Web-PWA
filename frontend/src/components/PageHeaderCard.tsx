@@ -32,8 +32,8 @@ export function PageHeaderCard({
   glowColor,
 }: PageHeaderCardProps) {
   return (
-    <div className="sticky top-[64px] sm:top-[80px] lg:top-[64px] z-30">
-      <div className="max-w-7xl mx-auto px-2 sm:px-5 lg:px-6 pt-3 sm:pt-5 lg:pt-6">
+    <div className="relative z-30 transition-all duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-6 lg:pt-8">
         {/* Professional Card with Premium Shadow & Border */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

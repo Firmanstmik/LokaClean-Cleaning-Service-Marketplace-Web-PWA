@@ -6,7 +6,7 @@
  * - Rating distribution chart (bar visualization)
  * - Recent ratings card grid (mobile-friendly card layout)
  * - Filters and sorting
- * - Clean, modern UI matching LocaClean theme
+ * - Clean, modern UI matching LokaClean theme
  */
 
 import { useEffect, useState, useMemo } from "react";
@@ -16,6 +16,11 @@ import { Star, TrendingUp, BarChart3, Filter, Calendar, Package as PackageIcon, 
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { formatDateTimeWITA } from "../../utils/date";
+
+function formatOrderNumber(orderNumber: number | null | undefined): string {
+  if (!orderNumber) return "-";
+  return `LC-${orderNumber.toString().padStart(4, "0")}`;
+}
 import { StarRating } from "../../components/StarRating";
 import { AnimatedCard } from "../../components/AnimatedCard";
 import type { Rating } from "../../types/api";
@@ -82,10 +87,8 @@ export function AdminRatingsPage() {
       try {
         // Use admin endpoint for admin pages
         const resp = await api.get("/admin/packages");
-        // Response structure: resp.data.data.items (array of PaketCleaning)
-        const packagesData = resp.data.data.items || [];
-        // Map to the format we need: { id, name }
-        const formattedPackages = packagesData.map((pkg: any) => ({
+        const packagesData = resp.data.data.items as Array<{ id: number; name: string }> | undefined;
+        const formattedPackages = (packagesData ?? []).map((pkg) => ({
           id: pkg.id,
           name: pkg.name
         }));
@@ -95,8 +98,8 @@ export function AdminRatingsPage() {
         // Try public endpoint as fallback
         try {
           const publicResp = await api.get("/packages");
-          const publicPackages = publicResp.data.data.items || [];
-          const formattedPackages = publicPackages.map((pkg: any) => ({
+          const publicPackages = publicResp.data.data.items as Array<{ id: number; name: string }> | undefined;
+          const formattedPackages = (publicPackages ?? []).map((pkg) => ({
             id: pkg.id,
             name: pkg.name
           }));
@@ -480,14 +483,14 @@ export function AdminRatingsPage() {
                 </div>
               </label>
               <select
+                title="Select package filter"
                 value={packageFilter}
                 onChange={(e) => setPackageFilter(e.target.value)}
                 disabled={packagesLoading}
-                className={`w-full rounded-xl border-2 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:ring-2 focus:ring-indigo-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-                  packageFilter 
-                    ? "border-indigo-500 bg-indigo-50/50" 
-                    : "border-slate-200 focus:border-indigo-500"
-                }`}
+                className={[
+                  "w-full rounded-xl border-2 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:ring-2 focus:ring-indigo-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
+                  packageFilter ? "border-indigo-500 bg-indigo-50/50" : "border-slate-200 focus:border-indigo-500"
+                ].join(" ")}
               >
                 <option value="">All Packages</option>
                 {packagesLoading ? (
@@ -521,6 +524,7 @@ export function AdminRatingsPage() {
                 Rating
               </label>
               <select
+                title="Select rating filter"
                 value={ratingFilter}
                 onChange={(e) => setRatingFilter(e.target.value)}
                 className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
@@ -571,6 +575,7 @@ export function AdminRatingsPage() {
                 Sort By
               </label>
               <select
+                title="Select sort option"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "highest" | "lowest" | "recent")}
                 className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
@@ -647,7 +652,7 @@ export function AdminRatingsPage() {
                           className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline transition-colors group-hover:scale-105"
                         >
                           <Eye className="h-3.5 w-3.5 flex-shrink-0" />
-                          <span>#{rating.pesanan.order_number}</span>
+                          <span>{formatOrderNumber(rating.pesanan.id)}</span>
                         </Link>
                         <div className="flex items-center gap-1 text-[10px] text-slate-500">
                           <Calendar className="h-3 w-3 flex-shrink-0" />

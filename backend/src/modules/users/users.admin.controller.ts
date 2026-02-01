@@ -156,10 +156,49 @@ export const deleteUserHandler = asyncHandler(async (req: Request, res: Response
     throw new HttpError(404, "User not found");
   }
 
-  // Delete user (cascade will handle related records)
-  await prisma.user.delete({
-    where: { id: userId }
+  // Find all user's orders to handle dependencies
+  const userOrders = await prisma.pesanan.findMany({
+    where: { user_id: userId },
+    select: { id: true }
   });
+  const orderIds = userOrders.map(o => o.id);
+
+  // Perform deletion in a transaction to ensure data integrity
+  await prisma.$transaction([
+    // 1. Delete all notifications belonging to the user OR referencing the user's orders
+    prisma.notification.deleteMany({
+      where: {
+        OR: [
+          { user_id: userId },
+          // Only include this condition if there are orders, though empty array is usually safe
+          ...(orderIds.length > 0 ? [{ pesanan_id: { in: orderIds } }] : [])
+        ]
+      }
+    }),
+
+    // 2. Delete dependencies of the orders (if any)
+    ...(orderIds.length > 0 ? [
+      prisma.pembayaran.deleteMany({
+        where: { pesanan_id: { in: orderIds } }
+      }),
+      prisma.rating.deleteMany({
+        where: { pesanan_id: { in: orderIds } }
+      }),
+      prisma.tip.deleteMany({
+        where: { pesanan_id: { in: orderIds } }
+      })
+    ] : []),
+
+    // 3. Delete the orders themselves
+    prisma.pesanan.deleteMany({
+      where: { user_id: userId }
+    }),
+
+    // 4. Finally, delete the user
+    prisma.user.delete({
+      where: { id: userId }
+    })
+  ]);
 
   return ok(res, { message: "User deleted successfully" });
 });

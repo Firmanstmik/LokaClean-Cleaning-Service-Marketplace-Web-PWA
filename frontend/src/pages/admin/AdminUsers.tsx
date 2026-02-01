@@ -28,6 +28,7 @@ import {
   ChevronDown,
   ChevronUp,
   KeyRound,
+  ExternalLink,
 } from "lucide-react";
 
 import { api } from "../../lib/api";
@@ -79,6 +80,35 @@ export function AdminUsersPage() {
   const [resetPasswordResult, setResetPasswordResult] = useState<{ newPassword: string; userName: string } | null>(null);
   const [customPassword, setCustomPassword] = useState("");
   const [useCustomPassword, setUseCustomPassword] = useState(false);
+
+  // Address state for detail modal
+  const [addressName, setAddressName] = useState<string | null>(null);
+  const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+
+  // Fetch address when selected user changes
+  useEffect(() => {
+    if (selectedUser?.default_latitude && selectedUser?.default_longitude) {
+      setIsLoadingAddress(true);
+      // Use OpenStreetMap Nominatim for reverse geocoding
+      // NOTE: We do not set User-Agent header as it is forbidden in browser fetch and causes CORS issues.
+      // Instead we pass email param as requested by Nominatim usage policy.
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedUser.default_latitude}&lon=${selectedUser.default_longitude}&zoom=18&addressdetails=1&accept-language=id&email=admin@lokaclean.com`)
+        .then(res => {
+           if (!res.ok) throw new Error("Network response was not ok");
+           return res.json();
+        })
+        .then(data => {
+          setAddressName(data.display_name || null);
+        })
+        .catch((err) => {
+           console.error("Address fetch error:", err);
+           setAddressName(null);
+        })
+        .finally(() => setIsLoadingAddress(false));
+    } else {
+      setAddressName(null);
+    }
+  }, [selectedUser?.id, selectedUser?.default_latitude, selectedUser?.default_longitude]);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -198,13 +228,19 @@ export function AdminUsersPage() {
       return;
     }
 
+    const normalizedPhone = normalizeWhatsAppPhone(formData.phone_number);
+    if (!normalizedPhone) {
+      setError("Nomor WhatsApp tidak valid. Contoh: +628123456789 atau 08123456789.");
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {
       await api.post("/admin/users", {
         full_name: formData.full_name,
-        email: formData.email,
-        phone_number: formData.phone_number,
+        email: formData.email.trim().toLowerCase(),
+        phone_number: normalizedPhone,
         password: formData.password,
         role: formData.role,
       });
@@ -215,7 +251,12 @@ export function AdminUsersPage() {
       await refreshUsers();
       setSuccessMessage(`User "${formData.full_name}" created successfully!`);
     } catch (err) {
-      setError(getApiErrorMessage(err));
+      const rawMessage = getApiErrorMessage(err);
+      if (rawMessage.toLowerCase().includes("email already in use") || rawMessage.toLowerCase().includes("email already registered")) {
+        setError("Email ini sudah digunakan. Gunakan email lain yang belum terdaftar.");
+      } else {
+        setError(rawMessage);
+      }
     } finally {
       setBusy(false);
     }
@@ -230,7 +271,15 @@ export function AdminUsersPage() {
     setBusy(true);
     setError(null);
     try {
-      const updateData: any = {
+      type UpdateUserPayload = {
+        full_name: string;
+        email: string;
+        phone_number: string;
+        role: "USER" | "ADMIN";
+        password?: string;
+      };
+
+      const updateData: UpdateUserPayload = {
         full_name: formData.full_name,
         email: formData.email,
         phone_number: formData.phone_number,
@@ -700,7 +749,7 @@ export function AdminUsersPage() {
                   >
                     {user.profile_photo ? (
                       <img
-                        src={toAbsoluteUrl(user.profile_photo)}
+                        src={toAbsoluteUrl(user.profile_photo) || undefined}
                         alt={user.full_name}
                         className="h-full w-full object-cover"
                         crossOrigin="anonymous"
@@ -1005,7 +1054,7 @@ export function AdminUsersPage() {
         )}
       </AnimatePresence>
 
-      {/* User Detail Modal - Premium Design */}
+      {/* User Detail Modal - Premium Design (Responsive Bottom Sheet on Mobile) */}
       <AnimatePresence>
         {showDetailModal && selectedUser && (
           <>
@@ -1014,179 +1063,187 @@ export function AdminUsersPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-sm"
+              className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-md"
               onClick={closeModals}
             />
             
-            {/* Modal Container - Centered and above navbar */}
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+            {/* Modal Container - Bottom Sheet on Mobile, Centered on Desktop with offset */}
+            <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center pointer-events-none p-0 sm:p-4 sm:pt-20">
               <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                initial={{ y: "100%", opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-md rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-xl shadow-2xl shadow-indigo-500/10 pointer-events-auto overflow-hidden"
+                className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border-t sm:border border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl pointer-events-auto overflow-hidden max-h-[85vh] sm:max-h-[85vh] flex flex-col sm:mt-10"
               >
-                {/* Premium gradient header */}
-                <div className="relative bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 p-4 border-b border-slate-200/50">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-black text-slate-900">User Details</h2>
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 90 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={closeModals}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-white/80 hover:text-slate-600 transition-colors"
-                      aria-label="Close modal"
-                    >
-                      <X className="h-4 w-4" />
-                    </motion.button>
+                {/* Premium Header */}
+                <div className="relative shrink-0">
+                   {/* Decorative background pattern */}
+                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 opacity-100" />
+                   <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-20" />
+                   
+                   {/* Content */}
+                   <div className="relative p-5 pt-4 pb-14 sm:p-6 sm:pt-6 sm:pb-16 flex items-start justify-between">
+                      <div className="text-white w-full text-center pr-8 pl-8">
+                        <h2 className="text-xl sm:text-2xl font-black tracking-tight mb-1">User Details</h2>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={closeModals}
+                        className="absolute right-5 top-4 sm:right-6 sm:top-6 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors backdrop-blur-md"
+                      >
+                        <X className="h-5 w-5" />
+                      </motion.button>
+                   </div>
+
+                   {/* Profile Photo - Centered Floating Overlap */}
+                   <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full border-4 border-white bg-white shadow-xl overflow-hidden cursor-pointer group"
+                        onClick={() => selectedUser.profile_photo && window.open(toAbsoluteUrl(selectedUser.profile_photo) || "", "_blank")}
+                      >
+                        {selectedUser.profile_photo ? (
+                          <img
+                            src={toAbsoluteUrl(selectedUser.profile_photo) || undefined}
+                            alt={selectedUser.full_name}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            crossOrigin="anonymous"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-indigo-50 text-indigo-500">
+                            <User className="h-10 w-10 sm:h-12 sm:w-12" />
+                          </div>
+                        )}
+                        
+                        {/* Status Indicator */}
+                        <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-sm py-1 text-center">
+                           <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-wider block">
+                             {selectedUser.role}
+                           </span>
+                        </div>
+                      </motion.div>
+                   </div>
+                </div>
+
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-5 pt-12 sm:p-6 sm:pt-14 pb-2 scrollbar-thin scrollbar-thumb-slate-200">
+                  <div className="space-y-3">
+                    {/* Name & Contact Section - Centered */}
+                    <div className="space-y-1 mb-4 sm:mb-5 text-center">
+                      <h3 className="text-lg sm:text-xl font-black text-slate-900">{selectedUser.full_name}</h3>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
+                          <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-500" />
+                          {selectedUser.email}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
+                          <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500" />
+                          {selectedUser.phone_number}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center text-center">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-amber-100 text-amber-600 mb-1">
+                          <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-0.5">Role Access</span>
+                        <div className="text-xs sm:text-sm font-black text-slate-900">{selectedUser.role}</div>
+                      </div>
+                      
+                      <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center text-center">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-purple-100 text-purple-600 mb-1">
+                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-0.5">Joined Date</span>
+                        <div className="text-xs sm:text-sm font-black text-slate-900">{formatDateOnlyWITA(selectedUser.created_at)}</div>
+                      </div>
+                    </div>
+
+                    {/* Location Card */}
+                    {(selectedUser.default_latitude && selectedUser.default_longitude) && (
+                      <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center gap-2">
+                           <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-rose-500" />
+                           <span className="text-[10px] sm:text-xs font-bold text-slate-700 uppercase">Default Location</span>
+                        </div>
+                        <div className="p-3 sm:p-4 bg-white">
+                           <div className="text-xs sm:text-sm font-medium text-slate-800 mb-3 leading-relaxed break-words whitespace-pre-wrap text-left">
+                             {isLoadingAddress ? (
+                               <div className="flex items-center gap-2 text-slate-400">
+                                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="h-3 w-3 rounded-full border-2 border-slate-300 border-t-slate-500" />
+                                  Finding address...
+                               </div>
+                             ) : (
+                               addressName ? (
+                                 <span>{addressName}</span>
+                               ) : (
+                                 <span className="font-mono text-slate-500 text-[10px] sm:text-xs">
+                                   {selectedUser.default_latitude.toFixed(6)}, {selectedUser.default_longitude.toFixed(6)}
+                                 </span>
+                               )
+                             )}
+                           </div>
+                           <a
+                             href={`https://www.google.com/maps/search/?api=1&query=${selectedUser.default_latitude},${selectedUser.default_longitude}`}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 border border-slate-200 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold text-slate-700 transition-all hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 hover:shadow-md active:scale-95"
+                           >
+                             <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                             Open in Google Maps
+                           </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="p-5 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-                  {/* Profile Photo - Compact and Premium */}
-                  <div className="flex justify-center">
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        if (selectedUser.profile_photo) {
-                          window.open(toAbsoluteUrl(selectedUser.profile_photo) || "", "_blank");
-                        }
-                      }}
-                      className={`relative h-24 w-24 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-md ${
-                        selectedUser.profile_photo ? "cursor-pointer hover:shadow-lg transition-all" : ""
-                      }`}
-                    >
-                    {selectedUser.profile_photo ? (
-                      <img
-                        src={toAbsoluteUrl(selectedUser.profile_photo)}
-                        alt={selectedUser.full_name}
-                        className="h-full w-full object-cover"
-                        crossOrigin="anonymous"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          const parent = target.parentElement;
-                          if (parent && !parent.querySelector(".photo-placeholder")) {
-                            const placeholder = document.createElement("div");
-                            placeholder.className = "photo-placeholder flex h-full w-full items-center justify-center";
-                            placeholder.innerHTML = `<div class="text-2xl font-black text-indigo-600">${selectedUser.full_name[0]?.toUpperCase() || "?"}</div>`;
-                            parent.appendChild(placeholder);
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <User className="h-12 w-12 text-indigo-500" />
-                      </div>
-                    )}
-                    {selectedUser.role === "ADMIN" && (
-                      <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-md border border-white">
-                        <Shield className="h-3 w-3 text-white" />
-                      </div>
-                    )}
-                    {selectedUser.profile_photo && (
-                      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded-full font-semibold backdrop-blur-sm">
-                        Click to view
-                      </div>
-                    )}
-                  </motion.div>
+                {/* Footer Actions - Sticky Bottom */}
+                <div className="p-3 sm:p-4 bg-white border-t border-slate-100 flex gap-2 sm:gap-3 shrink-0 pb-6 sm:pb-4 safe-area-bottom">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      closeModals();
+                      openEditModal(selectedUser);
+                    }}
+                    className="flex-1 flex flex-col items-center justify-center gap-0.5 sm:gap-1 rounded-xl bg-indigo-50 py-2.5 sm:py-3 text-indigo-700 transition-all hover:bg-indigo-100 active:bg-indigo-200"
+                  >
+                    <Edit2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Edit</span>
+                  </motion.button>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      closeModals();
+                      handleResetPassword(selectedUser.id);
+                    }}
+                    disabled={busy}
+                    className="flex-1 flex flex-col items-center justify-center gap-0.5 sm:gap-1 rounded-xl bg-amber-50 py-2.5 sm:py-3 text-amber-700 transition-all hover:bg-amber-100 active:bg-amber-200 disabled:opacity-50"
+                  >
+                    <KeyRound className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Reset Pass</span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={closeModals}
+                    className="flex-1 flex flex-col items-center justify-center gap-0.5 sm:gap-1 rounded-xl bg-slate-50 py-2.5 sm:py-3 text-slate-700 transition-all hover:bg-slate-100 active:bg-slate-200"
+                  >
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Close</span>
+                  </motion.button>
                 </div>
-
-                {/* User Info - Compact Premium Cards */}
-                <div className="grid gap-2.5">
-                  <div className="rounded-lg bg-gradient-to-r from-indigo-50/80 to-purple-50/80 p-3 border border-indigo-100/50 backdrop-blur-sm">
-                    <div className="text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">Full Name</div>
-                    <div className="text-sm font-black text-slate-900">{selectedUser.full_name}</div>
-                  </div>
-
-                  <div className="rounded-lg bg-gradient-to-r from-blue-50/80 to-cyan-50/80 p-3 border border-blue-100/50 backdrop-blur-sm">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
-                      <Mail className="h-3 w-3" />
-                      Email
-                    </div>
-                    <div className="text-xs font-black text-slate-900 break-all">{selectedUser.email}</div>
-                  </div>
-
-                  <div className="rounded-lg bg-gradient-to-r from-emerald-50/80 to-teal-50/80 p-3 border border-emerald-100/50 backdrop-blur-sm">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
-                      <Phone className="h-3 w-3" />
-                      Phone Number
-                    </div>
-                    <div className="text-xs font-black text-slate-900">{selectedUser.phone_number}</div>
-                  </div>
-
-                  <div className="rounded-lg bg-gradient-to-r from-amber-50/80 to-orange-50/80 p-3 border border-amber-100/50 backdrop-blur-sm">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
-                      <Shield className="h-3 w-3" />
-                      Role
-                    </div>
-                    <div className="text-xs font-black text-slate-900">{selectedUser.role}</div>
-                  </div>
-
-                  <div className="rounded-lg bg-gradient-to-r from-purple-50/80 to-pink-50/80 p-3 border border-purple-100/50 backdrop-blur-sm">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
-                      <Calendar className="h-3 w-3" />
-                      Joined
-                    </div>
-                    <div className="text-xs font-black text-slate-900">
-                      {formatDateOnlyWITA(selectedUser.created_at)}
-                    </div>
-                  </div>
-
-                  {(selectedUser.default_latitude && selectedUser.default_longitude) && (
-                    <div className="rounded-lg bg-gradient-to-r from-slate-50/80 to-slate-100/80 p-3 border border-slate-200/50 backdrop-blur-sm">
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">
-                        <MapPin className="h-3 w-3" />
-                        Default Location
-                      </div>
-                      <div className="text-[10px] font-semibold text-slate-700">
-                        {selectedUser.default_latitude.toFixed(6)}, {selectedUser.default_longitude.toFixed(6)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons - Compact */}
-              <div className="p-4 pt-0 flex gap-2 border-t border-slate-200/50">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    closeModals();
-                    openEditModal(selectedUser);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 transition-all hover:bg-indigo-100"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                  Edit
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    closeModals();
-                    handleResetPassword(selectedUser.id);
-                  }}
-                  disabled={busy}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-700 transition-all hover:bg-amber-100 disabled:opacity-50"
-                >
-                  <KeyRound className="h-3.5 w-3.5" />
-                  Reset Password
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={closeModals}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition-all hover:bg-slate-50"
-                >
-                  Close
-                </motion.button>
-              </div>
-            </motion.div>
+              </motion.div>
             </div>
           </>
         )}

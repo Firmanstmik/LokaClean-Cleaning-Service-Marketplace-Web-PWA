@@ -24,9 +24,9 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "/img/Logo LocaClean2.jpg",
+            src: "/img/logo.jpg",
             sizes: "any",
-            type: "image/png",
+            type: "image/jpeg",
             purpose: "any maskable"
           }
         ]

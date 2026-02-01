@@ -41,6 +41,11 @@ import { getPackageGradient } from "../../utils/packageIcon";
 import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
 import type { Pesanan } from "../../types/api";
 
+function formatOrderNumber(orderNumber: number | null | undefined): string {
+  if (!orderNumber) return "-";
+  return `LC-${orderNumber.toString().padStart(4, "0")}`;
+}
+
 function StatusBadge({ status }: { status: string }) {
   const variants: Record<string, { bg: string; text: string; icon: typeof CheckCircle2 }> = {
     PENDING: {
@@ -738,7 +743,7 @@ export function AdminOrdersPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-bold text-slate-500 mb-1">ORDER #{o.order_number}</div>
+                        <div className="text-xs font-bold text-slate-500 mb-1">ORDER {formatOrderNumber(o.order_number)}</div>
                         <h3 className="text-base sm:text-lg font-black text-slate-900 truncate">{o.paket.name}</h3>
                         <div className="mt-1.5 space-y-1">
                           <div className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-600">
@@ -918,7 +923,7 @@ export function AdminOrdersPage() {
           try {
             await api.delete(`/admin/orders/${deleteConfirm.order.id}`);
             setDeleteConfirm({ isOpen: false, order: null });
-            setSuccessMessage(`Pesanan #${deleteConfirm.order.order_number} berhasil dihapus!`);
+            setSuccessMessage(`Pesanan ${formatOrderNumber(deleteConfirm.order.order_number)} berhasil dihapus!`);
             
             // Auto-hide success message after 3 seconds
             setTimeout(() => {
@@ -940,7 +945,7 @@ export function AdminOrdersPage() {
           }
         }}
         title="Hapus Pesanan?"
-        message={`Nomor Pesanan: #${deleteConfirm.order?.order_number}\nPaket: ${deleteConfirm.order?.paket.name}\nStatus: ${deleteConfirm.order?.status}\n\nApakah Anda yakin ingin menghapus pesanan ini?\nTindakan ini TIDAK DAPAT DIBATALKAN.`}
+        message={`Nomor Pesanan: ${formatOrderNumber(deleteConfirm.order?.order_number)}\nPaket: ${deleteConfirm.order?.paket.name}\nStatus: ${deleteConfirm.order?.status}\n\nApakah Anda yakin ingin menghapus pesanan ini?\nTindakan ini TIDAK DAPAT DIBATALKAN.`}
         confirmText="Ya, Hapus"
         cancelText="Batal"
         variant="danger"

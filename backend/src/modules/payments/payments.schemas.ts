@@ -1,25 +1,16 @@
 /**
- * Zod schemas for payment operations.
+ * Zod schemas for Payment endpoints.
  */
 
 import { z } from "zod";
 
-export const updatePaymentStatusSchema = z.object({
-  status: z.enum(["PENDING", "PAID"])
-});
+const intField = z.preprocess((val) => {
+  if (val === undefined || val === null || val === "") return val;
+  const num = Number(val);
+  return Number.isFinite(num) ? num : val;
+}, z.number().int());
 
-/**
- * Schema for requesting Snap token.
- * Frontend sends this after order is created with NON-CASH payment method.
- */
-export const requestSnapTokenSchema = z.object({
-  pesanan_id: z.coerce.number().int().positive(),
-  customer_details: z.object({
-    first_name: z.string().min(1),
-    last_name: z.string().optional(),
-    email: z.string().email(),
-    phone: z.string().min(1)
-  })
+export const snapTokenRequestSchema = z.object({
+  order_id: intField
 });
-
 

@@ -23,6 +23,7 @@ enum OrderStatus {
   PROCESSING
   IN_PROGRESS
   COMPLETED
+  CANCELLED
 }
 
 enum PaymentMethod {
@@ -77,6 +78,8 @@ model PaketCleaning {
   price              Int
   estimated_duration Int
   image              String?  // Optional image path for package
+  category           String   @default("SERVICE") // SERVICE, PRODUCT
+  stock              Int      @default(100)
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 

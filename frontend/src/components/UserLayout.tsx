@@ -5,13 +5,13 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Plus, List, User as UserIcon, LogOut, Sparkles, Bell, X, CheckCheck, Sparkles as SparklesIcon, Star, Heart, ArrowRight, Zap, MapPin, CheckCircle2, MessageCircle, Instagram, Facebook, Phone, Mail, Clock } from "lucide-react";
+import { Package, Plus, List, User as UserIcon, LogOut, Sparkles, Bell, X, CheckCheck, Star, Heart, ArrowRight, Zap, MapPin, CheckCircle2, MessageCircle, Instagram, Facebook, Phone, Mail, Clock, AlertTriangle, Home, History, LayoutGrid, Scan, Wallet } from "lucide-react";
 
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { toAbsoluteUrl } from "../lib/urls";
 import { formatDateTimeWITA } from "../utils/date";
-import { getNotificationMessage, t } from "../lib/i18n";
+import { getNotificationMessage, t, useCurrentLanguage } from "../lib/i18n";
 import { NotificationToastContainer } from "./NotificationToast";
 import { NotificationDetailModal } from "./NotificationDetailModal";
 import { ScrollToTop } from "./ScrollToTop";
@@ -21,6 +21,7 @@ import { Footer } from "./Footer";
 import { playOrderNotificationSound } from "../utils/sound";
 import { speakNotification } from "../utils/textToSpeech";
 import { getLanguage } from "../lib/i18n";
+import { LanguageSwitcherPill } from "./LanguageSwitcher";
 import type { User, Notification, Pesanan } from "../types/api";
 
 function NavItem({
@@ -28,13 +29,15 @@ function NavItem({
   label,
   icon: Icon,
   exact = false,
-  currentPathname
+  currentPathname,
+  badge
 }: {
   to: string;
   label: string;
   icon: typeof Package;
   exact?: boolean;
   currentPathname?: string;
+  badge?: number;
 }) {
   const location = useLocation();
   
@@ -83,60 +86,46 @@ function NavItem({
       to={to}
       end={shouldEnd}
       className={[
-        "relative flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-500 overflow-hidden group",
+        "relative flex items-center gap-2 px-4 py-2 text-sm font-bold transition-colors duration-300",
         isActive
-          ? "bg-tropical-gradient text-white shadow-[0_6px_20px_rgba(26,188,156,0.3)] scale-105"
-          : "text-slate-700 hover:bg-tropical-50 hover:text-tropical-700 hover:scale-105 hover:shadow-md"
+          ? "text-lombok-tropical-600"
+          : "text-slate-500 hover:text-lombok-tropical-600"
       ].join(" ")}
     >
-      <>
-        {/* Shimmer effect for active state */}
-        {isActive && (
+      <motion.div
+        animate={{ 
+          scale: isActive ? 1.1 : 1,
+        }}
+        whileHover={{ scale: 1.1 }}
+        transition={{ 
+          duration: 0.2,
+          type: "spring",
+          stiffness: 400,
+          damping: 25
+        }}
+        className="relative z-10"
+      >
+        <Icon className="h-5 w-5" />
+        {badge && badge > 0 ? (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-            animate={{
-              x: ["-100%", "200%"]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              repeatDelay: 0.5,
-              ease: "linear"
-            }}
-          />
-        )}
-        <motion.div
-          animate={{ 
-            scale: isActive ? 1.15 : 1,
-          }}
-          whileHover={{ scale: 1.2 }}
-          transition={{ 
-            duration: 0.3,
-            type: "spring",
-            stiffness: 400,
-            damping: 20
-          }}
-          className="relative z-10 group/icon"
-        >
-          <Icon className={`h-4 w-4 transition-colors duration-300 ${isActive ? "text-white drop-shadow-lg" : "group-hover:text-lombok-tropical-600"}`} />
-          {/* Glow effect */}
-          {isActive && (
-            <motion.div
-              className="absolute inset-0 rounded-full bg-white/30 blur-md -z-10"
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-                scale: [1, 1.2, 1]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-          )}
-        </motion.div>
-        <span className="relative z-10">{label}</span>
-      </>
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="pointer-events-none absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white ring-2 ring-white"
+          >
+            {badge > 9 ? "9+" : badge}
+          </motion.div>
+        ) : null}
+      </motion.div>
+      <span className="relative z-10">{label}</span>
+      {isActive && (
+         <motion.div
+           layoutId="activeNavIndicator"
+           className="absolute -bottom-[21px] left-0 right-0 h-[3px] bg-gradient-to-r from-lombok-tropical-500 to-lombok-ocean-500 rounded-t-full"
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           transition={{ duration: 0.3 }}
+         />
+      )}
     </NavLink>
   );
 }
@@ -149,6 +138,7 @@ export function UserLayout() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unpaidTransferCount, setUnpaidTransferCount] = useState(0);
   const [previousNotificationIds, setPreviousNotificationIds] = useState<Set<number>>(new Set());
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [showNotificationDetail, setShowNotificationDetail] = useState(false);
@@ -163,24 +153,8 @@ export function UserLayout() {
     return true;
   });
   const [reminderOrders, setReminderOrders] = useState<Array<{ id: number; paket_name: string }>>([]); // Orders needing after photo
-  const [currentLanguage, setCurrentLanguage] = useState<"id" | "en">(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("lokaclean_language");
-      return (stored === "en" || stored === "id") ? stored : "id";
-    }
-    return "id";
-  });
+  const currentLanguage = useCurrentLanguage();
   const [isPageReady, setIsPageReady] = useState(false); // Track if page is ready to show notifications
-
-  // Listen for language changes
-  useEffect(() => {
-    const handleLanguageChange = () => {
-      const stored = localStorage.getItem("lokaclean_language");
-      setCurrentLanguage((stored === "en" || stored === "id") ? stored : "id");
-    };
-    window.addEventListener("languagechange", handleLanguageChange);
-    return () => window.removeEventListener("languagechange", handleLanguageChange);
-  }, []);
 
   const fetchUser = async () => {
     try {
@@ -190,6 +164,50 @@ export function UserLayout() {
       // Ignore errors - user data will be null
     }
   };
+
+  const fetchUnpaidTransferOrders = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append("page", "1");
+      params.append("limit", "50");
+
+      const resp = await api.get(`/orders?${params.toString()}`);
+      const data = resp.data.data;
+      const orders = (data.items || []) as Pesanan[];
+      const now = Date.now();
+
+      const unpaidTransfer = orders.filter((o) => {
+        if (
+          o.pembayaran.method !== "TRANSFER" ||
+          o.pembayaran.status !== "PENDING" ||
+          o.status === "CANCELLED"
+        ) {
+          return false;
+        }
+        const createdAtMs = new Date(o.created_at).getTime();
+        if (!Number.isFinite(createdAtMs)) {
+          return true;
+        }
+        const expiryMs = createdAtMs + 60 * 60 * 1000;
+        const remainingMs = expiryMs - now;
+        const rawRemainingSeconds = Math.floor(remainingMs / 1000);
+        return rawRemainingSeconds > -60;
+      });
+
+      setUnpaidTransferCount(unpaidTransfer.length);
+    } catch (err) {
+      console.error("[UnpaidTransferOrders] Failed to fetch count", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchUnpaidTransferOrders();
+      const interval = setInterval(fetchUnpaidTransferOrders, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, fetchUnpaidTransferOrders]);
+
 
   // Initialize unread count from localStorage on mount
   useEffect(() => {
@@ -337,8 +355,8 @@ export function UserLayout() {
                     navigator.serviceWorker.ready.then((registration) => {
                       registration.showNotification(friendlyMsg.title, {
                         body: friendlyMsg.message,
-                        icon: '/img/logo.png',
-                        badge: '/img/logo.png',
+                        icon: '/img/Logo_LokaClean.jpg',
+                        badge: '/img/Logo_LokaClean.jpg',
                         tag: `notification-${notif.id}`,
                         requireInteraction: false,
                         data: {
@@ -353,8 +371,8 @@ export function UserLayout() {
                       // Fallback to direct Notification API if service worker not ready
                   const browserNotification = new Notification(friendlyMsg.title, {
                     body: friendlyMsg.message,
-                    icon: '/img/logo.png',
-                    badge: '/img/logo.png',
+                    icon: '/img/Logo_LokaClean.jpg',
+                    badge: '/img/Logo_LokaClean.jpg',
                     tag: `notification-${notif.id}`,
                     requireInteraction: false,
                     data: {
@@ -377,8 +395,8 @@ export function UserLayout() {
                     // Fallback to direct Notification API if service worker not supported
                     const browserNotification = new Notification(friendlyMsg.title, {
                       body: friendlyMsg.message,
-                      icon: '/img/logo.png',
-                      badge: '/img/logo.png',
+                      icon: '/img/Logo_LokaClean.jpg',
+                      badge: '/img/Logo_LokaClean.jpg',
                       tag: `notification-${notif.id}`,
                       requireInteraction: false,
                       data: {
@@ -812,7 +830,7 @@ export function UserLayout() {
         )}
       </AnimatePresence>
 
-    <div className="min-h-dvh bg-gradient-to-br from-tropical-50 via-ocean-50/50 to-sand-50/70 scrollbar-hide overflow-x-hidden relative">
+    <div className="min-h-dvh flex flex-col bg-gradient-to-br from-tropical-50 via-ocean-50/50 to-sand-50/70 scrollbar-hide overflow-x-hidden relative">
       {/* Animated background particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -888,123 +906,46 @@ export function UserLayout() {
         }}
         onMarkRead={markAsRead}
       />
-      <header className="fixed top-0 left-0 right-0 z-40 border-b border-slate-200/60 bg-white/90 backdrop-blur-xl shadow-sm">
-        <div className="relative mx-auto flex w-full items-center justify-between gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 lg:px-6 lg:py-3 max-w-7xl">
+      <header className="fixed top-0 left-1/2 -translate-x-1/2 lg:left-0 lg:translate-x-0 w-full max-w-md lg:max-w-full z-40 bg-transparent sm:border-b sm:border-slate-200/70 sm:bg-gradient-to-r sm:from-white/95 sm:via-tropical-50/80 sm:to-white/95 sm:backdrop-blur-2xl sm:shadow-[0_10px_30px_rgba(15,23,42,0.08)] pt-safe">
+        <div className="relative mx-auto flex w-full max-w-full items-center justify-between gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 lg:px-6 lg:py-3">
           <NavLink
             to="/packages"
             className="flex items-center gap-2.5 sm:gap-3.5 flex-1 min-w-0 group"
           >
             <motion.div
-              whileHover={{ scale: 1.08, rotate: [0, -2, 2, -2, 0] }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, x: -50, scale: 0.8 }}
-              animate={{ 
-                opacity: 1, 
-                x: 0,
-                scale: 1,
-              }}
-              transition={{ 
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, x: -40, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              transition={{
                 type: "spring",
-                damping: 20,
-                stiffness: 300,
-                duration: 0.6
+                damping: 24,
+                stiffness: 260,
+                duration: 0.5
               }}
-              className="relative h-11 w-11 sm:h-16 sm:w-16 flex-shrink-0 rounded-2xl flex items-center justify-center overflow-visible"
+              className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 rounded-2xl flex items-center justify-center overflow-visible"
             >
-              {/* Premium Glowing Ring Animation - Multi-layer depth effect */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-tropical-400/30 via-ocean-400/25 to-sun-400/30 blur-lg" />
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-br from-tropical-400 via-ocean-400 to-sun-400 opacity-0"
+                className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-gradient-to-br from-white via-tropical-50/80 to-ocean-50/80 shadow-[0_8px_24px_rgba(15,23,42,0.15)] flex items-center justify-center border border-white/80"
                 animate={{
-                  opacity: [0, 0.7, 0.4, 0.7, 0],
-                  scale: [1, 1.15, 1.25, 1.15, 1],
-                  rotate: [0, 90, 180, 270, 360],
+                  y: [0, -1, 0],
                 }}
                 transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                style={{
-                  filter: "blur(10px)",
-                }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-br from-ocean-400 via-tropical-400 to-sun-400 opacity-0"
-                animate={{
-                  opacity: [0, 0.5, 0.8, 0.5, 0],
-                  scale: [1, 1.2, 1.3, 1.2, 1],
-                  rotate: [360, 270, 180, 90, 0],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.5,
-                }}
-                style={{
-                  filter: "blur(14px)",
-                }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-br from-sun-400 via-tropical-400 to-ocean-400 opacity-0"
-                animate={{
-                  opacity: [0, 0.6, 0.3, 0.6, 0],
-                  scale: [1, 1.1, 1.2, 1.1, 1],
-                }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1,
-                }}
-                style={{
-                  filter: "blur(8px)",
-                }}
-              />
-              
-              {/* Premium Logo Container with Gradient Border */}
-              <motion.div
-                className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-gradient-to-br from-white via-tropical-50/30 to-ocean-50/30 shadow-xl flex items-center justify-center border-2 border-transparent"
-                animate={{
-                  boxShadow: [
-                    "0 8px 32px rgba(26, 188, 156, 0.25), 0 0 0 0px rgba(26, 188, 156, 0)",
-                    "0 12px 48px rgba(52, 152, 219, 0.4), 0 0 0 2px rgba(26, 188, 156, 0.3)",
-                    "0 16px 64px rgba(26, 188, 156, 0.5), 0 0 0 3px rgba(52, 152, 219, 0.4)",
-                    "0 12px 48px rgba(52, 152, 219, 0.4), 0 0 0 2px rgba(26, 188, 156, 0.3)",
-                    "0 8px 32px rgba(26, 188, 156, 0.25), 0 0 0 0px rgba(26, 188, 156, 0)",
-                  ],
-                  borderColor: [
-                    "rgba(26, 188, 156, 0)",
-                    "rgba(26, 188, 156, 0.3)",
-                    "rgba(52, 152, 219, 0.4)",
-                    "rgba(26, 188, 156, 0.3)",
-                    "rgba(26, 188, 156, 0)",
-                  ],
-                }}
-                transition={{
-                  duration: 3,
+                  duration: 6,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
               >
-                {/* Subtle gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-tropical-400/5 via-transparent to-ocean-400/5 pointer-events-none" />
-                
                 <motion.img
-                  src="/img/Logo LocaClean2.jpg"
+                  src="/img/Logo_LokaClean.jpg"
                   alt="LokaClean Logo"
-                  className="relative z-10 h-full w-full object-contain p-1.5 sm:p-2 scale-105"
+                  className="h-full w-full object-contain p-1.5 sm:p-2"
                   animate={{
-                    filter: [
-                      "brightness(1) saturate(1)",
-                      "brightness(1.15) saturate(1.1)",
-                      "brightness(1.25) saturate(1.2)",
-                      "brightness(1.15) saturate(1.1)",
-                      "brightness(1) saturate(1)",
-                    ],
+                    scale: [1, 1.02, 1],
                   }}
                   transition={{
-                    duration: 3,
+                    duration: 6,
                     repeat: Infinity,
                     ease: "easeInOut",
                   }}
@@ -1013,7 +954,7 @@ export function UserLayout() {
             </motion.div>
             
             {/* Premium Brand Typography */}
-            <div className="min-w-0 flex flex-col">
+            <div className="min-w-0 hidden sm:flex flex-col">
               <motion.div
                 className="relative"
                 initial={{ opacity: 0, y: -10 }}
@@ -1055,8 +996,11 @@ export function UserLayout() {
             </div>
           </NavLink>
 
-          {/* Mobile Notifications & Logout Buttons - Top Right */}
-          <div className="sm:hidden flex items-center gap-2">
+
+          {/* Mobile Notifications Button - Top Right (Hidden on Desktop) */}
+          <div className="flex sm:hidden items-center gap-2">
+            <LanguageSwitcherPill variant="dark" uniqueId="mobile-nav" />
+            
             {/* Mobile Notifications Button */}
             <div className="relative">
               <motion.button
@@ -1073,11 +1017,11 @@ export function UserLayout() {
                     console.log('[Notifications] Fetching notifications on open');
                     fetchNotifications().catch(console.error);
                   }
-                }}
-                className="relative flex items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-2 text-slate-700 shadow-sm transition-all duration-300 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 flex-shrink-0"
-                title="Notifications"
-              >
-                <Bell className="h-4 w-4" />
+              }}
+              className="relative flex items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-3 text-slate-700 shadow-sm transition-all duration-300 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 flex-shrink-0"
+              title="Notifications"
+            >
+              <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <motion.span
                     initial={{ scale: 0 }}
@@ -1089,32 +1033,48 @@ export function UserLayout() {
                 )}
               </motion.button>
             </div>
-
-            {/* Mobile Logout Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center rounded-lg border-2 border-rose-200 bg-white p-2 text-rose-600 shadow-sm transition-all duration-300 hover:border-rose-300 hover:bg-rose-50 hover:shadow-md flex-shrink-0"
-              onClick={() => {
-                logout();
-                navigate("/login", { replace: true });
-              }}
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4" />
-            </motion.button>
           </div>
 
-          {/* Desktop Navigation - Center */}
-          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-            <NavItem to="/packages" label={t("packages.title")} icon={Package} exact currentPathname={location.pathname} />
-            <NavItem to="/orders/new" label={t("packages.newOrder")} icon={Plus} exact currentPathname={location.pathname} />
-            <NavItem to="/orders" label={t("orders.title")} icon={List} currentPathname={location.pathname} />
-            <NavItem to="/profile" label={t("profile.title")} icon={UserIcon} exact currentPathname={location.pathname} />
+          {/* Desktop Navigation - Center (Visible on Desktop) */}
+          <nav className="hidden lg:flex items-center gap-4 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            {/* 1. Beranda */}
+            <NavItem 
+              to="/packages" 
+              label={t("home.navbar.home")} 
+              icon={Home} 
+              exact 
+              currentPathname={location.pathname} 
+            />
+            {/* 2. Paket */}
+            <NavItem 
+              to="/packages/all" 
+              label={t("home.navbar.packages")} 
+              icon={LayoutGrid} 
+              exact 
+              currentPathname={location.pathname} 
+            />
+            {/* 3. Pesan Baru */}
+            <NavItem 
+              to="/orders/new" 
+              label={t("home.navbar.newOrder")} 
+              icon={Scan} 
+              exact 
+              currentPathname={location.pathname} 
+            />
+            {/* 4. Pesanan */}
+            <NavItem 
+              to="/orders" 
+              label={t("orders.title")} 
+              icon={History} 
+              currentPathname={location.pathname} 
+              badge={unpaidTransferCount} 
+            />
           </nav>
             
           {/* Desktop/Tablet Right Side - Notifications, Profile, Logout (visible on sm and above, but navigation is centered on lg) */}
           <div className="hidden sm:flex items-center gap-2">
+            <LanguageSwitcherPill variant="dark" uniqueId="desktop-nav" />
+
             {/* Notifications Bell */}
             <div className="relative">
               <motion.button
@@ -1306,258 +1266,212 @@ export function UserLayout() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 w-full px-3 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 pt-20 sm:pt-24 lg:px-6 lg:py-6 lg:pt-24 lg:pb-6"
+        className="relative z-10 w-full px-3 sm:px-4 pb-32 lg:pb-8 pt-14 sm:pt-24 lg:px-6 lg:pt-24 max-w-md lg:max-w-7xl mx-auto bg-gray-50 shadow-2xl lg:shadow-none lg:bg-transparent mt-safe"
       >
         <div className="mx-auto w-full max-w-7xl">
-        <Outlet />
+          {unpaidTransferCount > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 rounded-xl border border-amber-100 bg-gradient-to-r from-amber-50/90 to-orange-50/90 p-2.5 shadow-sm backdrop-blur-sm"
+            >
+              <div className="flex items-start gap-2.5">
+                <div className="flex-shrink-0 h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center shadow-inner mt-0.5">
+                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-amber-800 leading-tight mb-0.5">
+                    {unpaidTransferCount} Pesanan Belum Dibayar
+                  </p>
+                  <p className="text-[9px] sm:text-[10px] text-amber-700/90 leading-relaxed">
+                    Pesanan transfer menunggu pembayaran. Selesaikan atau ubah ke tunai di detail pesanan agar segera diproses.
+                  </p>
+                </div>
+                <Link 
+                  to="/orders" 
+                  className="flex-shrink-0 self-center px-2.5 py-1.5 rounded-lg bg-white border border-amber-200/60 shadow-sm text-[9px] font-bold text-amber-700 hover:bg-amber-50 transition-colors"
+                >
+                  Cek
+                </Link>
+              </div>
+            </motion.div>
+          )}
+          <Outlet />
         </div>
       </motion.main>
 
       {/* Footer Component */}
       <Footer variant="all" />
 
-      {/* Mobile bottom nav - Innovative cleaning theme with animated effects (hidden on desktop) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-white via-white/98 to-white/95 backdrop-blur-2xl lg:hidden overflow-hidden">
-        {/* Animated cleaning background - bubbles and waves */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Floating bubbles */}
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={`bubble-${i}`}
-              className="absolute rounded-full bg-gradient-to-br from-lombok-ocean-200/30 to-lombok-tropical-200/30 blur-sm"
-              style={{
-                width: `${Math.random() * 20 + 10}px`,
-                height: `${Math.random() * 20 + 10}px`,
-                left: `${(i * 12.5) + Math.random() * 5}%`,
-                bottom: `${Math.random() * 30}%`,
-              }}
-              animate={{
-                y: [0, -100, 0],
-                x: [0, Math.random() * 20 - 10, 0],
-                opacity: [0.3, 0.6, 0.3],
-                scale: [1, 1.2, 1],
-              }}
-              transition={{
-                duration: Math.random() * 3 + 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.3,
-              }}
-            />
-          ))}
-          {/* Liquid wave at top */}
-          <motion.div
-            className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-lombok-tropical-300/40 to-transparent"
-            style={{
-              backgroundSize: "200% 100%",
-            }}
-            animate={{
-              backgroundPosition: ["0% 0%", "100% 0%"],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-        </div>
-        
-        <div className="relative mx-auto flex max-w-7xl items-center justify-between gap-1 px-2 py-3">
-          <NavLink
-            to="/packages"
-            end
-            className={({ isActive }) =>
-              [
-                "relative flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-3 text-xs font-semibold transition-all duration-200 active:scale-95 overflow-hidden group touch-manipulation",
-                isActive
-                  ? "text-white scale-110"
-                  : "text-slate-600 hover:text-lombok-tropical-600"
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {/* Liquid wave background for active */}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeBottomNav"
-                    className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-500 via-teal-500 to-blue-500 backdrop-blur-sm"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 380, damping: 30, duration: 0.2 }}
-                  />
-                )}
-                <motion.div
-                  animate={{
-                    scale: isActive ? 1.15 : 1,
-                  }}
-                  transition={{
-                    duration: 0.15,
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 25
-                  }}
-                  className="relative z-10"
-                >
-                  <Package className={`h-5 w-5 transition-all duration-150 ${isActive ? "text-white drop-shadow-md" : "text-slate-600 group-hover:text-teal-600"}`} />
-                </motion.div>
-                <span className={`relative z-10 transition-all duration-150 font-medium ${isActive ? "text-white" : ""}`}>{t("packages.title")}</span>
-              </>
-            )}
-          </NavLink>
-          <NavLink
-            to="/orders/new"
-            end
-            className={({ isActive }) =>
-              [
-                "relative flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-3 text-xs font-semibold transition-all duration-200 active:scale-95 overflow-hidden group touch-manipulation",
-                isActive
-                  ? "text-white scale-110"
-                  : "text-slate-600 hover:text-lombok-tropical-600"
-              ].join(" ")
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {/* Liquid wave background for active */}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeBottomNav"
-                    className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-500 via-teal-500 to-blue-500 backdrop-blur-sm"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 380, damping: 30, duration: 0.2 }}
-                  />
-                )}
-                <motion.div
-                  animate={{
-                    scale: isActive ? 1.15 : 1,
-                  }}
-                  transition={{
-                    duration: 0.15,
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 25
-                  }}
-                  className="relative z-10"
-                >
-                  <Plus className={`h-5 w-5 transition-all duration-150 ${isActive ? "text-white drop-shadow-md" : "text-slate-600 group-hover:text-teal-600"}`} />
-                </motion.div>
-                <span className={`relative z-10 transition-all duration-150 font-medium ${isActive ? "text-white" : ""}`}>{t("packages.newOrder")}</span>
-              </>
-            )}
-          </NavLink>
-          {(() => {
-            // Calculate active state for /orders route manually
-            const pathname = location.pathname;
-            let isOrdersActive = false;
+      {/* Mobile bottom nav - Premium DANA-like Design */}
+      <nav className="lg:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 pointer-events-none">
+        <div className="pointer-events-auto relative bg-white/95 backdrop-blur-xl border-t border-slate-100 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.05)] pb-safe rounded-t-2xl">
+          <div className="relative mx-auto grid max-w-md grid-cols-5 items-center h-20">
             
-            if (pathname === "/orders/new" || pathname.startsWith("/orders/new/")) {
-              isOrdersActive = false;
-            } else if (pathname === "/orders") {
-              isOrdersActive = true;
-            } else {
-              const ordersIdMatch = pathname.match(/^\/orders\/(\d+)$/);
-              if (ordersIdMatch) {
-                isOrdersActive = true;
+            {/* 1. Beranda */}
+            <NavLink
+              to="/packages"
+              end
+              onClick={() => window.navigator?.vibrate?.(10)}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
+                  isActive ? "text-lombok-ocean-600" : "text-slate-600 hover:text-slate-800"
+                }`
               }
-            }
-            
-            return (
-              <NavLink
-                to="/orders"
-                end={true}
-                className={[
-                  "relative flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-3 text-xs font-semibold transition-all duration-200 active:scale-95 overflow-hidden group touch-manipulation",
-                  isOrdersActive
-                    ? "text-white scale-110"
-                    : "text-slate-600 hover:text-lombok-tropical-600"
-                ].join(" ")}
-              >
+            >
+              {({ isActive }) => (
                 <>
-                  {/* Liquid wave background for active */}
-                  {isOrdersActive && (
-                    <motion.div
-                      layoutId="activeBottomNav"
-                      className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-500 via-teal-500 to-blue-500 backdrop-blur-sm"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 380, damping: 30, duration: 0.2 }}
-                    />
-                  )}
                   <motion.div
-                    animate={{
-                      scale: isOrdersActive ? 1.15 : 1,
-                    }}
-                    transition={{
-                      duration: 0.15,
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 25
-                    }}
-                    className="relative z-10"
+                    whileTap={{ scale: 0.9 }}
+                    className="relative"
                   >
-                    <List className={`h-5 w-5 transition-all duration-150 ${isOrdersActive ? "text-white drop-shadow-md" : "text-slate-600 group-hover:text-teal-600"}`} />
+                    <Home className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
                   </motion.div>
-                  <span className={`relative z-10 transition-all duration-150 font-medium ${isOrdersActive ? "text-white" : ""}`}>{t("orders.title")}</span>
+                  <span className={`text-[10px] font-bold ${isActive ? "font-extrabold" : ""}`}>
+                    {t("home.navbar.home")}
+                  </span>
                 </>
-              </NavLink>
-            );
-          })()}
-          <NavLink
-            to="/profile"
-            end
-            className={({ isActive }) =>
-              [
-                "relative flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-3 text-xs font-semibold transition-all duration-200 active:scale-95 overflow-hidden group touch-manipulation",
-                isActive
-                  ? "text-white scale-110"
-                  : "text-slate-600 hover:text-lombok-tropical-600"
-              ].join(" ")
-            }
-            title={t("profile.title")}
-          >
-            {({ isActive }) => (
-              <>
-                {/* Liquid wave background for active */}
-                {isActive && (
+              )}
+            </NavLink>
+
+            {/* 2. Paket */}
+            <NavLink
+              to="/packages/all"
+              end
+              onClick={() => window.navigator?.vibrate?.(10)}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
+                  isActive ? "text-lombok-ocean-600" : "text-slate-600 hover:text-slate-800"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
                   <motion.div
-                    layoutId="activeBottomNav"
-                    className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-500 via-teal-500 to-blue-500 backdrop-blur-sm"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 380, damping: 30, duration: 0.2 }}
-                  />
-                )}
+                    whileTap={{ scale: 0.9 }}
+                    className="relative"
+                  >
+                    <LayoutGrid className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
+                  </motion.div>
+                  <span className={`text-[10px] font-bold ${isActive ? "font-extrabold" : ""}`}>
+                    {t("home.navbar.packages")}
+                  </span>
+                </>
+              )}
+            </NavLink>
+
+            {/* 3. Center - Scan/Pesan Baru */}
+            <div className="relative -top-10 flex justify-center">
+              <NavLink
+                to="/orders/new"
+                end
+                onClick={() => window.navigator?.vibrate?.(15)}
+                className="group flex flex-col items-center justify-center gap-1"
+              >
                 <motion.div
-                  animate={{
-                    scale: isActive ? 1.15 : 1,
-                  }}
-                  transition={{
-                    duration: 0.15,
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 25
-                  }}
-                  className="relative z-10"
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-b from-lombok-ocean-500 to-lombok-tropical-600 shadow-xl shadow-lombok-ocean-500/30 ring-[6px] ring-white"
                 >
-                  {profilePhotoUrl ? (
-                    <div className="h-5 w-5 overflow-hidden rounded-full border-2 border-white shadow-md">
-                      <img
-                        className="h-full w-full object-cover"
-                        src={profilePhotoUrl}
-                        alt={t("profile.title")}
-                        crossOrigin="anonymous"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <UserIcon className={`h-5 w-5 transition-all duration-150 ${isActive ? "text-white drop-shadow-md" : "text-slate-600 group-hover:text-teal-600"}`} />
-                  )}
+                  <Scan className="h-8 w-8 text-white stroke-[2px]" />
+                  {/* Ripple effect */}
+                  <div className="absolute inset-0 rounded-full border border-white/20 animate-ping" />
                 </motion.div>
-                <span className={`relative z-10 transition-all duration-150 font-medium ${isActive ? "text-white" : ""}`}>{t("profile.title")}</span>
-              </>
-            )}
-          </NavLink>
+                <span className="text-[10px] font-extrabold text-slate-700 group-hover:text-lombok-ocean-600 transition-colors drop-shadow-sm bg-white/50 backdrop-blur-[2px] px-2 rounded-full">
+                  {t("home.navbar.newOrder")}
+                </span>
+              </NavLink>
+            </div>
+
+            {/* 4. Pesanan (History) */}
+            {(() => {
+              const pathname = location.pathname;
+              let isOrdersActive = false;
+              
+              if (pathname === "/orders/new" || pathname.startsWith("/orders/new/")) {
+                isOrdersActive = false;
+              } else if (pathname === "/orders") {
+                isOrdersActive = true;
+              } else {
+                const ordersIdMatch = pathname.match(/^\/orders\/(\d+)$/);
+                if (ordersIdMatch) {
+                  isOrdersActive = true;
+                }
+              }
+              
+              return (
+                <NavLink
+                  to="/orders"
+                  end={true}
+                  onClick={() => window.navigator?.vibrate?.(10)}
+                  className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
+                    isOrdersActive ? "text-lombok-ocean-600" : "text-slate-600 hover:text-slate-800"
+                  }`}
+                >
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                    className="relative"
+                  >
+                    <History className={`h-6 w-6 ${isOrdersActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
+                    {unpaidTransferCount > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white ring-2 ring-white"
+                      >
+                        {unpaidTransferCount > 9 ? "9+" : unpaidTransferCount}
+                      </motion.div>
+                    )}
+                  </motion.div>
+                  <span className={`text-[10px] font-bold ${isOrdersActive ? "font-extrabold" : ""}`}>
+                    {t("orders.title")}
+                  </span>
+                </NavLink>
+              );
+            })()}
+
+            {/* 5. Profil */}
+            <NavLink
+              to="/profile"
+              end
+              onClick={() => window.navigator?.vibrate?.(10)}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
+                  isActive ? "text-lombok-ocean-600" : "text-slate-600 hover:text-slate-800"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                    className="relative"
+                  >
+                    {profilePhotoUrl ? (
+                      <div className={`h-6 w-6 overflow-hidden rounded-full border transition-all ${isActive ? "border-lombok-ocean-600 ring-1 ring-lombok-ocean-600" : "border-transparent"}`}>
+                        <img
+                          className="h-full w-full object-cover"
+                          src={profilePhotoUrl}
+                          alt={t("profile.title")}
+                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <UserIcon className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
+                    )}
+                  </motion.div>
+                  <span className={`text-[10px] font-bold ${isActive ? "font-extrabold" : ""}`}>
+                    {t("profile.title")}
+                  </span>
+                </>
+              )}
+            </NavLink>
+
+          </div>
         </div>
       </nav>
 

@@ -272,7 +272,7 @@ export function AdminLayout() {
               transition={{ duration: 0.3 }}
             >
               <img
-                src="/img/logo.png"
+                src="/img/Logo_LokaClean.jpg"
                 alt="LokaClean Logo"
                 className="h-full w-full object-contain p-0.5 scale-110"
               />

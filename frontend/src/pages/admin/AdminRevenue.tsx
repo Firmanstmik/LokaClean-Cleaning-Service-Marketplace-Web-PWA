@@ -5,7 +5,7 @@
  * This is necessary because colors are determined at runtime based on order status.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -37,6 +37,7 @@ import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { AnimatedCard } from "../../components/AnimatedCard";
 import { formatDateWITA } from "../../utils/date";
+import type { Pesanan } from "../../types/api";
 
 interface RevenueData {
   totalRevenue: number;
@@ -58,6 +59,16 @@ const STATUS_COLORS: Record<string, string> = {
 
 
 export function AdminRevenuePage() {
+  type OrderWithRelations = Pesanan & {
+    pembayaran?: {
+      status?: string;
+      amount?: number | null;
+    } | null;
+    tip?: {
+      amount?: number | null;
+    } | null;
+  };
+
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,10 +81,10 @@ export function AdminRevenuePage() {
       try {
         // Fetch orders data
         const resp = await api.get("/admin/orders");
-        const orders = resp.data.data.items || [];
+        const orders = (resp.data.data.items || []) as OrderWithRelations[];
 
         // Calculate revenue data (excluding tip)
-        const totalRevenue = orders.reduce((sum: number, order: any) => {
+        const totalRevenue = orders.reduce((sum: number, order: OrderWithRelations) => {
           if (order.pembayaran?.status === "PAID") {
             return sum + (order.pembayaran.amount || 0);
           }
@@ -81,7 +92,7 @@ export function AdminRevenuePage() {
         }, 0);
 
         // Calculate tip revenue
-        const totalTipRevenue = orders.reduce((sum: number, order: any) => {
+        const totalTipRevenue = orders.reduce((sum: number, order: OrderWithRelations) => {
           if (order.tip?.amount) {
             return sum + (order.tip.amount || 0);
           }
@@ -89,12 +100,12 @@ export function AdminRevenuePage() {
         }, 0);
 
         const totalOrders = orders.length;
-        const paidOrders = orders.filter((o: any) => o.pembayaran?.status === "PAID").length;
-        const pendingOrders = orders.filter((o: any) => o.pembayaran?.status === "PENDING").length;
+        const paidOrders = orders.filter((o) => o.pembayaran?.status === "PAID").length;
+        const pendingOrders = orders.filter((o) => o.pembayaran?.status === "PENDING").length;
 
         // Monthly data (last 12 months) - with tip revenue
-        const monthlyMap = new Map<string, { revenue: number; tipRevenue: number; orders: number; monthKey: string }>();
-        orders.forEach((order: any) => {
+        const monthlyMap = new Map<string, { revenue: number; tipRevenue: number; orders: number; monthKey: string; month: string }>();
+        orders.forEach((order) => {
           if (order.pembayaran?.status === "PAID") {
             const date = new Date(order.created_at);
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -130,7 +141,7 @@ export function AdminRevenuePage() {
         });
         
         // Count orders by status
-        orders.forEach((order: any) => {
+        orders.forEach((order) => {
           const status = order.status || "UNKNOWN";
           // Map status to readable label, COMPLETED shows as "Selesai" when user verified
           const displayStatus = statusLabels[status] || status;
@@ -556,8 +567,8 @@ export function AdminRevenuePage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ status, percent }) => {
-                      if (percent < 0.05) return ""; // Hide label for very small slices
+                    label={({ percent = 0 }) => {
+                      if (percent < 0.05) return "";
                       return `${(percent * 100).toFixed(0)}%`;
                     }}
                     outerRadius={100}
@@ -625,12 +636,12 @@ export function AdminRevenuePage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 * index }}
                     className="relative overflow-hidden rounded-xl border-2 p-3 backdrop-blur-sm bg-white/80 status-card-wrapper"
-                    style={{ 
-                      '--status-color': fillColor,
-                      '--status-color-shadow': fillColor + '80',
-                      '--status-color-border': fillColor + '40',
-                      '--status-color-bg': fillColor
-                    } as React.CSSProperties}
+                    style={{
+                      "--status-color": fillColor,
+                      "--status-color-shadow": `${fillColor}80`,
+                      "--status-color-border": `${fillColor}40`,
+                      "--status-color-bg": fillColor
+                    } as CSSProperties}
                   >
                     <div className="absolute inset-0 opacity-10 status-card-bg" />
                     <div className="relative z-10 flex items-center justify-between">

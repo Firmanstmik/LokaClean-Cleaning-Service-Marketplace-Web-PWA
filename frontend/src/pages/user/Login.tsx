@@ -5,14 +5,17 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Phone, Lock, LogIn, Sparkles } from "lucide-react";
+import { Mail, Phone, Lock, LogIn, Sparkles, ArrowLeft, Hand } from "lucide-react";
 
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { LanguageSwitcherPill } from "../../components/LanguageSwitcher";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { normalizeWhatsAppPhone } from "../../lib/phone";
+import { t, useCurrentLanguage } from "../../lib/i18n";
 
 export function UserLogin() {
+  const lang = useCurrentLanguage();
   const { token, actor, setAuth } = useAuth();
   const navigate = useNavigate();
 
@@ -21,6 +24,8 @@ export function UserLogin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isFormValid = login.trim().length > 0 && password.trim().length >= 6;
 
   // Clear error and login value when switching methods
   const handleMethodChange = (method: "EMAIL" | "WHATSAPP") => {
@@ -37,388 +42,424 @@ export function UserLogin() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-tropical-50 via-ocean-50/30 to-sand-50/50 p-4 sm:p-6">
-      {/* Animated background elements - Tropical theme */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-tropical-200/30 blur-3xl"
-          animate={{
-            x: [0, 50, 0],
-            y: [0, 50, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-ocean-200/30 blur-3xl"
-          animate={{
-            x: [0, -50, 0],
-            y: [0, -50, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      </div>
-
-      {/* Login Card - Compact Professional Design */}
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-        className="relative w-full max-w-sm z-10"
+    <div className="flex min-h-screen w-full bg-white overflow-hidden">
+      {/* Left Side - Hero Section (Desktop Only) */}
+      <motion.div 
+        initial={{ x: "-100%", opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="hidden lg:flex w-1/2 relative bg-slate-900 items-center justify-center overflow-hidden"
       >
-        {/* Background glow effect behind card */}
-        <div className="absolute inset-0 -z-10 bg-tropical-500/20 blur-3xl rounded-3xl opacity-50"></div>
-        
-        <div className="relative rounded-2xl border border-white/60 bg-white/90 backdrop-blur-xl shadow-xl shadow-tropical-500/20 p-5 sm:p-6 overflow-hidden">
-          {/* Animated cleaning broom effect */}
-          <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none overflow-hidden">
-            <motion.div
-              className="absolute bottom-4 left-0"
-              animate={{
-                x: ["-10%", "110%"],
-              }}
-              transition={{
-                duration: 10,
-                repeat: Infinity,
-                repeatDelay: 4,
-                ease: "linear",
-              }}
-            >
-              {/* Broom SVG */}
-              <motion.div
-                className="flex flex-col items-center"
-                animate={{
-                  y: [0, -3, 0],
-                  rotate: [0, -5, 0],
-                }}
-                transition={{
-                  duration: 0.6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <svg
-                  width="36"
-                  height="36"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="text-tropical-600"
-                >
-                  {/* Broom handle */}
-                  <line x1="12" y1="4" x2="12" y2="12" />
-                  {/* Broom head */}
-                  <path d="M6 12h12M6 12v6M9 12v6M12 12v6M15 12v6M18 12v6" />
-                </svg>
-              </motion.div>
-              {/* Cleaning sparkles that appear and fade */}
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute bottom-0"
-                  initial={{ opacity: 0 }}
-                  animate={{
-                    opacity: [0, 0.8, 0],
-                    scale: [0.5, 1.2, 0.5],
-                    y: [0, -15, -25],
-                    x: [i * 15 - 20, i * 15 - 15, i * 15 - 10],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: i * 0.15,
-                    ease: "easeOut",
-                  }}
-                >
-                  <Sparkles className="h-2 w-2 text-tropical-400/70" />
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-          {/* Header with Logo */}
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/img/hero.png" 
+            alt="LokaClean Hero" 
+            className="w-full h-full object-cover object-center opacity-80"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-tropical-900/40 mix-blend-multiply" />
+        </div>
+
+        {/* Content Overlay */}
+        <div className="relative z-10 p-12 text-white max-w-xl">
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mb-5 text-center"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
           >
-            <motion.div
-              className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-xl bg-white shadow-lg overflow-hidden"
-              whileHover={{ scale: 1.05 }}
-              animate={{
-                rotate: [0, 5, -5, 0],
-              }}
-              transition={{
-                rotate: {
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                },
-                scale: { duration: 0.3 }
-              }}
+            <motion.div 
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/15 backdrop-blur-xl border border-white/30 mb-8 shadow-[0_8px_32px_rgba(0,0,0,0.2)] ring-1 ring-white/20"
             >
-              <img
-                src="/img/logo.png"
-                alt="LokaClean Logo"
-                className="h-full w-full object-contain p-2 scale-110"
-              />
+              <img src="/img/logo.jpg" alt="Logo" className="h-20 w-20 object-contain drop-shadow-lg rounded-2xl" />
             </motion.div>
-            <h1 className="text-xl font-semibold text-slate-900 mb-1">Welcome back</h1>
-            <p className="text-xs text-slate-500">Sign in to continue</p>
+            <h1 className="text-5xl font-bold leading-tight mb-6">
+              {t("auth.hero.titlePart1")} <br/>
+              <span className="text-tropical-300">{t("auth.hero.titleHighlight")}</span>
+            </h1>
+            <p className="text-lg text-slate-300 leading-relaxed mb-8">
+              {t("auth.hero.subtitle")}
+            </p>
+            
+            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-2 pr-6 rounded-full w-fit border border-white/20">
+               <div className="flex -space-x-4">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-800 bg-slate-700 overflow-hidden">
+                      <img src={`https://randomuser.me/api/portraits/thumb/men/${i+20}.jpg`} alt={`User ${i}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+               </div>
+               <div className="flex flex-col justify-center">
+                 <div className="flex items-center gap-1 text-amber-400">
+                   <Sparkles className="w-3.5 h-3.5 fill-current" />
+                   <span className="font-bold text-white text-sm">4.9/5.0</span>
+                 </div>
+                 <span className="text-xs text-slate-300">{t("auth.hero.trustedUsers")}</span>
+               </div>
+            </div>
           </motion.div>
+        </div>
+      </motion.div>
 
-          {/* Error message */}
-          {error && (
+      {/* Right Side - Form Section */}
+      <motion.div 
+        className="w-full lg:w-1/2 flex items-center justify-center relative bg-transparent lg:bg-white overflow-hidden lg:p-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        {/* Mobile Background - Premium Brand Gradient */}
+        <div className="absolute inset-0 lg:hidden z-0 bg-slate-900">
+          <img 
+            src="/img/hero.png" 
+            alt="Background" 
+            className="w-full h-[49%] object-cover object-top opacity-90"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-slate-900/60 to-slate-900" />
+        </div>
+        
+        {/* Desktop Language Switcher */}
+        <div className="hidden lg:block absolute top-8 right-8 z-50">
+          <LanguageSwitcherPill variant="dark" uniqueId="desktop-login" />
+        </div>
+
+        {/* Decorative Circles (Mobile & Desktop) */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
             <motion.div
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-4 rounded-lg border border-red-200 bg-red-50 p-2.5 text-sm text-red-700"
-            >
-              <span className="font-medium">{error}</span>
-            </motion.div>
-          )}
+              className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-tropical-500/10 lg:bg-tropical-500/5 blur-3xl"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              className="absolute top-1/4 -left-10 h-40 w-40 rounded-full bg-yellow-400/20 lg:bg-yellow-400/10 blur-2xl"
+              animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
+        </div>
 
-          {/* Login Form */}
-          <form
-            className="space-y-4 relative z-10"
-            onSubmit={async (e) => {
-              e.preventDefault();
-
-              const rawLogin = login.trim();
-
-              // Validate email format if using EMAIL method
-              if (loginMethod === "EMAIL") {
-                if (!rawLogin) {
-                  setError("Email wajib diisi.");
-                  return;
-                }
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(rawLogin)) {
-                  setError("Format email tidak valid. Contoh: user@example.com");
-                  return;
-                }
-              } else {
-                if (!rawLogin) {
-                  setError("Nomor WhatsApp wajib diisi.");
-                  return;
-                }
-                const normalized = normalizeWhatsAppPhone(rawLogin);
-                if (!normalized) {
-                  setError("Format nomor WhatsApp tidak valid. Gunakan format:\n• +628123456789 (format internasional)\n• 08123456789 (format lokal Indonesia)\n• Pastikan nomor minimal 10 digit");
-                  return;
-                }
-              }
-
-              // Prepare login value
-              // For email: lowercase
-              // For phone: send raw input, let backend normalize (for better compatibility)
-              let loginValue: string;
-              if (loginMethod === "EMAIL") {
-                loginValue = rawLogin.toLowerCase();
-              } else {
-                // Validate format first, but send raw input to backend
-                const normalized = normalizeWhatsAppPhone(rawLogin);
-                if (!normalized) {
-                  setError("Format nomor WhatsApp tidak valid. Gunakan format: +628123456789 atau 08123456789");
-                  return;
-                }
-                // Send raw input to backend - backend will normalize it
-                // This allows backend to try multiple normalization variations
-                loginValue = rawLogin.trim();
-              }
-
-              if (!password.trim()) {
-                setError("Password wajib diisi.");
-                return;
-              }
-
-              if (password.trim().length < 6) {
-                setError("Password minimal 6 karakter.");
-                return;
-              }
-              setLoading(true);
-              setError(null);
-              try {
-                const resp = await api.post("/auth/user/login", {
-                  login: loginValue,
-                  password
-                });
-                const token = resp.data.data.token as string;
-                setAuth(token, "USER");
-                // Clear welcome screen cache to show welcome screen after login
-                localStorage.removeItem("lokaclean_welcome_shown");
-                navigate("/packages", { replace: true });
-              } catch (err) {
-                const errorMessage = getApiErrorMessage(err);
-                // Make error messages more user-friendly
-                let friendlyMessage = errorMessage;
+        {/* Login Container */}
+        <div className="w-full h-full lg:h-auto flex flex-col lg:justify-center relative z-10">
+            
+            {/* Mobile Header Area (Logo & Welcome & Testimonials) */}
+            <div className="lg:hidden min-h-[40vh] flex flex-col justify-end px-6 pb-6 pt-10 text-white relative z-10">
                 
-                // Check for specific error patterns and make them clearer
-                if (errorMessage.toLowerCase().includes("invalid credentials")) {
-                  if (loginMethod === "EMAIL") {
-                    friendlyMessage = "Email atau password salah. Pastikan email dan password yang Anda masukkan benar.";
-                  } else {
-                    friendlyMessage = "Nomor WhatsApp atau password salah. Pastikan nomor dan password yang Anda masukkan benar.";
-                  }
-                } else if (errorMessage.toLowerCase().includes("nomor whatsapp tidak valid")) {
-                  friendlyMessage = "Format nomor WhatsApp tidak valid. Gunakan format: +628123456789 atau 08123456789";
-                } else if (errorMessage.toLowerCase().includes("password salah")) {
-                  friendlyMessage = "Password yang Anda masukkan salah. Silakan coba lagi atau gunakan fitur lupa password jika tersedia.";
-                } else if (errorMessage.toLowerCase().includes("tidak terdaftar")) {
-                  friendlyMessage = errorMessage; // Already clear from backend
-                }
-                
-                setError(friendlyMessage);
-              } finally {
-                setLoading(false);
-              }
-            }}
-          >
-            {/* Login Method Toggle */}
-            <div className="space-y-1.5">
-              <div className="text-xs font-medium text-slate-600 uppercase tracking-wide">Login with</div>
-              <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-1">
-                <button
-                  type="button"
-                  className={[
-                    "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
-                    loginMethod === "EMAIL"
-                      ? "bg-white text-tropical-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
-                  ].join(" ")}
-                  onClick={() => handleMethodChange("EMAIL")}
+                {/* Mobile Language Switcher */}
+                <div className="absolute top-6 right-6 z-20">
+                    <LanguageSwitcherPill uniqueId="mobile-login" />
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-4"
                 >
-                  <div className="flex items-center justify-center gap-1.5">
-                    <Mail className="h-4 w-4" />
-                    Email
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-lg">
+                      <img src="/img/logo.jpg" alt="Logo" className="h-16 w-16 object-contain rounded-xl" />
+                    </div>
                   </div>
-                </button>
-                <button
-                  type="button"
-                  className={[
-                    "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
-                    loginMethod === "WHATSAPP"
-                      ? "bg-white text-tropical-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
-                  ].join(" ")}
-                  onClick={() => handleMethodChange("WHATSAPP")}
-                >
-                  <div className="flex items-center justify-center gap-1.5">
-                    <Phone className="h-4 w-4" />
-                    WhatsApp
+                  
+                  <h2 className="text-2xl font-bold leading-tight mb-3 drop-shadow-md">
+                    {t("auth.hero.titlePart1")} <br/>
+                    <span className="text-tropical-200">{t("auth.hero.titleHighlight")}</span>
+                  </h2>
+
+                  <p className="text-xs text-slate-100 leading-relaxed mb-6 max-w-xs drop-shadow-sm">
+                    {t("auth.hero.subtitle")}
+                  </p>
+
+                  <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-1.5 pr-3 rounded-full w-fit border border-white/20">
+                    <div className="flex -space-x-3">
+                        {[1,2,3].map(i => (
+                        <div key={i} className="w-6 h-6 rounded-full border border-slate-800 bg-slate-700 overflow-hidden">
+                            <img src={`https://randomuser.me/api/portraits/thumb/men/${i+20}.jpg`} alt={`User ${i}`} className="w-full h-full object-cover" />
+                        </div>
+                        ))}
+                    </div>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-yellow-300 fill-yellow-300" />
+                            <span className="text-[10px] font-bold text-white">4.9/5.0</span>
+                        </div>
+                        <span className="text-[9px] text-slate-300 leading-none">{t("auth.hero.trustedUsers")}</span>
+                    </div>
                   </div>
-                </button>
-              </div>
+                </motion.div>
             </div>
 
-            {/* Login Input */}
-            <label className="block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700">
-                {loginMethod === "EMAIL" ? "Email Address" : "WhatsApp Number"}
-              </div>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  {loginMethod === "EMAIL" ? (
-                    <Mail className="h-4 w-4 text-slate-400" />
-                  ) : (
-                    <Phone className="h-4 w-4 text-slate-400" />
-                  )}
-                </div>
-                <input
-                  className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-2 focus:ring-tropical-100 focus:outline-none"
-                  type={loginMethod === "EMAIL" ? "email" : "tel"}
-                  inputMode={loginMethod === "EMAIL" ? "email" : "tel"}
-                  {...(loginMethod === "EMAIL" ? { autoComplete: "email" } : { autoComplete: "tel" })}
-                  value={login}
-                  onChange={(e) => {
-                    setLogin(e.target.value);
-                    setError(null);
-                  }}
-                  required
-                  placeholder={loginMethod === "EMAIL" ? "you@email.com" : "+62 812-3456-7890"}
-                />
-              </div>
-              {loginMethod === "WHATSAPP" && (
-                <div className="mt-1 text-xs text-slate-500">
-                  Format: <span className="font-medium">+kode negara</span>
-                </div>
-              )}
-            </label>
-
-            {/* Password Input */}
-            <label className="block">
-              <div className="mb-1.5 text-sm font-medium text-slate-700">Password</div>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                  <Lock className="h-4 w-4 text-slate-400" />
-                </div>
-                <input
-                  className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-2 focus:ring-tropical-100 focus:outline-none"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="••••••••"
-                />
-              </div>
-            </label>
-
-            {/* Submit Button */}
-            <motion.button
-              type="submit"
-              disabled={loading}
-              whileHover={{ scale: loading ? 1 : 1.01 }}
-              whileTap={{ scale: loading ? 1 : 0.99 }}
-              className="w-full rounded-lg bg-tropical-gradient px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-tropical-500/30 transition-all hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <span className="flex items-center justify-center gap-2">
-                {loading ? (
-                  <>
+            {/* Form Container - Bottom Sheet Style on Mobile */}
+            <div className="flex-1 lg:flex-none bg-white rounded-t-[2.5rem] lg:rounded-none px-6 py-8 sm:px-12 lg:px-0 lg:py-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] lg:shadow-none relative lg:flex lg:flex-col lg:justify-center">
+                
+                {/* Welcome Text */}
+                <div className="mb-8 w-full max-w-md mx-auto">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight">
+                      {t("auth.login.welcomeTitle")}
+                    </h2>
                     <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
-                    />
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="h-4 w-4" />
-                    <span>Sign in</span>
-                  </>
-                )}
-              </span>
-            </motion.button>
-          </form>
+                      animate={{ rotate: [0, 20, 0, 20, 0] }}
+                      transition={{ 
+                        duration: 1.5, 
+                        repeat: Infinity, 
+                        repeatDelay: 3,
+                        ease: "easeInOut"
+                      }}
+                      className="origin-bottom-right"
+                    >
+                      <Hand className="h-6 w-6 lg:h-8 lg:w-8 text-tropical-500 fill-tropical-200" />
+                    </motion.div>
+                  </div>
+                  <p className="text-slate-600 text-sm lg:text-base leading-relaxed">
+                    {t("auth.login.welcomeSubtitle")}
+                  </p>
+                </div>
 
-          {/* Footer Link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mt-5 border-t border-slate-200 pt-4 text-center"
-          >
-            <p className="text-sm text-slate-600">
-              New user?{" "}
-              <Link
-                to="/register"
-                className="font-semibold text-tropical-600 hover:text-tropical-700 hover:underline transition-colors"
-              >
-                Create an account
-              </Link>
-            </p>
-          </motion.div>
+                {/* Form Content */}
+                <div className="w-full max-w-md mx-auto">
+                {error && (
+                    <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-start gap-3"
+                    >
+                    <div className="mt-0.5 min-w-[16px]"><Sparkles className="h-4 w-4 text-red-500" /></div>
+                    <span className="font-medium">{error}</span>
+                    </motion.div>
+                )}
+
+                <form
+                    className="space-y-4 lg:space-y-6"
+                    onSubmit={async (e) => {
+                    e.preventDefault();
+
+                    const rawLogin = login.trim();
+
+                    // Validate email format if using EMAIL method
+                    if (loginMethod === "EMAIL") {
+                        if (!rawLogin) {
+                        setError(t("auth.validation.emailRequired"));
+                        return;
+                        }
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(rawLogin)) {
+                        setError(t("auth.validation.emailInvalid"));
+                        return;
+                        }
+                    } else {
+                        if (!rawLogin) {
+                        setError(t("auth.validation.whatsappRequired"));
+                        return;
+                        }
+                        const normalized = normalizeWhatsAppPhone(rawLogin);
+                        if (!normalized) {
+                        setError(t("auth.validation.whatsappInvalidFormat"));
+                        return;
+                        }
+                    }
+
+                    // Prepare login value
+                    let loginValue: string;
+                    if (loginMethod === "EMAIL") {
+                        loginValue = rawLogin.toLowerCase();
+                    } else {
+                        const normalized = normalizeWhatsAppPhone(rawLogin);
+                        if (!normalized) {
+                        setError(t("auth.validation.whatsappInvalidFormat"));
+                        return;
+                        }
+                        loginValue = rawLogin.trim();
+                    }
+
+                    if (!password.trim()) {
+                        setError(t("auth.validation.passwordRequired"));
+                        return;
+                    }
+
+                    if (password.trim().length < 6) {
+                        setError(t("auth.validation.passwordMin"));
+                        return;
+                    }
+                    setLoading(true);
+                    setError(null);
+                    try {
+                        const resp = await api.post("/auth/user/login", {
+                        login: loginValue,
+                        password
+                        });
+                        const token = resp.data.data.token as string;
+                        setAuth(token, "USER");
+                        localStorage.removeItem("lokaclean_welcome_shown");
+                        navigate("/packages", { replace: true });
+                    } catch (err) {
+                        const errorMessage = getApiErrorMessage(err);
+                        let friendlyMessage = errorMessage;
+                        
+                        if (errorMessage.toLowerCase().includes("invalid credentials")) {
+                        if (loginMethod === "EMAIL") {
+                            friendlyMessage = t("auth.validation.loginFailed");
+                        } else {
+                            friendlyMessage = t("auth.validation.loginFailed");
+                        }
+                        } else if (errorMessage.toLowerCase().includes("nomor whatsapp tidak valid")) {
+                        friendlyMessage = t("auth.validation.whatsappInvalidFormat");
+                        } else if (errorMessage.toLowerCase().includes("password salah")) {
+                        friendlyMessage = t("auth.validation.loginFailed");
+                        } else if (errorMessage.toLowerCase().includes("tidak terdaftar")) {
+                        friendlyMessage = errorMessage;
+                        }
+                        
+                        setError(friendlyMessage);
+                    } finally {
+                        setLoading(false);
+                    }
+                    }}
+                >
+                    {/* Login Method Toggle */}
+                    <div className="space-y-1.5 lg:space-y-2">
+                    <div className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-wider">{t("auth.login.methodLabel")}</div>
+                    <div className="flex rounded-lg lg:rounded-xl border border-slate-200 bg-slate-50 p-1 lg:p-1.5">
+                        <button
+                        type="button"
+                        className={[
+                            "flex-1 rounded-md lg:rounded-lg px-3 py-2 lg:py-2.5 text-xs lg:text-sm font-semibold transition-all duration-200",
+                            loginMethod === "EMAIL"
+                            ? "bg-white text-tropical-600 shadow-sm ring-1 ring-slate-200"
+                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                        ].join(" ")}
+                        onClick={() => handleMethodChange("EMAIL")}
+                        >
+                        <div className="flex items-center justify-center gap-1.5 lg:gap-2">
+                            <Mail className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
+                            Email
+                        </div>
+                        </button>
+                        <button
+                        type="button"
+                        className={[
+                            "flex-1 rounded-md lg:rounded-lg px-3 py-2 lg:py-2.5 text-xs lg:text-sm font-semibold transition-all duration-200",
+                            loginMethod === "WHATSAPP"
+                            ? "bg-white text-tropical-600 shadow-sm ring-1 ring-slate-200"
+                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                        ].join(" ")}
+                        onClick={() => handleMethodChange("WHATSAPP")}
+                        >
+                        <div className="flex items-center justify-center gap-1.5 lg:gap-2">
+                            <Phone className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
+                            WhatsApp
+                        </div>
+                        </button>
+                    </div>
+                    </div>
+
+                    {/* Login Input */}
+                    <div className="space-y-1.5 lg:space-y-2">
+                        <label className="text-xs lg:text-sm font-semibold text-slate-700">
+                            {loginMethod === "EMAIL" ? t("auth.login.emailLabel") : t("auth.login.whatsappLabel")}
+                        </label>
+                        <div className="relative group">
+                            <div className="absolute left-3.5 lg:left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-tropical-500 text-slate-400">
+                            {loginMethod === "EMAIL" ? (
+                                <Mail className="h-4 w-4 lg:h-5 lg:w-5" />
+                            ) : (
+                                <Phone className="h-4 w-4 lg:h-5 lg:w-5" />
+                            )}
+                            </div>
+                            <input
+                            className="w-full rounded-lg lg:rounded-xl border border-slate-300 bg-white pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3.5 text-sm lg:text-base font-medium text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-4 focus:ring-tropical-500/10 focus:outline-none"
+                            type={loginMethod === "EMAIL" ? "email" : "tel"}
+                            inputMode={loginMethod === "EMAIL" ? "email" : "tel"}
+                            {...(loginMethod === "EMAIL" ? { autoComplete: "email" } : { autoComplete: "tel" })}
+                            value={login}
+                            onChange={(e) => {
+                                setLogin(e.target.value);
+                                setError(null);
+                            }}
+                            required
+                            placeholder={loginMethod === "EMAIL" ? t("auth.login.emailPlaceholder") : t("auth.login.whatsappPlaceholder")}
+                            />
+                        </div>
+                        {loginMethod === "WHATSAPP" && (
+                            <div className="text-[10px] lg:text-xs text-slate-500 pl-1">
+                            Format: <span className="font-medium">+kode negara</span> (e.g. +62)
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Password Input */}
+                    <div className="space-y-1.5 lg:space-y-2">
+                        <div className="flex justify-between items-center">
+                            <label className="text-xs lg:text-sm font-semibold text-slate-700">{t("auth.login.passwordLabel")}</label>
+                            <a href="#" className="text-[10px] lg:text-xs font-semibold text-tropical-600 hover:text-tropical-700">{t("auth.login.forgotPassword")}</a>
+                        </div>
+                        <div className="relative group">
+                            <div className="absolute left-3.5 lg:left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-tropical-500 text-slate-400">
+                            <Lock className="h-4 w-4 lg:h-5 lg:w-5" />
+                            </div>
+                            <input
+                            className="w-full rounded-lg lg:rounded-xl border border-slate-300 bg-white pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3.5 text-sm lg:text-base font-medium text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-4 focus:ring-tropical-500/10 focus:outline-none"
+                            type="password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            placeholder="••••••••"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <motion.button
+                    type="submit"
+                    disabled={loading || !isFormValid}
+                    whileHover={isFormValid ? { scale: 1.02, y: -1 } : {}}
+                    whileTap={isFormValid ? { scale: 0.98 } : {}}
+                    className={[
+                        "w-full rounded-xl px-4 py-3.5 text-base font-bold transition-all duration-300 mt-2 relative overflow-hidden group",
+                        isFormValid 
+                        ? "bg-gradient-to-r from-tropical-600 via-tropical-500 to-ocean-500 text-white shadow-[0_10px_20px_-5px_rgba(13,148,136,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)]" 
+                        : "bg-slate-100 text-slate-300 cursor-not-allowed shadow-none"
+                    ].join(" ")}
+                    >
+                    {/* Shine Effect */}
+                    {isFormValid && (
+                        <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer-slide bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
+                    )}
+                    
+                    <span className="flex items-center justify-center gap-2 relative z-20">
+                        {loading ? (
+                        <>
+                            <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
+                            />
+                            <span>{t("auth.login.loading")}</span>
+                        </>
+                        ) : (
+                        <>
+                            <Sparkles className={isFormValid ? "h-5 w-5" : "h-5 w-5 opacity-50"} />
+                            <span className="tracking-wide">{t("auth.login.submitButton")}</span>
+                        </>
+                        )}
+                    </span>
+                    </motion.button>
+                </form>
+
+                <div className="mt-8 text-center">
+                    <p className="text-sm text-slate-500 font-medium">
+                    {t("auth.login.footerText")}{" "}
+                    <Link
+                        to="/register"
+                        className="font-bold text-tropical-600 hover:text-tropical-700 transition-colors"
+                    >
+                        {t("auth.login.footerLink")}
+                    </Link>
+                    </p>
+                </div>
+                </div>
+            </div>
         </div>
       </motion.div>
     </div>

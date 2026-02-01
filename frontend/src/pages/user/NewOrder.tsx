@@ -9,17 +9,18 @@
  */
 
 import { useEffect, useMemo, useState, useRef } from "react";
+import type React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { MapPicker, type LatLng } from "../../components/MapPicker";
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
-import { loadMidtransSnap, openMidtransSnap } from "../../lib/midtrans";
 import { toDatetimeLocalValueWITA } from "../../utils/date";
 import { t, getLanguage } from "../../lib/i18n";
-import { motion, AnimatePresence } from "framer-motion";
-import { Package, Clock, MapPin, Camera, Calendar, CreditCard, AlertCircle, Lightbulb, Sparkles, CheckCircle2, X, Upload, Image as ImageIcon, Zap, Plus, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Package, MapPin, Camera, Calendar, CreditCard, AlertCircle, Lightbulb, Sparkles, CheckCircle2, X, Upload, Image as ImageIcon, Zap, Plus, ArrowRight, Landmark, WalletCards } from "lucide-react";
 import { getPackageIcon, getPackageGradient } from "../../utils/packageIcon";
+import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
 import { playOrderNotificationSound } from "../../utils/sound";
 import type { PaketCleaning, PaymentMethod, Pesanan, User } from "../../types/api";
 
@@ -41,7 +42,7 @@ export function NewOrderPage() {
   const [loading, setLoading] = useState(true);
 
   const [paketId, setPaketId] = useState<number | null>(presetIdNum && Number.isFinite(presetIdNum) ? presetIdNum : null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [scheduledDate, setScheduledDate] = useState<string>(() => toDatetimeLocalValueWITA(new Date()));
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<LatLng | null>(null);
@@ -53,7 +54,6 @@ export function NewOrderPage() {
   const [error, setError] = useState<string | null>(null);
   const [usingDefaultLocation, setUsingDefaultLocation] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [processingPayment, setProcessingPayment] = useState(false);
   const [geocodingAddress, setGeocodingAddress] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -439,7 +439,7 @@ export function NewOrderPage() {
             />
             
             {/* Content Container */}
-            <div className="relative z-10 px-3 sm:px-6 lg:px-8 py-3 sm:py-5 lg:py-6">
+            <div className="relative z-10 px-3 sm:px-6 lg:px-8 pt-3 pb-4 sm:py-5 lg:py-6">
               <div className="flex items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2 sm:gap-4 lg:gap-5 flex-1 min-w-0">
                   {/* Premium Icon with Organic Shape - Mobile Optimized */}
@@ -574,7 +574,7 @@ export function NewOrderPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2, duration: 0.5 }}
-                    className="text-lg sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-white leading-tight sm:leading-[1.2] tracking-tight sm:tracking-[-0.02em] font-display line-clamp-2 sm:line-clamp-none"
+                    className="text-base sm:text-xl lg:text-2xl xl:text-3xl font-bold text-white leading-tight sm:leading-[1.2] tracking-tight sm:tracking-[-0.02em] font-display line-clamp-2 sm:line-clamp-none"
                     style={{
                       textShadow: "0 2px 4px rgba(0,0,0,0.2)",
                     }}
@@ -585,7 +585,7 @@ export function NewOrderPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3, duration: 0.5 }}
-                    className="text-xs sm:text-base lg:text-lg text-blue-50 mt-1 sm:mt-2 font-medium flex items-start sm:items-center gap-1 sm:gap-2 leading-snug sm:leading-relaxed"
+                    className="text-[11px] sm:text-sm lg:text-base text-blue-50 mt-1 sm:mt-2 font-medium flex items-start sm:items-center gap-1 sm:gap-2 leading-snug sm:leading-relaxed"
                   >
                     <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-yellow-300 flex-shrink-0 mt-0.5 sm:mt-0" />
                     <span className="line-clamp-2 sm:line-clamp-none break-words">{t("newOrder.subtitle")}</span>
@@ -786,19 +786,21 @@ export function NewOrderPage() {
                         
                         <div className="relative z-10 flex items-start gap-2.5 sm:gap-3">
                         <motion.div 
-                          whileHover={{ scale: 1.15, rotate: [0, -10, 10, -10, 0] }}
-                          transition={{ duration: 0.5, type: "spring", stiffness: 300 }}
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.3, type: "spring", stiffness: 250 }}
                           className="relative flex-shrink-0"
                         >
-                          {/* Outer glow ring */}
-                          <div className={`absolute -inset-1 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradient} opacity-0 group-hover/package:opacity-30 blur-md transition-opacity duration-300`} />
-                          
-                          {/* Icon container with 3D effect */}
-                          <div className={`relative flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradient} shadow-[0_8px_24px_rgba(0,0,0,0.2),inset_0_2px_4px_rgba(255,255,255,0.3)] group-hover/package:shadow-[0_12px_32px_rgba(0,0,0,0.3),inset_0_2px_4px_rgba(255,255,255,0.4)] transition-all duration-300 transform-3d-package-icon`}
-                          >
-                            {/* Inner shine */}
-                            <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/30 via-transparent to-transparent" />
-                            <Icon className="h-5 w-5 sm:h-7 sm:w-7 text-white relative z-10 drop-shadow-[0_4px_8px_rgba(0,0,0,0.4)]" />
+                          <div className={`absolute -inset-1 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradient} opacity-0 group-hover/package:opacity-40 blur-md transition-opacity duration-300`} />
+                          <div className={`relative h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl overflow-hidden border border-white/40 shadow-[0_8px_24px_rgba(0,0,0,0.18)] bg-gradient-to-br ${gradient}`}>
+                            <img
+                              src={getPackageImage(p.name, p.image)}
+                              alt={getPackageImageAlt(displayName)}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = getPackageImage(p.name);
+                              }}
+                            />
                           </div>
                         </motion.div>
                         <div className="flex-1 min-w-0 overflow-hidden">
@@ -818,13 +820,11 @@ export function NewOrderPage() {
                           </div>
                           <p className="mt-1.5 text-xs sm:text-base text-slate-600 line-clamp-3 sm:line-clamp-2 leading-snug sm:leading-relaxed">{displayDesc}</p>
                           <div className="mt-2.5 sm:mt-3 flex flex-wrap items-center gap-1.5 sm:gap-3 text-[10px] sm:text-sm">
-                            <span className="flex items-center gap-1 font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg whitespace-nowrap">
-                              <Clock className="h-3 w-3 sm:h-5 sm:w-5 flex-shrink-0" />
-                              <span className="truncate">{p.estimated_duration} {t("newOrder.duration")}</span>
-                            </span>
-                            <span className="flex items-center gap-1 font-bold text-yellow-600 bg-yellow-50 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg whitespace-nowrap">
+                            <span className="flex items-center gap-1.5 font-bold text-yellow-700 bg-yellow-100 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-md sm:rounded-lg whitespace-nowrap shadow-sm">
                               <CreditCard className="h-3 w-3 sm:h-5 sm:w-5 flex-shrink-0" />
-                              <span className="truncate">Rp {p.price.toLocaleString("id-ID")}</span>
+                              <span className="truncate text-[11px] sm:text-sm">
+                                Rp {p.price.toLocaleString("id-ID")}
+                              </span>
                             </span>
                           </div>
                         </div>
@@ -911,37 +911,38 @@ export function NewOrderPage() {
                 <CreditCard className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0" />
               <span className="flex-1 min-w-0">{t("newOrder.selectPaymentMethod")}</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-              {(["QRIS", "DANA", "TRANSFER", "CASH"] as PaymentMethod[]).map((method) => {
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              {(["TRANSFER", "CASH"] as PaymentMethod[]).map((method) => {
                 const isSelected = paymentMethod === method;
-                const isDisabled = method !== "CASH"; // Only CASH is enabled
+                const isDisabled = false; // Enable all payment methods
+                const displayLabel = method === "TRANSFER" ? "Transfer / QRIS" : "Cash";
+                
                 return (
                   <motion.button
                     key={method}
                     type="button"
                     whileHover={!isDisabled ? { 
-                      scale: 1.06, 
-                      y: -3,
-                      rotateY: 5,
+                      scale: 1.02, 
+                      y: -2,
                       boxShadow: isSelected
                         ? "0 12px 32px rgba(244, 208, 63, 0.3), 0 6px 16px rgba(255, 152, 0, 0.25)"
                         : "0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(244, 208, 63, 0.2)"
                     } : {}}
-                    whileTap={!isDisabled ? { scale: 0.95 } : {}}
+                    whileTap={!isDisabled ? { scale: 0.98 } : {}}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     onClick={() => !isDisabled && setPaymentMethod(method)}
                     disabled={isDisabled}
                     className={`relative overflow-visible p-0 transition-all duration-300 group/payment ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     {/* Innovative payment card design */}
-                    <div className="relative">
+                    <div className="relative h-full">
                       {/* Outer glow for selected */}
                       {isSelected && !isDisabled && (
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 rounded-xl opacity-30 blur-md animate-pulse" />
                       )}
                       
                       {/* Main card */}
-                      <div className={`relative overflow-hidden rounded-xl p-3 sm:p-4 transition-all duration-300 ${
+                      <div className={`relative h-full overflow-hidden rounded-xl p-3 sm:p-4 transition-all duration-300 ${
                         isDisabled
                           ? "bg-slate-50 border-2 border-slate-200 clip-path-payment-default"
                           : isSelected
@@ -995,7 +996,11 @@ export function NewOrderPage() {
                         {!isDisabled && isSelected && (
                           <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/30 via-transparent to-transparent" />
                         )}
-                        <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 relative z-10" />
+                        {method === "CASH" ? (
+                          <WalletCards className="h-5 w-5 sm:h-6 sm:w-6 relative z-10" />
+                        ) : (
+                          <Landmark className="h-5 w-5 sm:h-6 sm:w-6 relative z-10" />
+                        )}
                       </div>
                       <span className={`text-xs sm:text-sm font-bold ${
                         isDisabled
@@ -1004,7 +1009,7 @@ export function NewOrderPage() {
                           ? "text-yellow-700"
                           : "text-slate-700"
                       }`}>
-                        {method}
+                        {displayLabel}
                       </span>
                       {isSelected && !isDisabled && (
                         <motion.div
@@ -1024,23 +1029,21 @@ export function NewOrderPage() {
             </div>
             </div>
 
-            <div className="mt-4 rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 p-4 sm:p-5 text-sm sm:text-base text-slate-700 border border-blue-200/60 shadow-[0_2px_8px_rgba(37,99,235,0.1),0_1px_3px_rgba(6,182,212,0.08)] leading-relaxed">
-            {paymentMethod === "CASH" ? (
-              <div className="flex items-start gap-2.5">
-                <svg className="h-5 w-5 mt-0.5 text-yellow-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span dangerouslySetInnerHTML={{ __html: t("newOrder.cashPaymentInfo") }} />
-              </div>
-            ) : (
-              <div className="flex items-start gap-2.5">
-                <svg className="h-5 w-5 mt-0.5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <span dangerouslySetInnerHTML={{ __html: t("newOrder.nonCashPaymentInfo").replace("{method}", paymentMethod) }} />
+            {paymentMethod && (
+              <div className="mt-4 rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 p-4 sm:p-5 text-sm sm:text-base text-slate-700 border border-blue-200/60 shadow-[0_2px_8px_rgba(37,99,235,0.1),0_1px_3px_rgba(6,182,212,0.08)] leading-relaxed">
+                {paymentMethod === "CASH" ? (
+                  <div className="flex items-start gap-2.5">
+                    <WalletCards className="h-5 w-5 mt-0.5 text-yellow-600 flex-shrink-0" />
+                    <span dangerouslySetInnerHTML={{ __html: t("newOrder.cashPaymentInfo") }} />
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-2.5">
+                    <Landmark className="h-5 w-5 mt-0.5 text-blue-600 flex-shrink-0" />
+                    <span dangerouslySetInnerHTML={{ __html: t("newOrder.nonCashPaymentInfo").replace("{method}", paymentMethod) }} />
+                  </div>
+                )}
               </div>
             )}
-          </div>
           </div>
         </motion.div>
         </div>
@@ -1405,16 +1408,16 @@ export function NewOrderPage() {
             >
               <div className="flex items-center gap-2 mb-4">
                 <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">{t("newOrder.orderSummary")}</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">{t("newOrder.orderSummary")}</h3>
               </div>
-              <div className="space-y-3 text-sm sm:text-base">
+              <div className="space-y-3 text-xs sm:text-sm">
                 <div className="flex items-center justify-between leading-relaxed bg-white/60 rounded-lg px-3 py-2">
                   <span className="text-slate-600 font-medium">{t("newOrder.selectPackage")}:</span>
                   <span className="font-bold text-slate-900">{selectedPackage.name}</span>
                 </div>
                 <div className="flex items-center justify-between leading-relaxed bg-white/60 rounded-lg px-3 py-2">
                   <span className="text-slate-600 font-medium">{t("common.total")}:</span>
-                  <span className="font-bold text-yellow-600 text-lg sm:text-xl">
+                  <span className="font-bold text-yellow-600 text-base sm:text-lg">
                     Rp {selectedPackage.price.toLocaleString("id-ID")}
                   </span>
                 </div>
@@ -1429,18 +1432,19 @@ export function NewOrderPage() {
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="group relative mt-6 w-full overflow-hidden rounded-2xl sm:rounded-3xl px-4 sm:px-6 py-4 sm:py-5 text-sm sm:text-base lg:text-lg font-bold text-white transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-2.5 shadow-[0_8px_32px_rgba(37,99,235,0.3),0_4px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_12px_48px_rgba(37,99,235,0.4),0_6px_24px_rgba(6,182,212,0.3)]"
+            className="group relative mt-3 w-full overflow-hidden rounded-2xl sm:rounded-3xl px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm lg:text-base font-bold text-white transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-2.5 shadow-[0_8px_32px_rgba(37,99,235,0.3),0_4px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_12px_48px_rgba(37,99,235,0.4),0_6px_24px_rgba(6,182,212,0.3)]"
             style={{
               background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #3b82f6 100%)',
               backgroundSize: '200% 200%',
             }}
-            disabled={submitting || processingPayment || !paketId || !location || !address || beforePhotos.length === 0}
+            disabled={submitting || !paketId || !location || !address || beforePhotos.length === 0 || !paymentMethod}
             onClick={async () => {
                   setError(null);
                   if (!paketId) return setError(t("newOrder.pleaseSelectPackage"));
                   if (!location) return setError(t("newOrder.pleaseSelectLocation"));
                   if (beforePhotos.length === 0) return setError(t("newOrder.pleaseUploadPhoto"));
                   if (!user) return setError(t("newOrder.loadingUserData"));
+                  if (!paymentMethod) return setError(t("newOrder.pleaseSelectPaymentMethod") || "Pilih metode pembayaran dulu ya");
 
                   setSubmitting(true);
                   try {
@@ -1465,63 +1469,10 @@ export function NewOrderPage() {
                       console.warn('[NewOrder] Failed to play sound:', err);
                     });
 
-                    // Step 2: If NON-CASH payment, request Snap token and open payment UI
-                    const isNonCash = paymentMethod !== "CASH";
-                    if (isNonCash) {
-                      setSubmitting(false);
-                      setProcessingPayment(true);
-
-                      try {
-                        // Request Snap token from backend
-                        const snapResp = await api.post("/payments/snap-token", {
-                          pesanan_id: order.id,
-                          customer_details: {
-                            first_name: user.full_name.split(" ")[0] || user.full_name,
-                            last_name: user.full_name.split(" ").slice(1).join(" ") || undefined,
-                            email: user.email,
-                            phone: user.phone_number
-                          }
-                        });
-
-                        const { snap_token } = snapResp.data.data;
-
-                        // Load Midtrans Snap script
-                        // Get client key from env (should match backend MIDTRANS_CLIENT_KEY)
-                        const clientKey =
-                          import.meta.env.VITE_MIDTRANS_CLIENT_KEY || "SB-Mid-client-xxxxxxxxxxxxxxxxxxxxx";
-                        const isProduction = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === "true";
-                        await loadMidtransSnap(clientKey, isProduction);
-
-                        // Open Midtrans payment UI
-                        openMidtransSnap(snap_token, {
-                          onSuccess: () => {
-                            // Don't trust this callback! Payment status will be updated via webhook.
-                            // Redirect to order detail page - user can check status there
-                            navigate(`/orders/${order.id}`, { replace: true });
-                          },
-                          onPending: () => {
-                            // Payment is pending (e.g., bank transfer needs confirmation)
-                            // Redirect to order detail page - user can check status there
-                            navigate(`/orders/${order.id}`, { replace: true });
-                          },
-                          onError: () => {
-                            setError(t("newOrder.paymentFailed"));
-                            setProcessingPayment(false);
-                          },
-                          onClose: () => {
-                            // User closed payment popup without completing
-                            // Redirect to order detail page - payment is still PENDING
-                            navigate(`/orders/${order.id}`, { replace: true });
-                          }
-                        });
-                      } catch (err) {
-                        setError(getApiErrorMessage(err) || t("newOrder.failedToInitializePayment"));
-                        setProcessingPayment(false);
-                      }
-                    } else {
-                      // CASH payment - just redirect to order detail
-                    navigate(`/orders/${order.id}`, { replace: true });
-                    }
+                    navigate(`/orders/${order.id}`, { 
+                      replace: true,
+                      state: { autoPay: paymentMethod !== "CASH" }
+                    });
                   } catch (err) {
                     setError(getApiErrorMessage(err));
                   } finally {
@@ -1579,16 +1530,7 @@ export function NewOrderPage() {
               
               {/* Content */}
               <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-2.5">
-                {processingPayment ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="h-4 w-4 sm:h-5 sm:w-5 rounded-full border-2 border-white/30 border-t-white flex-shrink-0"
-                    />
-                    <span className="font-bold">{t("newOrder.processingPayment")}</span>
-                  </>
-                ) : submitting ? (
+                {submitting ? (
                   <>
                     <motion.div
                       animate={{ rotate: 360 }}
@@ -1643,5 +1585,3 @@ export function NewOrderPage() {
     </div>
   );
 }
-
-

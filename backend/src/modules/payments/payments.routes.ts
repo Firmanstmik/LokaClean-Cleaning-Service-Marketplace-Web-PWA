@@ -1,21 +1,21 @@
 /**
- * User payment routes.
- *
- * Routes:
- * - POST /payments/snap-token - Request Snap token for NON-CASH payment
- * - POST /payments/webhook - Midtrans webhook (no auth required)
+ * Payment routes for Midtrans integration.
  */
 
 import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth";
-import { requestSnapTokenHandler, webhookHandler } from "./payments.controller";
+import { requireActor } from "../../middleware/requireActor";
+import { generateSnapTokenHandler, webhookHandler } from "./payments.controller";
 
 export const paymentsRouter = Router();
 
-// Webhook endpoint (no auth - Midtrans calls this directly)
+// Public webhook endpoint (no auth required - Midtrans calls this directly)
 paymentsRouter.post("/webhook", webhookHandler);
 
-// Snap token endpoint (requires user authentication)
-paymentsRouter.post("/snap-token", authenticate, requestSnapTokenHandler);
+// Authenticated endpoints require USER role
+paymentsRouter.use(authenticate, requireActor("USER"));
+
+// Generate Snap token for order payment
+paymentsRouter.post("/snap-token", generateSnapTokenHandler);
 

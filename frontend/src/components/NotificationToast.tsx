@@ -1,13 +1,6 @@
 /**
- * Modern Toast Notification Component for LocaClean
- * 
- * FEATURES:
- * - Auto-close after 2.5 seconds (configurable)
- * - Each notification controls its own timer (useRef + useEffect)
- * - Timer pauses on hover, resumes after hover ends
- * - Reminder notifications never auto-close
- * - Modern UI with gradients and smooth animations
- * - Smooth fade-in/slide-down on appear, fade-out on close
+ * Modern Toast Notification Component for LokaClean
+ * Mobile-first, sleek, glassmorphism style.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,7 +45,7 @@ export function NotificationToast({
   
   // CRITICAL: useRef to store timeout ID - survives re-renders
   // This prevents timer reset when parent component re-renders
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasPlayedSoundRef = useRef(false);
 
   // Determine if this is a reminder notification

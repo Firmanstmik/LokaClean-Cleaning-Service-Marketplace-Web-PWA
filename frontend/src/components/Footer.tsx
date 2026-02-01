@@ -4,6 +4,8 @@
 
 import { motion } from "framer-motion";
 import { Instagram, Facebook, Phone, Mail, Clock, MessageCircle, Youtube, Twitter } from "lucide-react";
+import { t, getLanguage } from "../lib/i18n";
+import { useEffect, useState } from "react";
 
 interface FooterProps {
   variant?: "all" | "minimal" | "contact-only";
@@ -11,6 +13,13 @@ interface FooterProps {
 
 export function Footer({ variant = "all" }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const [, setLang] = useState(getLanguage());
+
+  useEffect(() => {
+    const handleLanguageChange = () => setLang(getLanguage());
+    window.addEventListener("languagechange", handleLanguageChange);
+    return () => window.removeEventListener("languagechange", handleLanguageChange);
+  }, []);
 
   return (
     <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
@@ -44,40 +53,40 @@ export function Footer({ variant = "all" }: FooterProps) {
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-3 sm:py-8 lg:py-12 pb-28 sm:pb-8 lg:pb-12">
+      <div className="relative z-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-3 sm:py-8 lg:py-12 pb-8 sm:pb-8 lg:pb-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-8 lg:gap-12">
           {/* Brand Section */}
           <div className="space-y-1.5 sm:space-y-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="h-7 w-7 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg sm:rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/20 flex-shrink-0">
                 <img
-                  src="/img/Logo LocaClean2.jpg"
+                  src="/img/Logo_LokaClean.jpg"
                   alt="LokaClean Logo"
                   className="h-full w-full object-contain p-0.5 sm:p-1"
                 />
               </div>
               <div className="min-w-0">
                 <h3 className="text-xs sm:text-lg lg:text-xl font-black text-white truncate">LokaClean</h3>
-                <p className="text-[9px] sm:text-xs text-slate-300 truncate">Clean Comfort, Island Style</p>
+                <p className="text-[9px] sm:text-xs text-slate-300 truncate">{t('home.footer.tagline')}</p>
               </div>
             </div>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed hidden sm:block">
-              Professional cleaning services for your home and office. Quality service, island hospitality.
+              {t('home.footer.description')}
             </p>
           </div>
 
           {/* Contact Information */}
           {(variant === "all" || variant === "contact-only") && (
             <div className="space-y-1.5 sm:space-y-4">
-              <h4 className="text-[11px] sm:text-base font-bold text-white mb-1.5 sm:mb-4">Contact Us</h4>
-              <div className="space-y-1.5 sm:space-y-3">
+              <h4 className="text-[11px] sm:text-base font-bold text-white mb-1.5 sm:mb-4">{t('home.footer.contactUs')}</h4>
+              <div className="space-y-3 sm:space-y-3">
                 <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-300">
                   <div className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 rounded-md sm:rounded-lg bg-tropical-500/20 flex items-center justify-center">
                     <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-tropical-400" />
                   </div>
                   <a
                     href="tel:+6281234567890"
-                    className="hover:text-tropical-400 transition-colors text-[11px] sm:text-sm"
+                    className="hover:text-tropical-400 transition-colors text-xs sm:text-sm"
                   >
                     +62 812-3456-7890
                   </a>
@@ -88,7 +97,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   </div>
                   <a
                     href="mailto:info@lokaclean.com"
-                    className="hover:text-ocean-400 transition-colors break-all text-[11px] sm:text-sm"
+                    className="hover:text-ocean-400 transition-colors break-all text-xs sm:text-sm"
                   >
                     info@lokaclean.com
                   </a>
@@ -97,7 +106,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   <div className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 rounded-md sm:rounded-lg bg-sun-500/20 flex items-center justify-center">
                     <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-sun-400" />
                   </div>
-                  <span className="text-[11px] sm:text-sm">Mon - Sat: 8:00 AM - 6:00 PM</span>
+                  <span className="text-xs sm:text-sm">{t('home.footer.hours')}</span>
                 </div>
               </div>
             </div>
@@ -106,7 +115,7 @@ export function Footer({ variant = "all" }: FooterProps) {
           {/* Social Media & Links - Premium Glassmorphism Design */}
           {variant === "all" && (
             <div className="space-y-1.5 sm:space-y-4">
-              <h4 className="text-[11px] sm:text-base font-bold text-white mb-2 sm:mb-4">Follow Us</h4>
+              <h4 className="text-[11px] sm:text-base font-bold text-white mb-2 sm:mb-4">{t('home.footer.followUs')}</h4>
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 {/* Instagram - Premium Glassmorphism */}
                 <motion.a
@@ -249,7 +258,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                 </motion.a>
               </div>
               <p className="text-[10px] sm:text-xs text-slate-400 mt-2 sm:mt-4 hidden sm:block">
-                Stay connected for updates, tips, and special offers.
+                {t('home.footer.socialText')}
               </p>
             </div>
           )}
@@ -259,7 +268,7 @@ export function Footer({ variant = "all" }: FooterProps) {
         <div className="mt-3 sm:mt-8 lg:mt-12 pt-2.5 sm:pt-6 lg:pt-8 border-t border-white/10 pb-4 sm:pb-0">
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-2 sm:gap-4">
             <p className="text-[11px] sm:text-xs lg:text-sm text-white text-center sm:text-left font-semibold leading-tight px-1 py-1">
-              © {currentYear} LokaClean. All rights reserved.
+              © {currentYear} LokaClean. {t('home.footer.rightsReserved')}
             </p>
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center">
               <a
@@ -270,7 +279,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   // Privacy policy link - can be implemented later
                 }}
               >
-                Privacy Policy
+                {t('home.footer.privacyPolicy')}
               </a>
               <span className="text-slate-600 text-[10px] sm:text-xs">•</span>
               <a
@@ -281,7 +290,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   // Terms of service link - can be implemented later
                 }}
               >
-                Terms of Service
+                {t('home.footer.termsOfService')}
               </a>
             </div>
           </div>

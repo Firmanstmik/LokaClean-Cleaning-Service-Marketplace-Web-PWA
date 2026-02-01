@@ -36,6 +36,11 @@ import type { LatLng } from "../../components/MapPicker";
 
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
+
+function formatOrderNumber(orderNumber: number | null | undefined): string {
+  if (!orderNumber) return "-";
+  return `LC-${orderNumber.toString().padStart(4, "0")}`;
+}
 import { toAbsoluteUrl, parsePhotoPaths } from "../../lib/urls";
 import { AnimatedCard } from "../../components/AnimatedCard";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -232,7 +237,7 @@ export function AdminOrderDetailPage() {
               const Icon = getPackageIcon(order.paket.name);
               return <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />;
             })()}
-            Order #{order.order_number}
+            Order {formatOrderNumber(order.order_number)}
           </div>
           <h1 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent leading-tight mb-2">
             {order.paket.name}
@@ -625,7 +630,7 @@ export function AdminOrderDetailPage() {
           setActionSuccess(null);
           try {
             await api.delete(`/admin/orders/${order.id}`);
-            setActionSuccess(`✅ Pesanan #${order.order_number} berhasil dihapus!`);
+            setActionSuccess(`✅ Pesanan ${formatOrderNumber(order.order_number)} berhasil dihapus!`);
             
             // Navigate after showing success message briefly
             setTimeout(() => {
@@ -639,7 +644,7 @@ export function AdminOrderDetailPage() {
           }
         }}
         title="Hapus Pesanan?"
-        message={`Nomor Pesanan: #${order?.order_number}\nPaket: ${order?.paket.name}\nStatus: ${order?.status}\nCustomer: ${order?.user.full_name}\n\nApakah Anda yakin ingin menghapus pesanan ini?\nTindakan ini TIDAK DAPAT DIBATALKAN dan semua data terkait akan dihapus permanen.`}
+        message={`Nomor Pesanan: ${formatOrderNumber(order?.order_number)}\nPaket: ${order?.paket.name}\nStatus: ${order?.status}\nCustomer: ${order?.user.full_name}\n\nApakah Anda yakin ingin menghapus pesanan ini?\nTindakan ini TIDAK DAPAT DIBATALKAN dan semua data terkait akan dihapus permanen.`}
         confirmText="Ya, Hapus"
         cancelText="Batal"
         variant="danger"

@@ -1,3 +1,4 @@
+/* global self, caches, fetch, clients, URL */
 /**
  * Service Worker for LokaClean - Background Notifications
  */
@@ -10,7 +11,7 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
         '/',
-        '/img/logo.png'
+        '/img/Logo_LokaClean.jpg'
       ]);
     })
   );
@@ -77,8 +78,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'LokaClean';
   const options = {
     body: data.message || 'You have a new notification',
-    icon: '/img/Logo LocaClean2.jpg',
-    badge: '/img/Logo LocaClean2.jpg',
+    icon: '/img/Logo_LokaClean.jpg',
+    badge: '/img/Logo_LokaClean.jpg',
     tag: data.tag || 'notification',
     requireInteraction: false,
     vibrate: [200, 100, 200],
@@ -88,7 +89,7 @@ self.addEventListener('push', (event) => {
       {
         action: 'view',
         title: 'View Order',
-        icon: '/img/Logo LocaClean2.jpg'
+        icon: '/img/Logo_LokaClean.jpg'
       }
     ] : []
   };

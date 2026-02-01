@@ -7,6 +7,7 @@
  */
 
 import type { Request, Response } from "express";
+import type { Pesanan } from "@prisma/client";
 import { OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 
 import { prisma } from "../../db/prisma";
@@ -19,7 +20,8 @@ import {
   adminUpdateStatusSchema,
   createOrderInputSchema,
   createRatingSchema,
-  createTipSchema
+  createTipSchema,
+  updatePaymentMethodSchema
 } from "./orders.schemas";
 
 const userSelect = {
@@ -141,6 +143,19 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
     include: orderInclude
   });
 
+  // For NON-CASH payments, create a notification reminding user to pay.
+  if (order.pembayaran?.method && order.pembayaran.method !== PaymentMethod.CASH) {
+    await prisma.notification.create({
+      data: {
+        user_id: order.user_id,
+        pesanan_id: order.id,
+        title: "Segera Lakukan Pembayaran",
+        message:
+          "Kamu memilih metode pembayaran non-tunai. Segera selesaikan pembayaran dalam 1 jam agar pesanan bisa diproses. Pesanan akan dibatalkan otomatis jika belum dibayar."
+      }
+    });
+  }
+
   return created(res, { order });
 });
 
@@ -227,7 +242,25 @@ export const uploadAfterPhotoUserHandler = asyncHandler(async (req: Request, res
 
   // Ensure the order belongs to the user and check status
   const order = await getOrderForUserOrThrow(id, req.auth.id);
-  
+
+  const scheduledMs = order.scheduled_date instanceof Date
+    ? order.scheduled_date.getTime()
+    : new Date(order.scheduled_date as unknown as string).getTime();
+  if (Number.isFinite(scheduledMs)) {
+    const graceDeadlineMs = scheduledMs + 5 * 60 * 1000;
+    if (Date.now() < graceDeadlineMs) {
+      throw new HttpError(400, "After photo can only be uploaded 5 minutes after the scheduled time");
+    }
+  }
+
+  if (order.pembayaran) {
+    if (order.pembayaran.method === PaymentMethod.CASH) {
+      // Allowed without upfront payment
+    } else if (order.pembayaran.status !== PaymentStatus.PAID) {
+      throw new HttpError(400, "Payment must be completed before uploading after photo");
+    }
+  }
+
   // Only allow upload when status is IN_PROGRESS (admin has confirmed)
   if (order.status !== OrderStatus.IN_PROGRESS) {
     throw new HttpError(400, `Cannot upload after photo. Order status must be IN_PROGRESS. Current status: ${order.status}`);
@@ -263,6 +296,25 @@ export const verifyCompletionHandler = asyncHandler(async (req: Request, res: Re
   if (order.status !== OrderStatus.IN_PROGRESS) {
     throw new HttpError(400, "Order must be IN_PROGRESS to verify completion");
   }
+
+  const scheduledMs = order.scheduled_date instanceof Date
+    ? order.scheduled_date.getTime()
+    : new Date(order.scheduled_date as unknown as string).getTime();
+  if (Number.isFinite(scheduledMs)) {
+    const graceDeadlineMs = scheduledMs + 5 * 60 * 1000;
+    if (Date.now() < graceDeadlineMs) {
+      throw new HttpError(400, "Order can only be completed 5 minutes after the scheduled time");
+    }
+  }
+
+  if (order.pembayaran) {
+    if (order.pembayaran.method === PaymentMethod.CASH) {
+      // Allowed without upfront payment
+    } else if (order.pembayaran.status !== PaymentStatus.PAID) {
+      throw new HttpError(400, "Payment must be completed before finishing the order");
+    }
+  }
+
   // Check if after photo exists (supports both JSON array and single string)
   let hasAfterPhoto = false;
   if (order.room_photo_after) {
@@ -386,10 +438,77 @@ export const createTipHandler = asyncHandler(async (req: Request, res: Response)
 });
 
 /**
+ * USER: Update payment method (e.g. CASH <-> TRANSFER) while order is still pending
+ * and payment has not been processed yet.
+ */
+export const updatePaymentMethodHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.auth) throw new HttpError(401, "Unauthenticated");
+  const id = parseId(req.params.id);
+  const input = updatePaymentMethodSchema.parse(req.body);
+
+  const order = await getOrderForUserOrThrow(id, req.auth.id);
+
+  if (order.status !== OrderStatus.PENDING) {
+    throw new HttpError(400, "Payment method can only be changed while order is PENDING");
+  }
+
+  if (!order.pembayaran || order.pembayaran.status !== PaymentStatus.PENDING) {
+    throw new HttpError(400, "Payment method can only be changed while payment is still PENDING");
+  }
+
+  // If method is unchanged, just return current order
+  if (order.pembayaran.method === input.payment_method) {
+    return ok(res, { order });
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.pembayaran.update({
+      where: { id: order.pembayaran!.id },
+      data: {
+        method: input.payment_method as PaymentMethod,
+        // Clear any existing Midtrans order id when changing method
+        midtrans_order_id: null
+      }
+    });
+
+    // Refresh order with relations
+    return await tx.pesanan.findUnique({
+      where: { id: order.id },
+      include: orderInclude
+    });
+  });
+
+  if (!updated) {
+    throw new HttpError(500, "Failed to update payment method");
+  }
+
+  return ok(res, { order: updated });
+});
+
+/**
  * ADMIN: View all orders.
  */
 export const listAllOrdersAdminHandler = asyncHandler(async (_req: Request, res: Response) => {
   const items = await prisma.pesanan.findMany({
+    where: {
+      OR: [
+        // All CASH orders (whatever their payment status)
+        {
+          pembayaran: {
+            method: PaymentMethod.CASH
+          }
+        },
+        // Non-CASH orders that have been PAID
+        {
+          pembayaran: {
+            method: {
+              not: PaymentMethod.CASH
+            },
+            status: PaymentStatus.PAID
+          }
+        }
+      ]
+    },
     orderBy: { created_at: "desc" },
     include: orderInclude
   });
@@ -400,13 +519,32 @@ export const listAllOrdersAdminHandler = asyncHandler(async (_req: Request, res:
  * ADMIN: Get pending orders count for notifications.
  */
 export const getPendingOrdersCountHandler = asyncHandler(async (_req: Request, res: Response) => {
-  const count = await prisma.pesanan.count({
-    where: { status: OrderStatus.PENDING }
-  });
-  
+  const where = {
+    status: OrderStatus.PENDING,
+    OR: [
+      // CASH orders are always visible to admin
+      {
+        pembayaran: {
+          method: PaymentMethod.CASH
+        }
+      },
+      // Non-CASH but already PAID (e.g. user paid quickly via Midtrans)
+      {
+        pembayaran: {
+          method: {
+            not: PaymentMethod.CASH
+          },
+          status: PaymentStatus.PAID
+        }
+      }
+    ]
+  };
+
+  const count = await prisma.pesanan.count({ where });
+
   // Also get the latest pending order for notification
-  const latestPendingOrder = await prisma.pesanan.findFirst({
-    where: { status: OrderStatus.PENDING },
+  const latestPendingOrder = (await prisma.pesanan.findFirst({
+    where,
     orderBy: { created_at: "desc" },
     include: {
       user: {
@@ -422,8 +560,11 @@ export const getPendingOrdersCountHandler = asyncHandler(async (_req: Request, r
         }
       }
     }
-  });
-  
+  })) as (Pesanan & {
+    user: { full_name: string };
+    paket: { name: string };
+  }) | null;
+
   return ok(res, { 
     count,
     latestOrder: latestPendingOrder ? {
@@ -451,6 +592,7 @@ export const getOrderAdminHandler = asyncHandler(async (req: Request, res: Respo
 export const assignOrderAdminHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.auth) throw new HttpError(401, "Unauthenticated");
   const id = parseId(req.params.id);
+  const adminId = req.auth!.id;
 
   const order = await getOrderOrThrow(id);
   if (order.status === OrderStatus.COMPLETED) throw new HttpError(400, "Cannot assign a COMPLETED order");
@@ -460,7 +602,7 @@ export const assignOrderAdminHandler = asyncHandler(async (req: Request, res: Re
   const updated = await prisma.$transaction(async (tx) => {
     const updatedOrder = await tx.pesanan.update({
       where: { id },
-      data: { admin_id: req.auth.id, status: OrderStatus.IN_PROGRESS },
+      data: { admin_id: adminId, status: OrderStatus.IN_PROGRESS },
       include: orderInclude
     });
 
@@ -492,6 +634,7 @@ export const assignOrderAdminHandler = asyncHandler(async (req: Request, res: Re
 export const updateOrderStatusAdminHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.auth) throw new HttpError(401, "Unauthenticated");
   const id = parseId(req.params.id);
+  const adminId = req.auth!.id;
 
   const { status } = adminUpdateStatusSchema.parse(req.body);
 
@@ -502,7 +645,7 @@ export const updateOrderStatusAdminHandler = asyncHandler(async (req: Request, r
   const order = await getOrderOrThrow(id);
 
   // Ensure the order is assigned to an admin before moving forward.
-  const assignedAdminId = order.admin_id ?? req.auth.id;
+  const assignedAdminId = order.admin_id ?? adminId;
 
   if (status === "PROCESSING") {
     if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.PROCESSING) {
@@ -515,7 +658,7 @@ export const updateOrderStatusAdminHandler = asyncHandler(async (req: Request, r
       throw new HttpError(400, `Cannot move from ${order.status} to IN_PROGRESS`);
     }
     if (!order.admin_id) throw new HttpError(400, "Order must be assigned before IN_PROGRESS");
-    if (order.admin_id !== req.auth.id) throw new HttpError(403, "Only assigned admin can set IN_PROGRESS");
+    if (order.admin_id !== adminId) throw new HttpError(403, "Only assigned admin can set IN_PROGRESS");
   }
 
   const updated = await prisma.pesanan.update({

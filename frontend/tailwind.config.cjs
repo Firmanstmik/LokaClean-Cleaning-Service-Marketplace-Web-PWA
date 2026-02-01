@@ -103,7 +103,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-in-out",
@@ -117,12 +117,17 @@ module.exports = {
         "bounce-in": "bounceIn 0.6s ease-out",
         "shimmer": "shimmer 2s infinite",
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "float": "float 3s ease-in-out infinite"
+        "float": "float 3s ease-in-out infinite",
+        "shimmer-slide": "shimmer-slide 1.5s infinite"
       },
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" }
+        },
+        "shimmer-slide": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" }
         },
         fadeInUp: {
           "0%": { opacity: "0", transform: "translateY(20px)" },
@@ -196,5 +201,4 @@ module.exports = {
   },
   plugins: []
 };
-
 

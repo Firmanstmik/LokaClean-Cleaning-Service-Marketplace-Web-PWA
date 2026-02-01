@@ -120,7 +120,7 @@ export function WelcomeScreen({ onComplete }: { onComplete: () => void }) {
             >
               <div className="relative w-full h-full flex items-center justify-center p-3 sm:p-4">
                 <img
-                  src="/img/logo.png"
+                  src="/img/Logo_LokaClean.jpg"
                   alt="LokaClean Logo"
                   className="max-w-full max-h-full w-auto h-auto object-contain"
                   style={{ 

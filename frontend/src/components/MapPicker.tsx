@@ -7,6 +7,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { LocateFixed, Loader2, MapPin, Navigation } from "lucide-react";
 
 import { api } from "../lib/api";
 import { t } from "../lib/i18n";
@@ -55,13 +56,15 @@ export function MapPicker({
   onChange,
   onAddressChange,
   label,
-  helperText
+  helperText,
+  hideLabel = false
 }: {
   value: LatLng | null;
   onChange: (v: LatLng) => void;
   onAddressChange?: (address: string | null) => void;
   label?: string;
   helperText?: string;
+  hideLabel?: boolean;
 }) {
   const defaultLabel = t("common.location");
   const defaultHelperText = t("map.tapToSetLocation");
@@ -132,10 +135,13 @@ export function MapPicker({
     setGeoError(null);
     setAccuracyMeters(null);
 
-    // Check secure context
     if (!window.isSecureContext) {
-      setGeoError(t("map.locationRequiresHttps"));
-      return;
+      const hostname = window.location.hostname;
+      const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+      if (!isLocalhost) {
+        setGeoError(t("map.locationRequiresHttps"));
+        return;
+      }
     }
 
     // Check geolocation support
@@ -239,7 +245,7 @@ export function MapPicker({
       setGeoError(null);
 
       // Log for debugging (in dev mode)
-      if (process.env.NODE_ENV === "development") {
+      if (import.meta.env.DEV) {
         console.log("📍 Location obtained:", {
           lat: latitude,
           lng: longitude,
@@ -286,7 +292,7 @@ export function MapPicker({
         setGeoError(t("map.couldNotGetLocation").replace("{error}", errMsg));
       }
 
-      if (process.env.NODE_ENV === "development") {
+      if (import.meta.env.DEV) {
         console.error("Geolocation error:", err);
       }
     } finally {
@@ -295,47 +301,64 @@ export function MapPicker({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-sm font-medium text-slate-700">{label ?? defaultLabel}</div>
+    <div className="space-y-3">
+      {!hideLabel && (
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-bold text-slate-700 flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-slate-500" />
+            {label ?? defaultLabel}
+          </div>
+        </div>
+      )}
+
+      <div className="relative group rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-indigo-100">
+        <MapContainer
+          key={mapKeyRef.current}
+          center={center}
+          zoom={15}
+          scrollWheelZoom
+          className="h-64 w-full bg-slate-50"
+          style={{ zIndex: 0 }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <RecenterOnChange center={center} />
+          <ClickToPick onPick={handleManualPick} />
+          {value ? <Marker key={`marker-${value.lat}-${value.lng}`} position={value} /> : null}
+          {value && accuracyMeters ? (
+            <Circle
+              key={`circle-${value.lat}-${value.lng}-${accuracyMeters}`}
+              center={value}
+              radius={accuracyMeters}
+              pathOptions={{ color: "#0ea5e9", fillColor: "#0ea5e9", fillOpacity: 0.15 }}
+            />
+          ) : null}
+        </MapContainer>
+
+        {/* Floating "Use My Location" Button */}
         <button
           type="button"
-          className="rounded-md border px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
           onClick={handleUseMyLocation}
           disabled={locating}
+          className="absolute top-3 right-3 z-[400] flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl shadow-lg border border-white/50 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 hover:scale-105 active:scale-95 transition-all disabled:opacity-70 disabled:scale-100"
         >
-          {locating ? t("map.locating") : t("map.useMyLocation")}
+          {locating ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" />
+          ) : (
+            <LocateFixed className="h-3.5 w-3.5 text-indigo-500" />
+          )}
+          <span>{locating ? t("map.locating") : t("map.useMyLocation")}</span>
         </button>
       </div>
 
-      <MapContainer
-        key={mapKeyRef.current}
-        center={center}
-        zoom={15}
-        scrollWheelZoom
-        className="h-64 w-full rounded-xl border"
-        style={{ zIndex: 0 }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <RecenterOnChange center={center} />
-        <ClickToPick onPick={handleManualPick} />
-        {value ? <Marker key={`marker-${value.lat}-${value.lng}`} position={value} /> : null}
-        {value && accuracyMeters ? (
-          <Circle
-            key={`circle-${value.lat}-${value.lng}-${accuracyMeters}`}
-            center={value}
-            radius={accuracyMeters}
-            pathOptions={{ color: "#0ea5e9", fillColor: "#0ea5e9", fillOpacity: 0.15 }}
-          />
-        ) : null}
-      </MapContainer>
-
       {geoError ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
-          <div className="font-semibold mb-2">{t("map.locationAccessIssue")}</div>
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 animate-in slide-in-from-top-2 fade-in duration-300">
+          <div className="font-semibold mb-2 flex items-center gap-2">
+             <Loader2 className="h-3 w-3 text-rose-500" />
+             {t("map.locationAccessIssue")}
+          </div>
           <div className="whitespace-pre-wrap leading-relaxed mb-3">{geoError}</div>
           <div className="rounded border border-amber-300 bg-amber-50 p-2 mb-3">
             <div className="font-semibold text-amber-900 mb-1">{t("map.quickSolution")}</div>
@@ -370,47 +393,72 @@ export function MapPicker({
       ) : null}
 
       {value && details ? (
-        <div className="rounded-xl border bg-white p-3 text-xs text-slate-700">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div>
-              <span className="font-semibold">{t("map.coordinates")}</span> {details.coords}
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-4 text-xs text-slate-700 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 mt-0.5">
+              <MapPin className="w-4 h-4" />
             </div>
-            {accuracyMeters != null ? (
+            <div className="flex-1 space-y-2">
               <div>
-                <span className="font-semibold">{t("map.accuracy")}</span> ±{formatMeters(accuracyMeters)}
+                <span className="block text-[10px] uppercase tracking-wider font-bold text-indigo-400 mb-0.5">{t("map.approxAddress")}</span>
+                <div className="font-medium text-slate-800 text-sm leading-snug">
+                  {resolving ? (
+                    <span className="flex items-center gap-2 text-slate-500">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      {t("map.lookingUp")}
+                    </span>
+                  ) : (
+                    resolvedAddress ?? "—"
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="text-slate-500">{t("map.tipUseMyLocation")}</div>
-            )}
-          </div>
+              
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-indigo-100/50">
+                <div>
+                  <span className="text-slate-400 mr-1.5">{t("map.coordinates")}:</span>
+                  <span className="font-mono text-slate-600 bg-white/50 px-1.5 py-0.5 rounded border border-indigo-50">{details.coords}</span>
+                </div>
+                
+                {accuracyMeters != null && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-400">{t("map.accuracy")}:</span>
+                    <span className={`px-1.5 py-0.5 rounded border ${
+                      accuracyMeters > 150 
+                        ? "bg-amber-50 text-amber-700 border-amber-100" 
+                        : "bg-emerald-50 text-emerald-700 border-emerald-100"
+                    }`}>
+                      ±{formatMeters(accuracyMeters)}
+                    </span>
+                  </div>
+                )}
 
-          <div className="mt-2">
-            <span className="font-semibold">{t("map.approxAddress")}</span>{" "}
-            {resolving ? <span className="text-slate-500">{t("map.lookingUp")}</span> : resolvedAddress ?? "—"}
-          </div>
-          {resolveError ? <div className="mt-1 text-rose-700">{resolveError}</div> : null}
-
-          {accuracyMeters != null && accuracyMeters > 150 ? (
-            <div className="mt-2 text-amber-700">
-              {t("map.accuracyLow").replace("{meters}", formatMeters(accuracyMeters))}
+                <a 
+                  className="ml-auto flex items-center gap-1 text-indigo-600 hover:text-indigo-700 font-medium hover:underline" 
+                  href={details.link} 
+                  target="_blank" 
+                  rel="noreferrer"
+                >
+                  <Navigation className="w-3 h-3" />
+                  {t("map.openInOpenStreetMap")}
+                </a>
+              </div>
             </div>
-          ) : null}
-
-          <div className="mt-2">
-            <a className="font-medium text-sky-700 hover:underline" href={details.link} target="_blank" rel="noreferrer">
-              {t("map.openInOpenStreetMap")}
-            </a>
           </div>
+
+          {resolveError ? <div className="mt-2 text-rose-600 bg-rose-50 px-3 py-2 rounded-lg border border-rose-100">{resolveError}</div> : null}
         </div>
       ) : null}
 
-      <div className="text-xs text-slate-500">
-        {helperText ?? defaultHelperText}
-        {geoError ? (
-          <span className="ml-1 font-medium text-amber-700">
-            {t("map.tipClickMap")}
-          </span>
-        ) : null}
+      <div className="flex items-center gap-2 text-xs text-slate-500 px-1">
+        <Navigation className="w-3 h-3 flex-shrink-0" />
+        <span>
+          {helperText ?? defaultHelperText}
+          {geoError ? (
+            <span className="ml-1 font-medium text-amber-700">
+              {t("map.tipClickMap")}
+            </span>
+          ) : null}
+        </span>
       </div>
     </div>
   );

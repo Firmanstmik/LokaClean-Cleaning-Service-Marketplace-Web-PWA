@@ -13,6 +13,7 @@ import {
   createTipHandler,
   getMyOrderHandler,
   listMyOrdersHandler,
+  updatePaymentMethodHandler,
   uploadAfterPhotoUserHandler,
   verifyCompletionHandler
 } from "./orders.controller";
@@ -26,6 +27,9 @@ ordersRouter.post("/", imageUpload.array("room_photo_before", 4), createOrderHan
 
 ordersRouter.get("/", listMyOrdersHandler);
 ordersRouter.get("/:id", getMyOrderHandler);
+
+// Change payment method while order and payment are still pending.
+ordersRouter.patch("/:id/payment-method", updatePaymentMethodHandler);
 
 // Optional: user can upload AFTER photo too (supports multiple photos, max 4).
 ordersRouter.post("/:id/after-photo", imageUpload.array("room_photo_after", 4), uploadAfterPhotoUserHandler);

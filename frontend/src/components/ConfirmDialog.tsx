@@ -5,6 +5,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X, CheckCircle2, Trash2 } from "lucide-react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -65,7 +66,7 @@ export function ConfirmDialog({
     }
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget && !isLoading) {
       onClose();
     }

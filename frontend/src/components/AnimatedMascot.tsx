@@ -220,6 +220,10 @@ export function AnimatedMascot({ size = 120, className = "", variant = "default"
           const x = 100 + Math.cos(angle) * radius;
           const y = 100 + Math.sin(angle) * radius;
           
+          // Defensive check
+          const safeX = (x === undefined || isNaN(x)) ? 100 : x;
+          const safeY = (y === undefined || isNaN(y)) ? 100 : y;
+
           return (
             <motion.g 
               key={i}
@@ -236,7 +240,7 @@ export function AnimatedMascot({ size = 120, className = "", variant = "default"
               }}
             >
               <path
-                d={`M ${x} ${y} L ${x + 4} ${y - 8} L ${x + 8} ${y} L ${x + 4} ${y + 8} Z`}
+                d={`M ${safeX} ${safeY} L ${safeX + 4} ${safeY - 8} L ${safeX + 8} ${safeY} L ${safeX + 4} ${safeY + 8} Z`}
                 fill="#ffd93d"
                 opacity={0.7}
               />

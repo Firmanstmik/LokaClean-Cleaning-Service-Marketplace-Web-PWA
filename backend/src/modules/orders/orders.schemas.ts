@@ -41,4 +41,8 @@ export const adminUpdateStatusSchema = z.object({
   status: z.enum(["PENDING", "PROCESSING", "IN_PROGRESS", "COMPLETED"])
 });
 
+export const updatePaymentMethodSchema = z.object({
+  payment_method: z.enum(["QRIS", "DANA", "TRANSFER", "CASH"])
+});
+
 

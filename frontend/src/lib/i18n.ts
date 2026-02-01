@@ -2,10 +2,185 @@
  * Simple i18n system for LokaClean
  */
 
+import { useState, useEffect } from "react";
+
 type Language = "id" | "en";
 
 const translations = {
   id: {
+    home: {
+      hero: {
+        titlePart1: "LokaClean - Solusi ",
+        titleHighlight1: "Kebersihan",
+        titlePart2: " Premium di ",
+        titleHighlight2: "Lokasi",
+        titlePart3: " Kamu",
+        subtitle: "Gabungan sentuhan lokal Lombok dengan standar kebersihan modern. Kami datang, bersihkan, kamu tinggal santai.",
+        feature1: { title: "Langsung ke Lokasi", desc: "Fleksibel & dekat" },
+        feature2: { title: "Standar Profesional", desc: "Terstandar & aman" },
+        feature3: { title: "Terpercaya", desc: "Lokal & Wisatawan" },
+        ctaRegister: "Daftar Sekarang",
+        ctaLogin: "Masuk"
+      },
+      navbar: {
+        login: "Masuk",
+        register: "Daftar",
+        home: "Beranda",
+        packages: "Paket",
+        newOrder: "Pesan"
+      },
+      featured: {
+        newHome: {
+          badge: "Baru",
+          title: "Pembersihan Rumah Baru",
+          desc: "Layanan deep cleaning menyeluruh untuk rumah baru atau pasca renovasi. Siap huni, bebas debu & bau cat.",
+          cta: "Lihat Paket"
+        }
+      },
+      howItWorks: {
+        title: "Cara Kerja",
+        subtitle: "Langkah mudah untuk ruangan bersih.",
+        step1: { title: "Daftar", desc: "Daftar & lengkapi profilmu." },
+        step2: { title: "Pesan", desc: "Pilih paket & jadwal." },
+        step3: { title: "Verifikasi", desc: "Upload foto & pin lokasi." },
+        step4: { title: "Nilai", desc: "Pantau, verifikasi & beri rating." }
+      },
+      services: {
+        title: "Layanan Premium",
+        subtitle: "Pilih paket kebersihan yang pas buat kamu."
+      },
+      testimonials: {
+        title: "Kata Mereka",
+        subtitle: "Dipercaya oleh turis, expat, dan pemilik villa di Kuta Mandalika.",
+        item1: {
+          name: "Jake & Friends",
+          role: "Surfers dari Australia",
+          text: "Habis surfing seharian di Tanjung Aan, balik ke homestay udah bersih total. Pasir-pasir di lantai hilang semua. LokaClean penyelamat anak pantai!"
+        },
+        item2: {
+          name: "Sarah & Tom",
+          role: "Honeymooners dari UK",
+          text: "Kami sewa villa di bukit Kuta. Staff LokaClean sangat profesional, bahkan debu-debu konstruksi dari proyek sebelah hilang bersih. Sangat detail!"
+        },
+        item3: {
+          name: "Elena Petrova",
+          role: "Digital Nomad / Expat",
+          text: "Tinggal 3 bulan di Kuta buat kerja remote. Kamar selalu rapi, wangi, dan WiFi tidak terganggu saat mereka bersih-bersih. Wajib buat long-stay!"
+        },
+        item4: {
+          name: "Bli Komang",
+          role: "Villa Manager",
+          text: "Sangat terbantu untuk handle kebersihan saat high season. Tamu check-in selalu puas dengan kebersihan villa. Partner andalan!"
+        }
+      },
+      footer: {
+        tagline: "Kenyamanan Bersih, Sentuhan Pulau",
+        description: "Layanan kebersihan profesional untuk rumah dan kantor Anda. Layanan berkualitas, keramahan khas pulau.",
+        contactUs: "Hubungi Kami",
+        followUs: "Ikuti Kami",
+        socialText: "Tetap terhubung untuk update, tips, dan penawaran spesial.",
+        rightsReserved: "Hak cipta dilindungi undang-undang.",
+        privacyPolicy: "Kebijakan Privasi",
+        termsOfService: "Syarat Layanan",
+        hours: "Sen - Sab: 08.00 - 18.00"
+      },
+      mascot: {
+        speech: "Siap Bersih-bersih? 🧹✨"
+      }
+    },
+    auth: {
+        hero: {
+          titlePart1: "Kenyamanan Bersih, ",
+          titleHighlight: "Sentuhan Pulau.",
+          subtitle: "Layanan kebersihan terbaik di Lombok, kini dalam genggaman. Profesional, asik, dan terpercaya.",
+          trustedUsers: "Gabung sama 2000+ pengguna lain",
+          joinRevolution: "Yuk Gabung ",
+          revolutionHighlight: "Revolusi Kebersihan.",
+          joinHappyCustomers: "Join ",
+          happyCustomersHighlight: "2.000+ ",
+          happyCustomers: "pelanggan happy"
+        },
+        login: {
+          welcomeTitle: "Selamat Datang Kembali!",
+          welcomeSubtitle: "Senang melihatmu lagi. Siap untuk ruangan yang bersih?",
+          methodLabel: "PILIH METODE MASUK",
+          emailLabel: "Alamat Email",
+          emailPlaceholder: "contoh@email.com",
+          whatsappLabel: "Nomor WhatsApp",
+          whatsappPlaceholder: "0812...",
+          passwordLabel: "Kata Sandi",
+          forgotPassword: "Lupa kata sandi?",
+          submitButton: "Masuk Sekarang",
+          footerText: "Belum punya akun?",
+          footerLink: "Daftar di sini",
+          loading: "Sedang memproses..."
+        },
+        register: {
+          title: "Daftar Akun Baru",
+          subtitle: "Cuma butuh 1 menit buat mulai hidup lebih bersih dan nyaman.",
+          fullNameLabel: "Nama Lengkap",
+          fullNamePlaceholder: "Masukkan nama lengkapmu",
+          emailLabel: "Alamat Email",
+          emailPlaceholder: "contoh@email.com",
+          whatsappLabel: "Nomor WhatsApp",
+          whatsappPlaceholder: "0812...",
+          passwordLabel: "Kata Sandi",
+          confirmPasswordLabel: "Ulangi Kata Sandi",
+          submitButton: "Daftar Sekarang",
+          footerText: "Sudah punya akun?",
+          footerLink: "Masuk di sini",
+          loading: "Sedang memproses..."
+        },
+        validation: {
+        emailRequired: "Eits, emailnya belum diisi nih!",
+        emailInvalid: "Waduh, format emailnya agak aneh.",
+        whatsappRequired: "Nomor WA wajib diisi biar gampang kontaknya.",
+        whatsappInvalid: "Coba cek lagi nomornya, kawan.",
+        whatsappInvalidFormat: "Nomornya unik nih, tapi coba format 0812... atau +62812... ya.",
+        passwordRequired: "Passwordnya jangan lupa diisi.",
+        passwordMin: "Minimal 6 karakter ya biar aman sentosa.",
+        passwordMismatch: "Eh, passwordnya beda. Coba samain dulu.",
+        nameRequired: "Kenalan dong, namanya siapa?",
+        loginFailed: "Ups, kunci salah! Cek email/nomor atau passwordnya lagi ya.",
+        emailRegistered: "Email ini udah ada yang punya. Coba yang lain atau langsung login aja."
+      }
+    },
+    // Complete Profile (Simple & Friendly)
+    completeProfile: {
+      step2: "Langkah Terakhir! 🚀",
+      title: "Lengkapi Profilmu",
+      subtitle: "Biar kami kenal kamu lebih dekat dan gampang nemuin lokasimu. Santai, data aman kok! 😉",
+      completionStatus: "Level Profilmu",
+      profilePhoto: "Foto Kece Kamu 📸",
+      uploadPhotoHint: "Upload foto wajah yang jelas ya, biar petugas nggak salah orang!",
+      photoSelected: "Foto Mantap! ✨",
+      personalInfo: "Kenalan Yuk",
+      fullName: "Nama Lengkap",
+      fullNamePlaceholder: "Contoh: Dian Sastro",
+      phone: "Nomor WhatsApp",
+      phonePlaceholder: "Contoh: 08123456789",
+      defaultLocation: "Lokasi Utama 📍",
+      locationSubtitle: "Ke mana tim kebersihan kami harus meluncur?",
+      tapMapHint: "Klik peta buat nandain lokasi",
+      addressDetail: "Detail Alamat",
+      addressPlaceholder: "Nama jalan, nomor rumah, warna pagar, patokan...",
+      geocoding: "Lagi nyari alamat...",
+      saving: "Lagi nyimpen data...",
+      save: "Simpan & Lanjut 🚀",
+      errorConnection: "Waduh, koneksi putus!",
+      tryAgain: "Coba Lagi",
+      errorName: "Nama wajib diisi ya!",
+      errorPhone: "Nomor WA jangan kosong dong.",
+      errorPhoto: "Foto profilnya mana?",
+      errorLocation: "Lokasi belum dipilih nih.",
+      preparing: "Menyiapkan profilmu...",
+      connectionIssue: "Waduh, Koneksi Bermasalah",
+      connectionIssueText: "Cek internet kamu dulu ya, abis itu coba lagi.",
+      tapToUpload: "Tap buat upload foto wajahmu",
+      mapHintOverlay: "Tap peta buat pilih lokasi",
+      addressDetailLabel: "Detail Alamat",
+      addressHelp: "Tulis detail biar petugas nggak nyasar, misal: warna pagar, patokan dekat mana.",
+    },
     // Notifications
     notifications: {
       orderConfirmed: {
@@ -210,6 +385,7 @@ const translations = {
       pleaseSelectLocation: "Pilih lokasi di peta dulu",
       pleaseUploadPhoto: "Upload foto sebelum pembersihan dulu ya",
       loadingUserData: "Mohon tunggu sebentar, sedang memuat data...",
+      pleaseSelectPaymentMethod: "Pilih metode pembayaran dulu ya",
       paymentFailed: "Pembayaran gagal. Coba lagi ya atau pakai metode pembayaran lain.",
       failedToInitializePayment: "Gagal memproses pembayaran. Coba lagi ya.",
       orderSummary: "Ringkasan Pesanan",
@@ -262,7 +438,7 @@ const translations = {
       uploadAfterPhotoHint: "Upload foto setelah pembersihan selesai",
       selectAfterPhoto: "Pilih foto sesudah",
       uploading: "Mengupload...",
-      afterPhotoRestriction: "Foto \"after\" hanya bisa di-upload setelah admin mengkonfirmasi dan status order menjadi IN_PROGRESS.",
+      afterPhotoRestriction: "Foto \"after\" hanya bisa di-upload minimal 5 menit setelah jam jadwal. Untuk pembayaran non-tunai, pastikan status pembayaran sudah PAID. Admin juga perlu mengkonfirmasi pesanan sampai status IN_PROGRESS.",
       scheduleAndPayment: "Jadwal & Pembayaran",
       scheduled: "Dijadwalkan",
       amount: "Jumlah",
@@ -342,6 +518,180 @@ const translations = {
     }
   },
   en: {
+    home: {
+      hero: {
+        titlePart1: "LokaClean - Premium ",
+        titleHighlight1: "Cleaning Solution",
+        titlePart2: " Right at Your",
+        titleHighlight2: " Location",
+        titlePart3: "",
+        subtitle: "Combining Lombok's local touch with modern cleaning standards. We come, we clean, you just relax.",
+        feature1: { title: "Straight to Location", desc: "Flexible & Close" },
+        feature2: { title: "Professional Standard", desc: "Standardized & Safe" },
+        feature3: { title: "Trusted", desc: "Locals & Tourists" },
+        ctaRegister: "Register Now",
+        ctaLogin: "Login"
+      },
+      navbar: {
+        login: "Login",
+        register: "Register",
+        home: "Home",
+        packages: "Package",
+        newOrder: "New Order"
+      },
+      featured: {
+        newHome: {
+          badge: "New",
+          title: "New Home Cleaning",
+          desc: "Deep cleaning service for new or post-renovation homes. Move-in ready, dust-free & paint smell-free.",
+          cta: "View Packages"
+        }
+      },
+      howItWorks: {
+        title: "How It Works",
+        subtitle: "Easy steps for a clean room.",
+        step1: { title: "Register", desc: "Sign up & complete profile." },
+        step2: { title: "Order", desc: "Choose package & schedule." },
+        step3: { title: "Verify", desc: "Upload photo & pin location." },
+        step4: { title: "Rate", desc: "Track, verify & rate." }
+      },
+      services: {
+        title: "Premium Services",
+        subtitle: "Choose the perfect cleaning package for you."
+      },
+      testimonials: {
+        title: "Testimonials",
+        subtitle: "Trusted by tourists, expats, and villa owners in Kuta Mandalika.",
+        item1: {
+          name: "Jake & Friends",
+          role: "Surfers from Australia",
+          text: "After surfing all day at Tanjung Aan, coming back to a spotless homestay is the best. No sand on the floor. LokaClean is a lifesaver!"
+        },
+        item2: {
+          name: "Sarah & Tom",
+          role: "Honeymooners from UK",
+          text: "We rented a villa in Kuta hill. LokaClean staff were super professional, even construction dust from next door is gone. Very detailed!"
+        },
+        item3: {
+          name: "Elena Petrova",
+          role: "Digital Nomad / Expat",
+          text: "Stayed 3 months in Kuta for remote work. Room always tidy, smells good, and WiFi not interrupted while they clean. Must-have for long-stays!"
+        },
+        item4: {
+          name: "Bli Komang",
+          role: "Villa Manager",
+          text: "Really helpful for handling cleaning during high season. Guests checking in are always happy with villa cleanliness. Reliable partner!"
+        }
+      },
+      footer: {
+        tagline: "Clean Comfort, Island Style",
+        description: "Professional cleaning services for your home and office. Quality service, island hospitality.",
+        contactUs: "Contact Us",
+        followUs: "Follow Us",
+        socialText: "Stay connected for updates, tips, and special offers.",
+        rightsReserved: "All rights reserved.",
+        privacyPolicy: "Privacy Policy",
+        termsOfService: "Terms of Service",
+        hours: "Mon - Sat: 8:00 AM - 6:00 PM"
+      },
+      mascot: {
+        speech: "Ready to Clean? 🧹✨"
+      }
+    },
+    // Auth
+    auth: {
+      hero: {
+        titlePart1: "Clean Comfort, ",
+        titleHighlight: "Island Style.",
+        subtitle: "Top-tier cleaning in Lombok, right in your pocket. Professional, fun, and totally trusted.",
+        trustedUsers: "Join 2,000+ happy locals & travelers",
+        joinRevolution: "Join the ",
+        revolutionHighlight: "Clean Revolution.",
+        joinHappyCustomers: "Join ",
+        happyCustomersHighlight: "2,000+ ",
+        happyCustomers: "happy customers"
+      },
+      login: {
+        welcomeTitle: "Welcome Back!",
+        welcomeSubtitle: "Good to see you again. Ready for a clean room?",
+        methodLabel: "CHOOSE LOGIN METHOD",
+        emailLabel: "Email Address",
+        emailPlaceholder: "example@email.com",
+        whatsappLabel: "WhatsApp Number",
+        whatsappPlaceholder: "+62 812...",
+        passwordLabel: "Password",
+        forgotPassword: "Forgot password?",
+        submitButton: "Log In",
+        footerText: "No account yet?",
+        footerLink: "Register here",
+        loading: "Logging in..."
+      },
+      register: {
+        title: "Create Account",
+        subtitle: "Sign up to start booking cleaning services.",
+        fullNameLabel: "Full Name",
+        fullNamePlaceholder: "Your name",
+        emailLabel: "Email Address",
+        emailPlaceholder: "example@email.com",
+        whatsappLabel: "WhatsApp Number",
+        whatsappPlaceholder: "+62...",
+        passwordLabel: "Password",
+        confirmPasswordLabel: "Confirm Password",
+        submitButton: "Sign Up",
+        footerText: "Have an account?",
+        footerLink: "Log in here",
+        loading: "Signing up..."
+      },
+      validation: {
+        emailRequired: "Hey, we need your email!",
+        emailInvalid: "Hmm, that email looks a bit off.",
+        whatsappRequired: "WhatsApp is a must for easy contact.",
+        whatsappInvalid: "Double-check that number, friend.",
+        whatsappInvalidFormat: "Number looks unique! Try 0812... or +62812...",
+        passwordRequired: "Don't forget the secret code (password)!",
+        passwordMin: "At least 6 chars to keep it safe.",
+        passwordMismatch: "Passwords don't match. Try again!",
+        nameRequired: "Don't be shy, what's your name?",
+        loginFailed: "Oops, wrong key! Check your email/number or password.",
+        emailRegistered: "This email is already part of the fam. Try another or login."
+      }
+    },
+    // Complete Profile (Simple & Friendly)
+    completeProfile: {
+      step2: "Final Step! 🚀",
+      title: "Complete Your Profile",
+      subtitle: "Let us know you better so we can find you easily. Don't worry, your data is safe! 😉",
+      completionStatus: "Profile Level",
+      profilePhoto: "Your Best Photo 📸",
+      uploadPhotoHint: "Upload a clear face photo so we recognize you!",
+      photoSelected: "Looking Good! ✨",
+      personalInfo: "Let's Get Acquainted",
+      fullName: "Full Name",
+      fullNamePlaceholder: "e.g. John Doe",
+      phone: "WhatsApp Number",
+      phonePlaceholder: "e.g. +628123456789",
+      defaultLocation: "Main Location 📍",
+      locationSubtitle: "Where should our cleaning team go?",
+      tapMapHint: "Tap map to pin location",
+      addressDetail: "Address Details",
+      addressPlaceholder: "Street name, house number, landmarks...",
+      geocoding: "Finding address...",
+      saving: "Saving...",
+      save: "Save & Continue 🚀",
+      errorConnection: "Oops, connection lost!",
+      tryAgain: "Try Again",
+      errorName: "Name is required!",
+      errorPhone: "WhatsApp number needed.",
+      errorPhoto: "Where's your photo?",
+      errorLocation: "Please pick a location.",
+      preparing: "Preparing your profile...",
+      connectionIssue: "Oops! Connection Issue",
+      connectionIssueText: "Check your internet connection and try again.",
+      tapToUpload: "Tap to upload face photo",
+      mapHintOverlay: "Tap map to select location",
+      addressDetailLabel: "Address Detail",
+      addressHelp: "Add details so we don't get lost, e.g., fence color, nearby landmarks.",
+    },
     // Notifications
     notifications: {
       orderConfirmed: {
@@ -546,6 +896,7 @@ const translations = {
       pleaseSelectLocation: "Please select location on the map",
       pleaseUploadPhoto: "Please upload a before photo",
       loadingUserData: "Please wait, loading user data...",
+      pleaseSelectPaymentMethod: "Please select a payment method first",
       paymentFailed: "Payment failed. Please try again or use another payment method.",
       failedToInitializePayment: "Failed to initialize payment. Please try again.",
       orderSummary: "Order Summary",
@@ -598,7 +949,7 @@ const translations = {
       uploadAfterPhotoHint: "Upload photo after cleaning is complete",
       selectAfterPhoto: "Select after photo",
       uploading: "Uploading...",
-      afterPhotoRestriction: "After photo can only be uploaded after admin confirms and order status becomes IN_PROGRESS.",
+      afterPhotoRestriction: "After photo can only be uploaded at least 5 minutes after the scheduled time. For non-cash payments, payment status must be PAID. Admin also needs to confirm the order so its status becomes IN_PROGRESS.",
       scheduleAndPayment: "Schedule & payment",
       scheduled: "Scheduled",
       amount: "Amount",
@@ -635,34 +986,7 @@ const translations = {
       submitTip: "Submit tip",
       completeFirst: "Complete the order first to submit rating/tip."
     },
-    // Login
-    login: {
-      title: "Welcome back",
-      subtitle: "Clean Comfort, Island Style",
-      email: "Email",
-      password: "Password",
-      login: "Login",
-      loggingIn: "Logging in...",
-      noAccount: "Don't have an account?",
-      register: "Register",
-      forgotPassword: "Forgot password?",
-      error: "Invalid email or password"
-    },
-    // Register
-    register: {
-      title: "Create New Account",
-      subtitle: "Join LokaClean",
-      fullName: "Full Name",
-      email: "Email",
-      password: "Password",
-      confirmPassword: "Confirm Password",
-      register: "Register",
-      registering: "Registering...",
-      haveAccount: "Already have an account?",
-      login: "Login",
-      passwordMismatch: "Passwords do not match",
-      passwordTooShort: "Password must be at least 6 characters"
-    },
+
     // Admin
     admin: {
       orders: "Orders",
@@ -679,12 +1003,12 @@ const translations = {
   }
 };
 
-const STORAGE_KEY = "lokaclean_language";
+const STORAGE_KEY = "lokaclean_language_v2";
 
 export function getLanguage(): Language {
-  if (typeof window === "undefined") return "id";
+  if (typeof window === "undefined") return "en";
   const stored = localStorage.getItem(STORAGE_KEY);
-  return (stored === "en" || stored === "id") ? stored : "id";
+  return (stored === "en" || stored === "id") ? stored : "en";
 }
 
 export function setLanguage(lang: Language): void {
@@ -696,20 +1020,25 @@ export function setLanguage(lang: Language): void {
 export function t(key: string): string {
   const lang = getLanguage();
   const keys = key.split(".");
-  let value: any = translations[lang];
-  
+  let value: unknown = translations[lang];
+
   for (const k of keys) {
-    value = value?.[k];
-    if (value === undefined) {
-      // Fallback to Indonesian if key not found
+    if (value && typeof value === "object" && k in (value as Record<string, unknown>)) {
+      value = (value as Record<string, unknown>)[k];
+    } else {
       value = translations.id;
       for (const k2 of keys) {
-        value = value?.[k2];
+        if (value && typeof value === "object" && k2 in (value as Record<string, unknown>)) {
+          value = (value as Record<string, unknown>)[k2];
+        } else {
+          value = undefined;
+          break;
+        }
       }
       break;
     }
   }
-  
+
   return typeof value === "string" ? value : key;
 }
 
@@ -738,5 +1067,17 @@ export function getNotificationMessage(notificationTitle: string, notificationMe
   
   // Return original if no match
   return { title: notificationTitle, message: notificationMessage };
+}
+
+export function useCurrentLanguage(): Language {
+  const [lang, setLang] = useState<Language>(getLanguage());
+
+  useEffect(() => {
+    const handleLanguageChange = () => setLang(getLanguage());
+    window.addEventListener("languagechange", handleLanguageChange);
+    return () => window.removeEventListener("languagechange", handleLanguageChange);
+  }, []);
+
+  return lang;
 }
 

@@ -7,13 +7,16 @@ let audioContextInstance: AudioContext | null = null;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
-  
+
   if (!audioContextInstance) {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return null;
-    
+    const win = window as typeof window & {
+      webkitAudioContext?: typeof AudioContext;
+    };
+    const AudioContextCtor = win.AudioContext || win.webkitAudioContext;
+    if (!AudioContextCtor) return null;
+
     try {
-      audioContextInstance = new AudioContext();
+      audioContextInstance = new AudioContextCtor();
     } catch (error) {
       console.warn('[Sound] Failed to create AudioContext:', error);
       return null;

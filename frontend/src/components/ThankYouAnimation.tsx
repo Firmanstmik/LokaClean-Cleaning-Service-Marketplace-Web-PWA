@@ -55,7 +55,7 @@ export function ThankYouAnimation({ isVisible, hasTip, onClose }: ThankYouAnimat
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[120000] bg-black/40 backdrop-blur-sm"
           />
 
           {/* Animation Card */}
@@ -64,7 +64,7 @@ export function ThankYouAnimation({ isVisible, hasTip, onClose }: ThankYouAnimat
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 50 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            className="fixed inset-0 z-[120001] flex items-center justify-center p-4 pointer-events-none"
           >
             <div className="relative w-full max-w-sm pointer-events-auto">
               {/* Main Card */}

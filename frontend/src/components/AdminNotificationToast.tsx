@@ -5,7 +5,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Package, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect, useRef } from "react";
 
 interface AdminNotificationToastProps {
   orderId: number;
@@ -14,41 +13,9 @@ interface AdminNotificationToastProps {
   onClose: () => void;
 }
 
-/**
- * Play notification sound using Web Audio API
- */
-function playNotificationSound() {
-  try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // Professional notification sound: two-tone chime
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
-    
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
-
-    // Cleanup
-    oscillator.onended = () => {
-      audioContext.close();
-    };
-  } catch (err) {
-    console.error('Failed to play notification sound:', err);
-  }
-}
-
 export function AdminNotificationToast({ orderId, userName, paketName, onClose }: AdminNotificationToastProps) {
-  // Sound is now played in AdminLayout when notification is triggered
-  // This component just displays the notification
+  // Sound is played in AdminLayout when notification is triggered.
+  // This component only displays the notification toast.
 
   return (
     <motion.div

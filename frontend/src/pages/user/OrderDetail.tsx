@@ -7,9 +7,9 @@
  * - rating + tip after completion
  */
 
-import { useCallback, useEffect, useState, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Image as ImageIcon, X, CheckCircle2 } from "lucide-react";
+import { useCallback, useEffect, useState, useRef, type ChangeEvent } from "react";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Camera, Image as ImageIcon, X, CheckCircle2, CreditCard, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { api } from "../../lib/api";
@@ -19,14 +19,21 @@ import { formatDateTimeWITA } from "../../utils/date";
 import { getPackageGradient } from "../../utils/packageIcon";
 import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
 import { t, getLanguage } from "../../lib/i18n";
+
+function formatOrderNumber(orderNumber: number | null | undefined): string {
+  if (!orderNumber) return "-";
+  return `LC-${orderNumber.toString().padStart(4, "0")}`;
+}
 import { playOrderNotificationSound } from "../../utils/sound";
 import { StarRating } from "../../components/StarRating";
 import { ThankYouAnimation } from "../../components/ThankYouAnimation";
-import type { Pesanan } from "../../types/api";
+import { initializeSnapPayment } from "../../lib/midtrans";
+import type { Pesanan, PaymentMethod, PaymentStatus } from "../../types/api";
 
 export function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const orderId = Number(id);
 
   const [language, setLanguage] = useState(getLanguage());
@@ -42,6 +49,7 @@ export function OrderDetailPage() {
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const [afterPhotos, setAfterPhotos] = useState<File[]>([]);
   const [afterPhotoPreviews, setAfterPhotoPreviews] = useState<string[]>([]);
@@ -50,16 +58,78 @@ export function OrderDetailPage() {
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const [isExpiredHidden, setIsExpiredHidden] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const autoPayTriggered = useRef(false);
 
   const refresh = useCallback(async () => {
     if (!Number.isFinite(orderId)) return;
     const resp = await api.get(`/orders/${orderId}`);
     setOrder(resp.data.data.order as Pesanan);
   }, [orderId]);
+
+  const handlePayment = useCallback(async () => {
+    if (!order || paymentLoading) return;
+    
+    setPaymentLoading(true);
+    setActionError(null);
+    try {
+      // Request snap token from backend
+      const tokenResp = await api.post("/payments/snap-token", {
+        order_id: order.id
+      });
+      const snapToken = tokenResp.data.data.snap_token;
+
+      // Initialize Midtrans payment
+      await initializeSnapPayment(snapToken, {
+        onSuccess: (result) => {
+          console.log("Payment success:", result);
+          // Refresh order data to get updated payment status from webhook
+          refresh();
+          setActionError(null);
+        },
+        onPending: (result) => {
+          console.log("Payment pending:", result);
+          setActionError(null);
+        },
+        onError: (result) => {
+          console.error("Payment error:", result);
+          setActionError(t("orderDetail.paymentError") || "Payment failed. Please try again.");
+        },
+        onClose: () => {
+          console.log("Payment popup closed");
+        }
+      });
+    } catch (err) {
+      console.error("Payment initialization error:", err);
+      setActionError(getApiErrorMessage(err));
+    } finally {
+      setPaymentLoading(false);
+    }
+  }, [order, paymentLoading, refresh]);
+
+  // Auto-pay effect
+  useEffect(() => {
+    const shouldAutoPay = location.state?.autoPay;
+    if (shouldAutoPay && order && order.pembayaran.method !== "CASH" && order.pembayaran.status === "PENDING" && !autoPayTriggered.current) {
+      autoPayTriggered.current = true;
+      // Clear the state so it doesn't trigger again on refresh
+      window.history.replaceState({}, document.title);
+      handlePayment();
+    }
+  }, [order, location.state, handlePayment]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   // After photo previews
   useEffect(() => {
@@ -94,7 +164,7 @@ export function OrderDetailPage() {
     setAfterPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleAfterFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAfterFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("image/"));
     if (files.length > 0) {
       addAfterPhotos(files);
@@ -325,12 +395,42 @@ export function OrderDetailPage() {
     return () => clearInterval(interval);
   }, [order, orderId]);
 
+  useEffect(() => {
+    setIsExpiredHidden(false);
+  }, [orderId]);
+
+  useEffect(() => {
+    if (!order || isExpiredHidden) return;
+    if (order.pembayaran.method !== "TRANSFER" || order.pembayaran.status !== "PENDING" || order.status === "CANCELLED") return;
+    const createdAtMs = new Date(order.created_at).getTime();
+    if (!Number.isFinite(createdAtMs)) return;
+    const expiryMs = createdAtMs + 60 * 60 * 1000;
+    if (now >= expiryMs + 60 * 1000) {
+      setIsExpiredHidden(true);
+    }
+  }, [order, now, isExpiredHidden]);
+
   if (loading) return <div className="text-sm text-slate-600">{t("orderDetail.loading")}</div>;
   if (loadError) {
     return (
       <div className="rounded-xl border bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.15),0_4px_8px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.08)]">
         <div className="text-lg font-semibold">{t("orderDetail.couldNotLoad")}</div>
         <div className="mt-2 text-sm text-rose-700">{loadError}</div>
+        <div className="mt-4">
+          <Link className="text-sm font-semibold text-sky-700 hover:underline" to="/orders">
+            {t("orderDetail.backToOrders")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  if (isExpiredHidden) {
+    return (
+      <div className="rounded-xl border bg-white p-6 shadow-[0_8px_24px_rgba(0,0,0,0.15),0_4px_8px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.08)]">
+        <div className="text-lg font-semibold text-slate-900">Waktu pembayaran habis</div>
+        <div className="mt-2 text-sm text-slate-600">
+          Pesanan ini sudah dihapus otomatis karena pembayaran melewati batas waktu.
+        </div>
         <div className="mt-4">
           <Link className="text-sm font-semibold text-sky-700 hover:underline" to="/orders">
             {t("orderDetail.backToOrders")}
@@ -349,10 +449,31 @@ export function OrderDetailPage() {
 
   const packageNameDisplay = isEnglish && order.paket.name_en ? order.paket.name_en : order.paket.name;
   const packageDescDisplay = isEnglish && order.paket.description_en ? order.paket.description_en : order.paket.description;
+  const scheduledMs = new Date(order.scheduled_date).getTime();
+  const fiveMinutesMs = 5 * 60 * 1000;
+  const isAfterScheduleGrace = Number.isFinite(scheduledMs) ? now >= scheduledMs + fiveMinutesMs : true;
+  const isCashPayment = order.pembayaran.method === "CASH";
+  const isNonCashPaid = order.pembayaran.method !== "CASH" && order.pembayaran.status === "PAID";
+  const canDoAfterAndComplete = isAfterScheduleGrace && (isCashPayment || isNonCashPaid);
+  const isTransferPending =
+    order.pembayaran.method === "TRANSFER" &&
+    order.pembayaran.status === "PENDING" &&
+    order.status !== "CANCELLED";
+  const createdAtMs = new Date(order.created_at).getTime();
+  const expiryMs = createdAtMs + 60 * 60 * 1000;
+  const remainingMs = expiryMs - now;
+  const rawRemainingSeconds = Math.floor(remainingMs / 1000);
+  const remainingSeconds = Math.max(0, rawRemainingSeconds);
+  const minutesLeft = Math.floor(remainingSeconds / 60);
+  const secondsLeft = remainingSeconds % 60;
+  const isCountdownExpired = rawRemainingSeconds <= 0;
+  const showCountdown =
+    isTransferPending &&
+    Number.isFinite(createdAtMs);
 
   return (
     <div className="w-full bg-gradient-to-br from-tropical-50 via-ocean-50/50 to-sand-50/70">
-      <div className="space-y-4 sm:space-y-6 max-w-full overflow-x-hidden px-3 sm:px-4 lg:px-6 pb-6 sm:pb-8 lg:pb-12">
+      <div className="space-y-4 sm:space-y-6 max-w-full overflow-x-hidden px-3 sm:px-4 lg:px-6 pb-4 sm:pb-6 lg:pb-8">
       {/* Back Button */}
       <motion.button
         initial={{ opacity: 0, x: -20 }}
@@ -383,7 +504,7 @@ export function OrderDetailPage() {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs sm:text-sm text-slate-500">{t("orderDetail.orderHash")}{order.order_number}</div>
+            <div className="text-xs sm:text-sm text-slate-500">{t("orderDetail.orderHash")}{formatOrderNumber(order.order_number)}</div>
             <div className="text-base sm:text-lg lg:text-xl font-semibold truncate">
               {packageNameDisplay}
             </div>
@@ -437,8 +558,8 @@ export function OrderDetailPage() {
             </div>
           </div>
 
-          {/* Upload after photo - Only available when status is IN_PROGRESS */}
-          {afterPhotoPaths.length === 0 && order.status === "IN_PROGRESS" ? (
+          {/* Upload after photo - Only available when status is IN_PROGRESS and passes time/payment rules */}
+          {afterPhotoPaths.length === 0 && order.status === "IN_PROGRESS" && canDoAfterAndComplete ? (
             <div className="mt-4 rounded-xl border-2 border-lombok-tropical-200 bg-gradient-to-br from-lombok-tropical-50 to-lombok-ocean-50 p-4 shadow-[0_6px_16px_rgba(0,0,0,0.12),0_3px_6px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.06)]">
               <div className="text-sm font-semibold text-slate-800 mb-1">{t("orderDetail.uploadAfterPhoto")}</div>
               <div className="text-xs text-slate-600 mb-3">{t("orderDetail.uploadAfterPhotoHint")}</div>
@@ -608,6 +729,13 @@ export function OrderDetailPage() {
                 {busy ? t("orderDetail.uploading") : t("orderDetail.uploadAfterPhoto")}
               </button>
             </div>
+          ) : afterPhotoPaths.length === 0 && order.status === "IN_PROGRESS" && !canDoAfterAndComplete ? (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-[0_6px_16px_rgba(0,0,0,0.12),0_3px_6px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.06)]">
+              <div className="text-sm font-semibold text-slate-800">{t("orderDetail.uploadAfterPhoto")}</div>
+              <div className="mt-2 text-xs text-slate-500">
+                {t("orderDetail.afterPhotoRestriction")}
+              </div>
+            </div>
           ) : afterPhotoPaths.length === 0 && order.status !== "IN_PROGRESS" ? (
             <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-[0_6px_16px_rgba(0,0,0,0.12),0_3px_6px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.06)]">
               <div className="text-sm font-semibold text-slate-800">{t("orderDetail.uploadAfterPhoto")}</div>
@@ -621,6 +749,48 @@ export function OrderDetailPage() {
         <div className="space-y-4 sm:space-y-6">
           <div className="rounded-xl sm:rounded-2xl border bg-white p-3 sm:p-4 lg:p-5 shadow-[0_8px_24px_rgba(0,0,0,0.15),0_4px_8px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.08)] max-w-full overflow-hidden">
             <div className="text-sm font-semibold text-slate-800">{t("orderDetail.scheduleAndPayment")}</div>
+            {showCountdown && (
+              <div
+                className={`mt-3 rounded-2xl px-4 py-3 sm:px-5 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 ${
+                  isCountdownExpired
+                    ? "bg-rose-50 border border-rose-200"
+                    : "bg-amber-50 border border-amber-200"
+                }`}
+              >
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div
+                    className={`flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full ${
+                      isCountdownExpired ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-600">
+                      {isCountdownExpired ? "Waktu pembayaran habis" : "Sisa waktu bayar"}
+                    </span>
+                    {!isCountdownExpired && (
+                      <span className="text-xs sm:text-sm text-slate-500">
+                        Segera selesaikan pembayaran sebelum waktu berakhir.
+                      </span>
+                    )}
+                    {isCountdownExpired && (
+                      <span className="text-[11px] sm:text-xs text-rose-600 font-medium">
+                        Pesanan akan hilang otomatis dalam 1 menit.
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {!isCountdownExpired && (
+                  <div className="flex items-center justify-end">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-black tracking-widest text-slate-900 tabular-nums">
+                      {minutesLeft.toString().padStart(2, "0")}:
+                      {secondsLeft.toString().padStart(2, "0")}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="mt-3 grid gap-3 text-sm">
               <div className="flex items-center justify-between">
                 <div className="text-slate-600">{t("orderDetail.scheduled")}</div>
@@ -635,10 +805,81 @@ export function OrderDetailPage() {
                 <div className="font-semibold">{order.pembayaran.status}</div>
               </div>
             </div>
+
+            {/* Allow user to change payment method while order & payment are still pending */}
+            {order.status === "PENDING" && order.pembayaran.status === "PENDING" && (
+              <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-600">
+                  <span className="font-semibold">Metode saat ini:</span>
+                  <span className="font-bold">{order.pembayaran.method}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    className="flex-1 rounded-lg border-2 border-slate-200 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:border-lombok-tropical-400 hover:bg-lombok-tropical-50 transition-colors"
+                    disabled={busy}
+                    onClick={async () => {
+                      // Toggle between CASH and TRANSFER for now
+                      const nextMethod = order.pembayaran.method === "CASH" ? "TRANSFER" : "CASH";
+                      setBusy(true);
+                      setActionError(null);
+                      try {
+                        await api.patch(`/orders/${order.id}/payment-method`, {
+                          payment_method: nextMethod
+                        });
+                        await refresh();
+                      } catch (err) {
+                        setActionError(getApiErrorMessage(err));
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    {busy
+                      ? "Mengubah metode..."
+                      : order.pembayaran.method === "CASH"
+                        ? "Ubah ke Transfer"
+                        : "Ubah ke Cash"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Payment button for NON-CASH payments with PENDING status */}
+            {order.pembayaran.method !== "CASH" && order.pembayaran.status === "PENDING" && (
+              <div className="mt-4 pt-4 border-t border-slate-200">
+                <motion.button
+                  whileHover={{ scale: paymentLoading ? 1 : 1.02, y: paymentLoading ? 0 : -2 }}
+                  whileTap={{ scale: paymentLoading ? 1 : 0.98 }}
+                  disabled={paymentLoading}
+                  onClick={handlePayment}
+                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:shadow-blue-500/40 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {paymentLoading ? (
+                    <>
+                      <motion.div
+                        className="h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
+                      <span>{t("orderDetail.processingPayment") || "Processing..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4" />
+                      <span>{t("orderDetail.payNow") || "Pay Now"}</span>
+                    </>
+                  )}
+                </motion.button>
+                {actionError && (
+                  <div className="mt-2 text-xs text-red-600 font-medium">{actionError}</div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Completion section - Show tip input after photo uploaded, then completion button */}
-          {order.status === "IN_PROGRESS" && afterPhotoPaths.length > 0 ? (
+          {/* Completion section - Show tip input after photo uploaded, then completion button (time/payment gated) */}
+          {order.status === "IN_PROGRESS" && afterPhotoPaths.length > 0 && canDoAfterAndComplete ? (
             <div className="rounded-2xl border-2 border-lombok-tropical-200 bg-gradient-to-br from-lombok-tropical-50 to-lombok-ocean-50 p-5 shadow-[0_8px_24px_rgba(0,0,0,0.15),0_4px_8px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.08)]">
               <div className="text-sm font-semibold text-slate-800 mb-2">{t("orderDetail.completeOrder")}</div>
               
@@ -724,11 +965,18 @@ export function OrderDetailPage() {
                 </div>
               )}
             </div>
-          ) : order.status === "IN_PROGRESS" && afterPhotoPaths.length === 0 ? (
+          ) : order.status === "IN_PROGRESS" && afterPhotoPaths.length === 0 && canDoAfterAndComplete ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-[0_8px_24px_rgba(0,0,0,0.15),0_4px_8px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.08)]">
               <div className="text-sm font-semibold text-slate-800">{t("orderDetail.completeOrder")}</div>
               <div className="mt-2 text-sm text-slate-600">
                 {t("orderDetail.uploadAfterFirst")}
+              </div>
+            </div>
+          ) : order.status === "IN_PROGRESS" && !canDoAfterAndComplete ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-[0_8px_24px_rgba(0,0,0,0.15),0_4px_8px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.08)]">
+              <div className="text-sm font-semibold text-slate-800">{t("orderDetail.completeOrder")}</div>
+              <div className="mt-2 text-sm text-slate-600">
+                {t("orderDetail.afterPhotoRestriction")}
               </div>
             </div>
           ) : order.status !== "IN_PROGRESS" ? (
