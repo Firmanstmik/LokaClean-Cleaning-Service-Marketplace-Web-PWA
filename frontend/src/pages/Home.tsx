@@ -306,8 +306,11 @@ export function Home() {
           <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center sm:justify-end pb-8 sm:pb-12 lg:pb-20">
             <div className="max-w-5xl pt-0 sm:pt-0">
                 {/* Mobile Hero Image (Top Position) */}
-                <div
-                  className="w-full mb-1 sm:hidden flex justify-center"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="w-full mb-1 sm:hidden flex justify-center will-change-transform"
                 >
                   <img 
                     src="/img/hero.png" 
@@ -317,10 +320,13 @@ export function Home() {
                     decoding="async"
                     className="h-[270px] w-auto object-contain drop-shadow-2xl filter contrast-110"
                   />
-                </div>
+                </motion.div>
                 {/* Headlines */}
-                <h1
-                  className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left"
+                <motion.h1
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+                  className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
                 >
                   <span className="inline-block">
                     {t("home.hero.titlePart1")}
@@ -337,17 +343,23 @@ export function Home() {
                     {t("home.hero.titleHighlight2")}
                   </span>
                   {t("home.hero.titlePart3")}
-                </h1>
+                </motion.h1>
 
-                <p
-                  className="text-sm sm:text-lg text-slate-800 font-semibold leading-relaxed mb-3 sm:mb-8 max-w-lg drop-shadow-md bg-white/40 sm:bg-white/30 sm:backdrop-blur-md p-3.5 rounded-xl border border-white/40 text-center sm:text-left mx-auto sm:mx-0"
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+                  className="text-sm sm:text-lg text-slate-800 font-semibold leading-relaxed mb-3 sm:mb-8 max-w-lg drop-shadow-md bg-white/40 sm:bg-white/30 sm:backdrop-blur-md p-3.5 rounded-xl border border-white/40 text-center sm:text-left mx-auto sm:mx-0 will-change-transform"
                 >
                   {t("home.hero.subtitle")}
-                </p>
+                </motion.p>
 
                 {/* CTA Buttons - Moved to Hero Section */}
-                <div
-                  className="flex flex-row gap-3 sm:gap-4 justify-center sm:justify-start mb-4 sm:mb-10"
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
+                  className="flex flex-row gap-3 sm:gap-4 justify-center sm:justify-start mb-4 sm:mb-10 will-change-transform"
                 >
                   <Link
                     to="/register"
@@ -385,8 +397,11 @@ export function Home() {
                 </div>
 
                 {/* Highlight Values (Floating Cards on Image) - Grid on Mobile */}
-                <div
-                  className="grid grid-cols-3 gap-2 sm:gap-4 pb-2 sm:pb-0 mx-0 items-stretch w-full max-w-4xl"
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
+                  className="grid grid-cols-3 gap-2 sm:gap-4 pb-2 sm:pb-0 mx-0 items-stretch w-full max-w-4xl will-change-transform"
                 >
                   {/* Item 1 */}
                   <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 sm:backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
@@ -432,26 +447,46 @@ export function Home() {
           {/* How It Works - Premium Mobile Style */}
         <div className="mb-12 sm:mb-24 relative z-10">
           <div className="text-center mb-10 sm:mb-16">
-            <div 
-              className="inline-block mb-3"
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="inline-block mb-3 will-change-transform"
             >
               <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-600 text-xs font-bold uppercase tracking-wider">
                 {t("home.howItWorks.subtitle") || "Simple Process"}
               </span>
-            </div>
+            </motion.div>
             
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight">
+            <motion.h2 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+              className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight will-change-transform"
+            >
               {t("home.howItWorks.title")}
-            </h2>
-            <div className="w-24 h-1.5 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full" />
+            </motion.h2>
+            <motion.div 
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+              className="w-24 h-1.5 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full origin-center will-change-transform" 
+            />
           </div>
           
           <div className="block sm:hidden relative px-2">
             <div className="grid grid-cols-4 gap-2">
               {steps.map((step, index) => (
-                <div
+                <motion.div
                   key={index}
-                  className="relative p-3 rounded-2xl bg-white border border-slate-100 shadow-md flex flex-col items-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-5%" }}
+                  transition={{ delay: index * 0.1, duration: 0.4, ease: "easeOut" }}
+                  className="relative p-3 rounded-2xl bg-white border border-slate-100 shadow-md flex flex-col items-center will-change-transform"
                 >
                   <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center mb-2 relative">
                     <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${
@@ -517,8 +552,12 @@ export function Home() {
         </div>
 
         {/* Featured Package - Pembersihan Rumah Baru */}
-        <div
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 shadow-2xl border border-white/10 mb-8 sm:mb-12"
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-10%" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 shadow-2xl border border-white/10 mb-8 sm:mb-12 will-change-transform"
         >
           {/* Background Effects */}
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-transparent z-10" />
@@ -562,21 +601,43 @@ export function Home() {
         {/* Testimonials - Aligned with How It Works Design */}
         <section className="mb-12 sm:mb-24 relative z-10">
           <div className="text-center mb-10 sm:mb-16">
-            <div 
-              className="inline-block mb-3"
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="inline-block mb-3 will-change-transform"
             >
               <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-600 text-xs font-bold uppercase tracking-wider">
                 Testimonials
               </span>
-            </div>
+            </motion.div>
             
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight">
+            <motion.h2 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+              className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight will-change-transform"
+            >
               {t("home.testimonials.title")}
-            </h2>
-            <div className="w-24 h-1.5 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto rounded-full mb-6" />
-            <p className="text-slate-600 max-w-2xl mx-auto text-sm sm:text-base">
+            </motion.h2>
+            <motion.div 
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+              className="w-24 h-1.5 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto rounded-full mb-6 origin-center will-change-transform" 
+            />
+            <motion.p 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="text-slate-600 max-w-2xl mx-auto text-sm sm:text-base will-change-opacity"
+            >
               {t("home.testimonials.subtitle")}
-            </p>
+            </motion.p>
           </div>
              
           <div className="block sm:hidden px-2">
@@ -587,9 +648,13 @@ export function Home() {
                 { name: t("home.testimonials.item3.name"), role: t("home.testimonials.item3.role"), text: t("home.testimonials.item3.text"), rating: 5, initial: "E" },
                 { name: t("home.testimonials.item4.name"), role: t("home.testimonials.item4.role"), text: t("home.testimonials.item4.text"), rating: 5, initial: "B" }
               ].map((testi, i) => (
-                <div
+                <motion.div
                   key={i}
-                  className="snap-center min-w-[85%] relative p-4 rounded-2xl bg-white border border-slate-100 shadow-md flex flex-col"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true, margin: "-5%" }}
+                  transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
+                  className="snap-center min-w-[85%] relative p-4 rounded-2xl bg-white border border-slate-100 shadow-md flex flex-col will-change-transform"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center relative">
