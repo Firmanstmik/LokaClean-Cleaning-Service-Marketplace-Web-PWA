@@ -53,12 +53,18 @@ api.interceptors.response.use(
     // Normalize to lower case for comparison
     const lowerMsg = typeof errorMsg === 'string' ? errorMsg.toLowerCase() : "";
     
+    // Check if the request was for the profile endpoint
+    const requestUrl = error.config?.url || "";
+    const isProfileRequest = requestUrl.includes("/users/me") || requestUrl.includes("/admins/me");
+
     const isUserNotFound = error.response?.status === 404 && 
       (lowerMsg.includes("user account not found") || 
        lowerMsg.includes("admin account not found") || 
-       lowerMsg.includes("user not found"));
+       lowerMsg.includes("user not found") ||
+       isProfileRequest); // Fallback: if /me returns 404, the user is definitely gone
 
     if (isUserNotFound) {
+      console.log("[AutoLogout] User not found detected. Initiating logout sequence.");
       
       // Show floating alert
       const msg = document.createElement('div');

@@ -30,7 +30,19 @@ export function RequireUserProfileComplete() {
         setMe(user);
       } catch (err) {
         if (!alive) return;
-        setError(getApiErrorMessage(err));
+        
+        // Backup: If interceptor failed to catch 404 (User not found), handle it here
+        // This ensures the user isn't stuck on a broken screen
+        const msg = getApiErrorMessage(err);
+        if (msg.toLowerCase().includes("user not found") || msg.toLowerCase().includes("account not found")) {
+           console.log("[RequireUserProfileComplete] User not found (backup handler). Redirecting...");
+           localStorage.removeItem("lokaclean_token");
+           localStorage.removeItem("lokaclean_actor");
+           window.location.href = "/register";
+           return;
+        }
+
+        setError(msg);
       } finally {
         if (alive) setLoading(false);
       }
