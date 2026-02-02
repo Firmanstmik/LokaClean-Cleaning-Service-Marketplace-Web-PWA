@@ -66,10 +66,10 @@ async function main() {
     // Update existing admin to ensure phone number is set
     // Only update if phone is missing or we want to enforce the seed phone
     // Let's enforce it so the user can login with the number they expect
-    if (adminPhone && existingAdmin.phone_number !== adminPhone) {
+    if (adminPhone && (existingAdmin as any).phone_number !== adminPhone) {
       await prisma.admin.update({
         where: { email: adminEmail },
-        data: { phone_number: adminPhone }
+        data: { phone_number: adminPhone } as any
       });
       console.log(`Updated admin ${adminEmail} with phone ${adminPhone}`);
     } else {
