@@ -23,14 +23,24 @@ export function createApp() {
   // Configure CORS first (needed for static files too)
   const corsOptions = {
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
       // In development, allow all localhost origins (Vite can use different ports)
-      if (env.NODE_ENV === "development" && (!origin || /^http:\/\/localhost:\d+$/.test(origin))) {
+      if (env.NODE_ENV === "development" && /^http:\/\/localhost:\d+$/.test(origin)) {
         return callback(null, true);
       }
-      // In production, use configured origin
-      if (env.CORS_ORIGIN === origin || !origin) {
+      
+      // In production, check against configured origin
+      if (env.CORS_ORIGIN === origin) {
         return callback(null, true);
       }
+
+      // Allow additional trusted domains if needed (can be extended)
+      // For now, if it doesn't match, we block it to be safe, OR we can be permissive for debugging:
+      // return callback(null, true); // Uncomment to allow ALL origins (dangerous for prod)
+      
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     },
     credentials: true
