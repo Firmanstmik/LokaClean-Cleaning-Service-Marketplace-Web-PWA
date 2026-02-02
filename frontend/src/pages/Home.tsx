@@ -194,30 +194,14 @@ export function Home() {
             >
               <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-tropical-400/30 via-ocean-400/25 to-sun-400/30 blur-lg" />
               <motion.div
-                className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-tropical-50/80 to-ocean-50/80 shadow-[0_8px_24px_rgba(15,23,42,0.15)] flex items-center justify-center border border-white/80"
-                animate={{
-                  y: [0, -1, 0],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <motion.img
-                  src="/img/Logo_LokaClean.jpg"
-                  alt="LokaClean Logo"
-                  className="h-full w-full object-contain p-1 sm:p-2"
-                  animate={{
-                    scale: [1, 1.02, 1],
-                  }}
-                  transition={{
-                    duration: 6,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              </motion.div>
+                  className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-tropical-50/80 to-ocean-50/80 shadow-[0_8px_24px_rgba(15,23,42,0.15)] flex items-center justify-center border border-white/80"
+                >
+                  <motion.img
+                    src="/img/Logo_LokaClean.jpg"
+                    alt="LokaClean Logo"
+                    className="h-full w-full object-contain p-1 sm:p-2"
+                  />
+                </motion.div>
             </motion.div>
             
             {/* Premium Brand Typography */}
@@ -230,17 +214,6 @@ export function Home() {
               >
                 <motion.span
                   className="block text-lg sm:text-2xl font-black leading-tight bg-gradient-to-r from-tropical-600 via-ocean-600 to-tropical-600 bg-clip-text text-transparent truncate"
-                  animate={{
-                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                  }}
-                  transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  style={{
-                    backgroundSize: "200% 100%",
-                  }}
                 >
                   LokaClean
                 </motion.span>
@@ -346,12 +319,6 @@ export function Home() {
                     loading="eager"
                     decoding="async"
                     className="h-[270px] w-auto object-contain drop-shadow-2xl filter contrast-110"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{
-                      duration: 10,
-                      ease: "easeInOut",
-                      repeat: Infinity,
-                    }}
                   />
                 </motion.div>
                 {/* Headlines */}
@@ -437,7 +404,7 @@ export function Home() {
                   className="grid grid-cols-3 gap-2 sm:gap-4 pb-2 sm:pb-0 mx-0 items-stretch w-full max-w-4xl"
                 >
                   {/* Item 1 */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white/95 backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 sm:backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
                     <div className="flex-shrink-0 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform duration-300">
                       <MapPin className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.5} />
                     </div>
@@ -448,7 +415,7 @@ export function Home() {
                   </div>
 
                   {/* Item 2 */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white/95 backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 sm:backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
                     <div className="flex-shrink-0 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl bg-green-50 text-green-600 group-hover:scale-110 transition-transform duration-300">
                       <Leaf className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.5} />
                     </div>
@@ -459,7 +426,7 @@ export function Home() {
                   </div>
 
                   {/* Item 3 */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white/95 backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 sm:backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
                     <div className="flex-shrink-0 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl bg-purple-50 text-purple-600 group-hover:scale-110 transition-transform duration-300">
                       <Handshake className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.5} />
                     </div>
@@ -500,13 +467,9 @@ export function Home() {
           <div className="block sm:hidden relative px-2">
             <div className="grid grid-cols-4 gap-2">
               {steps.map((step, index) => (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                  className="relative p-3 rounded-2xl bg-white/70 backdrop-blur-sm border border-white/60 shadow-md flex flex-col items-center"
+                  className="relative p-3 rounded-2xl bg-white border border-slate-100 shadow-md flex flex-col items-center"
                 >
                   <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center mb-2 relative">
                     <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${
@@ -526,7 +489,7 @@ export function Home() {
                     </div>
                   </div>
                   <h3 className="text-[11px] font-bold text-slate-900 text-center leading-snug truncate w-full">{step.title}</h3>
-                </motion.div>
+                </div>
               ))}
             </div>
             <div className="absolute left-6 right-6 top-[28px] h-0.5 bg-gradient-to-r from-blue-200 via-purple-200 to-blue-200 -z-10 rounded-full" />
@@ -648,13 +611,9 @@ export function Home() {
                 { name: t("home.testimonials.item3.name"), role: t("home.testimonials.item3.role"), text: t("home.testimonials.item3.text"), rating: 5, initial: "E" },
                 { name: t("home.testimonials.item4.name"), role: t("home.testimonials.item4.role"), text: t("home.testimonials.item4.text"), rating: 5, initial: "B" }
               ].map((testi, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="snap-center min-w-[85%] relative p-4 rounded-2xl bg-white/80 backdrop-blur-sm border border-white/60 shadow-md flex flex-col"
+                  className="snap-center min-w-[85%] relative p-4 rounded-2xl bg-white border border-slate-100 shadow-md flex flex-col"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center relative">
@@ -682,7 +641,7 @@ export function Home() {
                   <p className="text-xs text-slate-600 leading-snug">
                     "{testi.text}"
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

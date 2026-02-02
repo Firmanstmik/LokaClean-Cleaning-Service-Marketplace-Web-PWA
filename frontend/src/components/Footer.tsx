@@ -23,8 +23,8 @@ export function Footer({ variant = "all" }: FooterProps) {
 
   return (
     <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-      {/* Animated background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Animated background decoration - Hidden on mobile */}
+      <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-0 left-1/4 h-64 w-64 rounded-full bg-tropical-500/10 blur-3xl"
           animate={{
@@ -132,7 +132,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   aria-label="Instagram"
                 >
                   {/* Glassmorphism Background */}
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
+                  <div className="absolute inset-0 bg-white/10 sm:backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
                   
                   {/* Gradient Overlay on Hover */}
                   <motion.div
@@ -167,7 +167,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   aria-label="Twitter"
                 >
                   {/* Glassmorphism Background */}
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
+                  <div className="absolute inset-0 bg-white/10 sm:backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
                   
                   {/* Gradient Overlay on Hover */}
                   <motion.div
@@ -202,7 +202,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   aria-label="YouTube"
                 >
                   {/* Glassmorphism Background */}
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
+                  <div className="absolute inset-0 bg-white/10 sm:backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
                   
                   {/* Red Gradient Overlay on Hover */}
                   <motion.div
@@ -237,7 +237,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   aria-label="WhatsApp"
                 >
                   {/* Glassmorphism Background */}
-                  <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
+                  <div className="absolute inset-0 bg-white/10 sm:backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
                   
                   {/* Gradient Overlay on Hover */}
                   <motion.div
