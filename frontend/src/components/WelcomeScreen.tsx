@@ -8,8 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CircularLoader } from "./ui/CircularLoader";
 
 const STORAGE_KEY = "lokaclean_welcome_shown";
-const EXIT_DURATION = 150; // Quick smooth exit animation (0.15s)
-const WELCOME_DURATION = 1850; // 1.85s visible + 0.15s exit = exactly 2 seconds total
+const EXIT_DURATION = 500; // Slower smooth exit animation (0.5s)
+const WELCOME_DURATION = 2500; // 2.5s visible + 0.5s exit = exactly 3 seconds total
 
 export function WelcomeScreen({ onComplete }: { onComplete: () => void }) {
   const [show, setShow] = useState(true);

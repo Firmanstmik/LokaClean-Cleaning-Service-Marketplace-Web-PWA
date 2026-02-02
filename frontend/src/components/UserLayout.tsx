@@ -666,11 +666,11 @@ export function UserLayout() {
   }, [notifications, reminderOrders, currentLanguage, dismissedToastIds, isPageReady]); // Include isPageReady to re-evaluate
 
   // Welcome screen state
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   return (
     <>
-      {/* Welcome/Splash Screen - Disabled for smoother transition */}
+      {/* Welcome/Splash Screen */}
       {showWelcome && (
         <WelcomeScreen onComplete={() => setShowWelcome(false)} />
       )}
