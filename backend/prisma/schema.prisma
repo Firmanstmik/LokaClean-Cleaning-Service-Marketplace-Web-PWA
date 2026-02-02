@@ -58,12 +58,13 @@ model User {
 }
 
 model Admin {
-  id         Int      @id @default(autoincrement())
-  full_name  String
-  email      String   @unique
-  password   String
-  role       Role     @default(ADMIN)
-  created_at DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  full_name    String
+  email        String   @unique
+  phone_number String?  @unique
+  password     String
+  role         Role     @default(ADMIN)
+  created_at   DateTime @default(now())
 
   // Relationships
   pesanan Pesanan[]

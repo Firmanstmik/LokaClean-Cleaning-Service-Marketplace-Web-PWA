@@ -41,7 +41,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+      <Route path="/admin" element={<Navigate to="/adminlokacleanmandalika/login" replace />} />
 
       {/* USER auth */}
       <Route path="/login" element={<UserLogin />} />
@@ -72,7 +72,7 @@ export function AppRoutes() {
       </Route>
 
       {/* ADMIN auth */}
-      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/adminlokacleanmandalika/login" element={<AdminLogin />} />
 
       {/* ADMIN app */}
       <Route

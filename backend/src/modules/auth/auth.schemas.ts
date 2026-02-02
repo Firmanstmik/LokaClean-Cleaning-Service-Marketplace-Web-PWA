@@ -18,7 +18,7 @@ export const userLoginSchema = z.object({
 });
 
 export const adminLoginSchema = z.object({
-  email: z.string().email(),
+  login: z.string().min(1),
   password: z.string().min(6)
 });
 

@@ -188,11 +188,47 @@ export async function loginUser(input: { login: string; password: string }) {
   return { token, user };
 }
 
-export async function loginAdmin(input: { email: string; password: string }) {
-  const admin = await prisma.admin.findUnique({ where: { email: input.email } });
+export async function loginAdmin(input: { login: string; password: string }) {
+  const { login, password } = input;
+  
+  // Determine if login is email or phone
+  const isEmail = login.includes("@");
+  let admin = null;
+  
+  if (isEmail) {
+    admin = await prisma.admin.findUnique({ where: { email: login } });
+  } else {
+    // Phone login logic
+    const normalizedPhone = normalizeWhatsAppPhone(login);
+    if (!normalizedPhone) {
+       throw new HttpError(401, "Invalid credentials");
+    }
+
+    // Extract digits for flexible matching
+    let digitsOnly = normalizedPhone.replace(/^\+62/, "");
+    if (digitsOnly.startsWith("+")) digitsOnly = digitsOnly.slice(1);
+    if (digitsOnly.startsWith("62") && digitsOnly.length > 2) digitsOnly = digitsOnly.slice(2);
+
+    const variationsSet = new Set<string>();
+    variationsSet.add(normalizedPhone);
+    if (digitsOnly && digitsOnly.length >= 10) {
+      variationsSet.add(`+62${digitsOnly}`);
+      variationsSet.add(`0${digitsOnly}`);
+      variationsSet.add(digitsOnly);
+      variationsSet.add(`62${digitsOnly}`);
+    }
+    const variations = Array.from(variationsSet).filter(v => v && v.length > 0);
+
+    admin = await prisma.admin.findFirst({
+      where: {
+        OR: variations.map(v => ({ phone_number: v })) as any
+      }
+    });
+  }
+
   if (!admin) throw new HttpError(401, "Invalid credentials");
 
-  const ok = await bcrypt.compare(input.password, admin.password);
+  const ok = await bcrypt.compare(password, admin.password);
   if (!ok) throw new HttpError(401, "Invalid credentials");
 
   const token = signToken({ actor: "ADMIN", role: "ADMIN", id: admin.id });

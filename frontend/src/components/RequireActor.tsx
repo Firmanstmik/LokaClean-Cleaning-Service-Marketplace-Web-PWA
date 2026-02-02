@@ -13,7 +13,7 @@ export function RequireActor({ actor, children }: { actor: Actor; children: Reac
   const location = useLocation();
 
   if (!token) {
-    const to = actor === "ADMIN" ? "/admin/login" : "/login";
+    const to = actor === "ADMIN" ? "/adminlokacleanmandalika/login" : "/login";
     return <Navigate to={to} replace state={{ from: location.pathname }} />;
   }
 

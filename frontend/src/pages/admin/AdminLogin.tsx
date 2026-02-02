@@ -15,7 +15,7 @@ export function AdminLogin() {
   const { token, actor, setAuth } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,7 +198,7 @@ export function AdminLogin() {
                 setLoading(true);
                 setError(null);
                 try {
-                  const resp = await api.post("/auth/admin/login", { email, password });
+                  const resp = await api.post("/auth/admin/login", { login, password });
                   const token = resp.data.data.token as string;
                   const admin = resp.data.data.admin;
                   
@@ -226,7 +226,7 @@ export function AdminLogin() {
                 }
               }}
             >
-              {/* Email field */}
+              {/* Email/Phone field */}
               <motion.label
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -235,15 +235,15 @@ export function AdminLogin() {
               >
                 <div className="mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-slate-200">
                   <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  Email Address
+                  Email or WhatsApp Number
                 </div>
                 <input
                   className="w-full rounded-lg sm:rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base text-white placeholder-slate-400 backdrop-blur-sm transition-all focus:border-white/40 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/20"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
                   required
-                  placeholder="admin@lokaclean.local"
+                  placeholder="admin@lokaclean.local or 0812..."
                 />
               </motion.label>
 
