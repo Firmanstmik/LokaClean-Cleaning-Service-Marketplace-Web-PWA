@@ -9,6 +9,7 @@ import { User, Mail, Phone, Lock, UserPlus, Sparkles, Gem } from "lucide-react";
 
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { CircularLoader } from "../../components/ui/CircularLoader";
 import { LanguageSwitcherPill } from "../../components/LanguageSwitcher";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { normalizeWhatsAppPhone } from "../../lib/phone";
@@ -446,11 +447,7 @@ export function UserRegister() {
                     <span className="flex items-center justify-center gap-2 relative z-20">
                         {loading ? (
                         <>
-                            <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
-                            />
+                            <CircularLoader size="sm" />
                             <span>{t("auth.register.loading")}</span>
                         </>
                         ) : (

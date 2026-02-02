@@ -16,6 +16,7 @@ import { PageHeaderCard } from "../../components/PageHeaderCard";
 import { getPackageGradient } from "../../utils/packageIcon";
 import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
 import { t, getLanguage } from "../../lib/i18n";
+import { CircularLoader } from "../../components/ui/CircularLoader";
 import type { PaketCleaning } from "../../types/api";
 
 export function PackagesPage() {
@@ -818,11 +819,7 @@ export function PackagesPage() {
         {/* Loading State */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-16 sm:py-20">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="h-12 w-12 sm:h-16 sm:w-16 rounded-full border-3 sm:border-4 border-slate-200 border-t-teal-500"
-            />
+            <CircularLoader size="xl" />
             <p className="mt-4 text-xs sm:text-sm text-slate-600 font-medium">{t("packages.loading")}</p>
           </div>
         )}
