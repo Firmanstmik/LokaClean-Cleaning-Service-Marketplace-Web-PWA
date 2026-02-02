@@ -29,20 +29,22 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
       return next(new HttpError(401, "Invalid token payload"));
     }
 
-    req.auth = {
+    const payload = {
       id: Number(decoded.id),
       actor: decoded.actor,
       role: decoded.role
     };
 
+    req.auth = payload;
+
     // Verify user exists in DB (Async check)
     (async () => {
       try {
-        if (req.auth.actor === "USER") {
-          const user = await prisma.user.findUnique({ where: { id: req.auth.id } });
+        if (payload.actor === "USER") {
+          const user = await prisma.user.findUnique({ where: { id: payload.id } });
           if (!user) throw new HttpError(404, "User account not found");
-        } else if (req.auth.actor === "ADMIN") {
-          const admin = await prisma.admin.findUnique({ where: { id: req.auth.id } });
+        } else if (payload.actor === "ADMIN") {
+          const admin = await prisma.admin.findUnique({ where: { id: payload.id } });
           if (!admin) throw new HttpError(404, "Admin account not found");
         }
         next();
