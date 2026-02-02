@@ -100,11 +100,11 @@ export function Home() {
       <AnimatePresence>
         {showWelcome && (
           <motion.div
-            initial={{ opacity: 0, x: 50, y: -20 }}
+            initial={{ opacity: 0, x: 50, y: 20 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 50, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-4 right-4 z-50 w-[90%] max-w-sm sm:w-auto"
+            className="fixed bottom-4 right-4 z-50 w-[90%] max-w-sm sm:w-auto"
           >
             <div className="relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-amber-200/50 ring-1 ring-black/5">
               
