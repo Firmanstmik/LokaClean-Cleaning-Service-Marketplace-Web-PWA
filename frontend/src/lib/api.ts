@@ -22,4 +22,30 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const actor = localStorage.getItem("lokaclean_actor");
+      
+      localStorage.removeItem("lokaclean_token");
+      localStorage.removeItem("lokaclean_actor");
+
+      // Avoid redirect loops if already on login pages
+      const path = window.location.pathname;
+      if (path === "/login" || path === "/admin/login") {
+        return Promise.reject(error);
+      }
+
+      // Determine redirect target based on actor type
+      const target = actor === "ADMIN" ? "/admin/login" : "/login";
+      window.location.href = target;
+
+      // Return a pending promise to halt downstream error handling (prevent UI error flashes)
+      return new Promise(() => {});
+    }
+    return Promise.reject(error);
+  }
+);
+
 
