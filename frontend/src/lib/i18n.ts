@@ -86,6 +86,10 @@ const translations = {
       },
       mascot: {
         speech: "Siap Bersih-bersih? 🧹✨"
+      },
+      welcome: {
+        title: "Selamat Datang di LokaClean! 👋",
+        desc: "Solusi kebersihan premium untuk kenyamanan Anda."
       }
     },
     auth: {
@@ -597,6 +601,10 @@ const translations = {
       },
       mascot: {
         speech: "Ready to Clean? 🧹✨"
+      },
+      welcome: {
+        title: "Welcome to LokaClean! 👋",
+        desc: "Premium cleaning solutions for your comfort."
       }
     },
     // Auth

@@ -5,10 +5,10 @@
  * - If authenticated: route to the correct dashboard (USER vs ADMIN).
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Sparkles, CheckCircle2, MapPin, Camera, Star, Zap, Shield, Heart, ArrowRight, Handshake, Leaf, Globe, User, Calendar, Clock, Home as HomeIcon, Quote, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, CheckCircle2, MapPin, Camera, Star, Zap, Shield, Heart, ArrowRight, Handshake, Leaf, Globe, User, Calendar, Clock, Home as HomeIcon, Quote, Check, X } from "lucide-react";
 
 import { useAuth } from "../lib/auth";
 import { Footer } from "../components/Footer";
@@ -18,6 +18,22 @@ import { LanguageSwitcherPill } from "../components/LanguageSwitcher";
 export function Home() {
   const { token, actor } = useAuth();
   useCurrentLanguage(); // Force re-render on language change
+
+  // Welcome Alert State
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    // Show alert after a short delay for better effect
+    const timerStart = setTimeout(() => setShowWelcome(true), 1000);
+    
+    // Auto hide after 6 seconds
+    const timerEnd = setTimeout(() => setShowWelcome(false), 7000);
+
+    return () => {
+      clearTimeout(timerStart);
+      clearTimeout(timerEnd);
+    };
+  }, []);
 
   // Logged-in users should not see the marketing landing page again.
   if (actor === "ADMIN") return <Navigate to="/admin/orders" replace />;
@@ -79,6 +95,48 @@ export function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 overflow-hidden relative">
+      
+      {/* Welcome Alert - Floating Top Right */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 0, x: 50, y: -20 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, x: 50, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed top-4 right-4 z-50 w-[90%] max-w-sm sm:w-auto"
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-white/90 backdrop-blur-md p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 ring-1 ring-black/5">
+              
+              {/* Decorative gradient line */}
+              <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-teal-400 via-blue-500 to-purple-500" />
+
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 rounded-full bg-gradient-to-br from-teal-100 to-blue-100 p-2 shadow-inner">
+                  <Sparkles className="h-5 w-5 text-teal-600" />
+                </div>
+                
+                <div className="flex-1 pt-0.5">
+                  <h3 className="text-sm font-bold text-slate-800">
+                    {t("home.welcome.title") || "Welcome to LokaClean! 👋"}
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                    {t("home.welcome.desc") || "Experience premium cleaning services for your comfort."}
+                  </p>
+                </div>
+
+                <button 
+                  onClick={() => setShowWelcome(false)}
+                  className="ml-2 -mr-1 -mt-1 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Subtle animated background particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
