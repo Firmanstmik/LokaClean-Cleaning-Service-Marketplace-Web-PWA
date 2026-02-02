@@ -665,12 +665,12 @@ export function UserLayout() {
     return allNotifications.slice(0, 2);
   }, [notifications, reminderOrders, currentLanguage, dismissedToastIds, isPageReady]); // Include isPageReady to re-evaluate
 
-  // Welcome screen state
-  const [showWelcome, setShowWelcome] = useState(true);
+  // Welcome screen state - PERMANENTLY DISABLED
+  const [showWelcome, setShowWelcome] = useState(false);
 
   return (
     <>
-      {/* Welcome/Splash Screen */}
+      {/* Welcome/Splash Screen - REMOVED */}
       {showWelcome && (
         <WelcomeScreen onComplete={() => setShowWelcome(false)} />
       )}
