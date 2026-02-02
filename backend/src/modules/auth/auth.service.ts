@@ -189,7 +189,9 @@ export async function loginUser(input: { login: string; password: string }) {
 }
 
 export async function loginAdmin(input: { login: string; password: string }) {
-  const { login, password } = input;
+  const { login: rawLogin, password } = input;
+  // Normalize login (email) to lowercase if it's an email
+  const login = rawLogin.includes("@") ? rawLogin.trim().toLowerCase() : rawLogin.trim();
   
   // Determine if login is email or phone
   const isEmail = login.includes("@");
