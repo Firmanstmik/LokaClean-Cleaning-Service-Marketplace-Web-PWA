@@ -94,7 +94,7 @@ export function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 overflow-hidden relative">
+    <div className="min-h-screen bg-white sm:bg-gradient-to-br sm:from-white sm:via-blue-50/30 sm:to-purple-50/20 overflow-hidden relative">
       
       {/* Welcome Alert - Floating Top Right */}
       <AnimatePresence>
@@ -172,7 +172,7 @@ export function Home() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-white/20 bg-white/95 sm:bg-white/90 backdrop-blur-sm sm:backdrop-blur-xl shadow-sm pt-safe"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-white/20 bg-white/95 sm:bg-white/90 sm:backdrop-blur-xl shadow-sm pt-safe"
       >
         <div className="w-full flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 lg:px-8 py-2 sm:py-3.5">
           <Link
@@ -306,13 +306,10 @@ export function Home() {
           <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center sm:justify-end pb-8 sm:pb-12 lg:pb-20">
             <div className="max-w-5xl pt-0 sm:pt-0">
                 {/* Mobile Hero Image (Top Position) */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
+                <div
                   className="w-full mb-1 sm:hidden flex justify-center"
                 >
-                  <motion.img 
+                  <img 
                     src="/img/hero.png" 
                     alt="LokaClean Hero" 
                     fetchPriority="high"
@@ -320,12 +317,9 @@ export function Home() {
                     decoding="async"
                     className="h-[270px] w-auto object-contain drop-shadow-2xl filter contrast-110"
                   />
-                </motion.div>
+                </div>
                 {/* Headlines */}
-                <motion.h1
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
+                <h1
                   className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left"
                 >
                   <span className="inline-block">
@@ -343,22 +337,16 @@ export function Home() {
                     {t("home.hero.titleHighlight2")}
                   </span>
                   {t("home.hero.titlePart3")}
-                </motion.h1>
+                </h1>
 
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.6 }}
-                  className="text-sm sm:text-lg text-slate-800 font-semibold leading-relaxed mb-3 sm:mb-8 max-w-lg drop-shadow-md bg-white/40 sm:bg-white/30 backdrop-blur-md p-3.5 rounded-xl border border-white/40 text-center sm:text-left mx-auto sm:mx-0"
+                <p
+                  className="text-sm sm:text-lg text-slate-800 font-semibold leading-relaxed mb-3 sm:mb-8 max-w-lg drop-shadow-md bg-white/40 sm:bg-white/30 sm:backdrop-blur-md p-3.5 rounded-xl border border-white/40 text-center sm:text-left mx-auto sm:mx-0"
                 >
                   {t("home.hero.subtitle")}
-                </motion.p>
+                </p>
 
                 {/* CTA Buttons - Moved to Hero Section */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
+                <div
                   className="flex flex-row gap-3 sm:gap-4 justify-center sm:justify-start mb-4 sm:mb-10"
                 >
                   <Link
@@ -370,7 +358,7 @@ export function Home() {
                       <ArrowRight className="h-3.5 w-3.5 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                     </span>
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      className="hidden sm:block absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                       animate={{
                         x: ["-100%", "200%"],
                       }}
@@ -384,7 +372,7 @@ export function Home() {
                   </Link>
                   <Link
                     to="/login"
-                    className="flex-1 sm:flex-none sm:w-64 relative rounded-xl sm:rounded-2xl border-2 border-slate-300 bg-white/90 backdrop-blur-xl px-4 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-base font-bold text-slate-700 hover:bg-white hover:border-slate-400 hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden group text-center block"
+                    className="flex-1 sm:flex-none sm:w-64 relative rounded-xl sm:rounded-2xl border-2 border-slate-300 bg-white/90 sm:backdrop-blur-xl px-4 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-base font-bold text-slate-700 hover:bg-white hover:border-slate-400 hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden group text-center block"
                   >
                     <span className="relative z-10">{t("home.hero.ctaLogin")}</span>
                     <motion.div
@@ -394,13 +382,10 @@ export function Home() {
                       transition={{ duration: 0.3 }}
                       />
                   </Link>
-                </motion.div>
+                </div>
 
                 {/* Highlight Values (Floating Cards on Image) - Grid on Mobile */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
+                <div
                   className="grid grid-cols-3 gap-2 sm:gap-4 pb-2 sm:pb-0 mx-0 items-stretch w-full max-w-4xl"
                 >
                   {/* Item 1 */}
@@ -435,7 +420,7 @@ export function Home() {
                       <p className="text-[9px] sm:text-sm text-slate-500 font-medium leading-tight whitespace-normal sm:whitespace-nowrap">{t("home.hero.feature3.desc")}</p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
 
               </div>
             </div>
@@ -447,16 +432,13 @@ export function Home() {
           {/* How It Works - Premium Mobile Style */}
         <div className="mb-12 sm:mb-24 relative z-10">
           <div className="text-center mb-10 sm:mb-16">
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+            <div 
               className="inline-block mb-3"
             >
               <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-600 text-xs font-bold uppercase tracking-wider">
                 {t("home.howItWorks.subtitle") || "Simple Process"}
               </span>
-            </motion.div>
+            </div>
             
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight">
               {t("home.howItWorks.title")}
@@ -535,10 +517,7 @@ export function Home() {
         </div>
 
         {/* Featured Package - Pembersihan Rumah Baru */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.6 }}
+        <div
           className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 shadow-2xl border border-white/10 mb-8 sm:mb-12"
         >
           {/* Background Effects */}
@@ -548,10 +527,10 @@ export function Home() {
           <div className="relative z-20 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 items-center">
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 sm:px-4 sm:py-1.5 text-[10px] sm:text-sm font-bold text-white backdrop-blur-md border border-white/20 shadow-lg">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-0.5 sm:px-4 sm:py-1.5 text-[10px] sm:text-sm font-bold text-white sm:backdrop-blur-md border border-white/20 shadow-lg">
                   <Star className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-yellow-400 fill-yellow-400" /> PREMIUM
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 px-2.5 py-0.5 sm:px-4 sm:py-1.5 text-[10px] sm:text-sm font-bold text-blue-200 backdrop-blur-md border border-blue-500/30">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 px-2.5 py-0.5 sm:px-4 sm:py-1.5 text-[10px] sm:text-sm font-bold text-blue-200 sm:backdrop-blur-md border border-blue-500/30">
                   {t("home.featured.newHome.badge")}
                 </span>
               </div>
@@ -576,23 +555,20 @@ export function Home() {
                {/* Mascot Illustration Placeholder - Mascot moved to global scope */}
             </div>
           </div>
-        </motion.div>
+        </div>
 
 
 
         {/* Testimonials - Aligned with How It Works Design */}
         <section className="mb-12 sm:mb-24 relative z-10">
           <div className="text-center mb-10 sm:mb-16">
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+            <div 
               className="inline-block mb-3"
             >
               <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-600 text-xs font-bold uppercase tracking-wider">
                 Testimonials
               </span>
-            </motion.div>
+            </div>
             
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight">
               {t("home.testimonials.title")}
