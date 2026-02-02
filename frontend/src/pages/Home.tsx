@@ -394,7 +394,7 @@ export function Home() {
                       transition={{ duration: 0.3 }}
                       />
                   </Link>
-                </div>
+                </motion.div>
 
                 {/* Highlight Values (Floating Cards on Image) - Grid on Mobile */}
                 <motion.div
@@ -435,7 +435,7 @@ export function Home() {
                       <p className="text-[9px] sm:text-sm text-slate-500 font-medium leading-tight whitespace-normal sm:whitespace-nowrap">{t("home.hero.feature3.desc")}</p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
               </div>
             </div>
@@ -506,7 +506,7 @@ export function Home() {
                     </div>
                   </div>
                   <h3 className="text-[11px] font-bold text-slate-900 text-center leading-snug truncate w-full">{step.title}</h3>
-                </div>
+                </motion.div>
               ))}
             </div>
             <div className="absolute left-6 right-6 top-[28px] h-0.5 bg-gradient-to-r from-blue-200 via-purple-200 to-blue-200 -z-10 rounded-full" />
@@ -594,7 +594,7 @@ export function Home() {
                {/* Mascot Illustration Placeholder - Mascot moved to global scope */}
             </div>
           </div>
-        </div>
+        </motion.div>
 
 
 
@@ -682,7 +682,7 @@ export function Home() {
                   <p className="text-xs text-slate-600 leading-snug">
                     "{testi.text}"
                   </p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
