@@ -32,7 +32,8 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
     const payload = {
       id: Number(decoded.id),
       actor: decoded.actor,
-      role: decoded.role
+      role: decoded.role,
+      origin: decoded.origin
     };
 
     req.auth = payload;
@@ -44,8 +45,16 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
           const user = await prisma.user.findUnique({ where: { id: payload.id } });
           if (!user) throw new HttpError(404, "User account not found");
         } else if (payload.actor === "ADMIN") {
-          const admin = await prisma.admin.findUnique({ where: { id: payload.id } });
-          if (!admin) throw new HttpError(404, "Admin account not found");
+          if (payload.origin === "USER") {
+             // User with ADMIN role logging in as Admin
+             const user = await prisma.user.findUnique({ where: { id: payload.id } });
+             if (!user) throw new HttpError(404, "Admin account (User) not found");
+             if (user.role !== "ADMIN") throw new HttpError(403, "Not authorized as Admin");
+          } else {
+             // Standard Admin
+             const admin = await prisma.admin.findUnique({ where: { id: payload.id } });
+             if (!admin) throw new HttpError(404, "Admin account not found");
+          }
         }
         next();
       } catch (err) {

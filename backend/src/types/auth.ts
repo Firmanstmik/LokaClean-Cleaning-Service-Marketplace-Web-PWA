@@ -8,12 +8,14 @@ export interface AuthContext {
   actor: Actor;
   role: Actor; // matches ERD roles (USER/ADMIN)
   id: number;
+  origin?: "USER" | "ADMIN";
 }
 
 export interface JwtTokenPayload {
   actor: Actor;
   role: Actor;
   id: number;
+  origin?: "USER" | "ADMIN";
 }
 
 

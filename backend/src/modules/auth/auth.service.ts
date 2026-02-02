@@ -193,18 +193,14 @@ export async function loginAdmin(input: { login: string; password: string }) {
   
   // Determine if login is email or phone
   const isEmail = login.includes("@");
-  let admin = null;
+  let admin: any = null;
+  let isUserTable = false;
   
-  if (isEmail) {
-    admin = await prisma.admin.findUnique({ where: { email: login } });
-  } else {
-    // Phone login logic
-    const normalizedPhone = normalizeWhatsAppPhone(login);
-    if (!normalizedPhone) {
-       throw new HttpError(401, "Invalid credentials");
-    }
-
-    // Extract digits for flexible matching
+  // Helper to get phone variations
+  const getPhoneVariations = (phone: string) => {
+    const normalizedPhone = normalizeWhatsAppPhone(phone);
+    if (!normalizedPhone) return [];
+    
     let digitsOnly = normalizedPhone.replace(/^\+62/, "");
     if (digitsOnly.startsWith("+")) digitsOnly = digitsOnly.slice(1);
     if (digitsOnly.startsWith("62") && digitsOnly.length > 2) digitsOnly = digitsOnly.slice(2);
@@ -217,23 +213,76 @@ export async function loginAdmin(input: { login: string; password: string }) {
       variationsSet.add(digitsOnly);
       variationsSet.add(`62${digitsOnly}`);
     }
-    const variations = Array.from(variationsSet).filter(v => v && v.length > 0);
+    return Array.from(variationsSet).filter(v => v && v.length > 0);
+  };
 
-    admin = await prisma.admin.findFirst({
-      where: {
-        OR: variations.map(v => ({ phone_number: v })) as any
+  // 1. Try finding in ADMIN table
+  if (isEmail) {
+    admin = await prisma.admin.findUnique({ where: { email: login } });
+  } else {
+    const variations = getPhoneVariations(login);
+    if (variations.length > 0) {
+      admin = await prisma.admin.findFirst({
+        where: {
+          OR: variations.map(v => ({ phone_number: v })) as any
+        }
+      });
+    }
+  }
+
+  // 2. If not found in Admin, try USER table with role=ADMIN
+  if (!admin) {
+    if (isEmail) {
+      admin = await prisma.user.findFirst({ 
+        where: { email: login, role: "ADMIN" } 
+      });
+    } else {
+      const variations = getPhoneVariations(login);
+      if (variations.length > 0) {
+        admin = await prisma.user.findFirst({
+          where: { 
+            AND: [
+              { role: "ADMIN" },
+              { OR: variations.map(v => ({ phone_number: v })) as any }
+            ]
+          }
+        });
       }
-    });
+    }
+    if (admin) isUserTable = true;
   }
 
   if (!admin) throw new HttpError(401, "Invalid credentials");
 
-  const ok = await bcrypt.compare(password, admin.password);
+  // 3. Verify Password
+  // Admin table uses 'password', User table uses 'password_hash'
+  const dbPassword = isUserTable ? admin.password_hash : admin.password;
+  
+  if (!dbPassword) {
+      // If user has no password (e.g. google auth only), they can't login this way
+      throw new HttpError(401, "Invalid credentials");
+  }
+
+  const ok = await bcrypt.compare(password, dbPassword);
   if (!ok) throw new HttpError(401, "Invalid credentials");
 
-  const token = signToken({ actor: "ADMIN", role: "ADMIN", id: admin.id });
-  const safeAdmin = await prisma.admin.findUnique({ where: { id: admin.id }, select: adminSelect });
-  if (!safeAdmin) throw new HttpError(500, "Admin not found after login");
+  // 4. Return Token
+  const tokenPayload: JwtTokenPayload = { 
+      actor: "ADMIN", 
+      role: "ADMIN", 
+      id: admin.id,
+      origin: isUserTable ? "USER" : "ADMIN"
+  };
+
+  const token = signToken(tokenPayload);
+  
+  const safeAdmin = {
+      id: admin.id,
+      full_name: admin.full_name,
+      email: admin.email,
+      role: "ADMIN",
+      created_at: admin.created_at
+  };
 
   return { token, admin: safeAdmin };
 }
