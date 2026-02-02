@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Phone, Lock, UserPlus, Sparkles, Gem } from "lucide-react";
 
 import { api } from "../../lib/api";
@@ -473,6 +473,29 @@ export function UserRegister() {
                 </div>
                 </div>
             </div>
+
+            {/* Loading Overlay */}
+            <AnimatePresence>
+              {loading && (
+                <motion.div
+                  initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                  animate={{ opacity: 1, backdropFilter: "blur(8px)" }}
+                  exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                  className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/50 rounded-t-[2.5rem] lg:rounded-none"
+                >
+                   <motion.div
+                    initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                    className="flex flex-col items-center bg-white/80 p-8 rounded-3xl shadow-2xl border border-white/50 backdrop-blur-xl"
+                  >
+                    <CircularLoader size="xl" className="mb-6" />
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">{t("auth.register.loading")}</h3>
+                    <p className="text-sm text-slate-500 font-medium">Preparing your account...</p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
         </div>
       </motion.div>
     </div>
