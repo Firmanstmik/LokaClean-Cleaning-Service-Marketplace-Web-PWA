@@ -7,6 +7,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
+import { prisma } from "../db/prisma";
 import { env } from "../config/env";
 import { HttpError } from "../utils/httpError";
 import type { JwtTokenPayload } from "../types/auth";
@@ -34,7 +35,22 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
       role: decoded.role
     };
 
-    return next();
+    // Verify user exists in DB (Async check)
+    (async () => {
+      try {
+        if (req.auth.actor === "USER") {
+          const user = await prisma.user.findUnique({ where: { id: req.auth.id } });
+          if (!user) throw new HttpError(404, "User account not found");
+        } else if (req.auth.actor === "ADMIN") {
+          const admin = await prisma.admin.findUnique({ where: { id: req.auth.id } });
+          if (!admin) throw new HttpError(404, "Admin account not found");
+        }
+        next();
+      } catch (err) {
+        next(err);
+      }
+    })();
+
   } catch {
     return next(new HttpError(401, "Invalid or expired token"));
   }
