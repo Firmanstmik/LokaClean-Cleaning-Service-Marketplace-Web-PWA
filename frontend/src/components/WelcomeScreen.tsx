@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { CircularLoader } from "./ui/CircularLoader";
 
 const STORAGE_KEY = "lokaclean_welcome_shown";
 const EXIT_DURATION = 150; // Quick smooth exit animation (0.15s)
@@ -166,29 +167,14 @@ export function WelcomeScreen({ onComplete }: { onComplete: () => void }) {
               </motion.p>
             </motion.div>
 
-            {/* Loading dots */}
+            {/* Circular Loader */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.35 }}
-              className="flex justify-center gap-2 mt-6"
+              className="mt-8"
             >
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="h-2 w-2 rounded-full bg-white"
-                  animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
+              <CircularLoader size="lg" variant="white" />
             </motion.div>
           </motion.div>
         </motion.div>
