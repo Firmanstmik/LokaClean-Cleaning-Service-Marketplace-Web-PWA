@@ -47,8 +47,12 @@ api.interceptors.response.use(
 
     // Handle User Deleted (404 with specific message)
     const errorMessage = error.response?.data?.error?.message;
-    if (error.response?.status === 404 && 
-       (errorMessage === "User account not found" || errorMessage === "Admin account not found")) {
+    const isUserNotFound = error.response?.status === 404 && 
+      (errorMessage === "User account not found" || 
+       errorMessage === "Admin account not found" || 
+       errorMessage === "User not found"); // Handle controller-level error too
+
+    if (isUserNotFound) {
       
       // Show floating alert
       const msg = document.createElement('div');
