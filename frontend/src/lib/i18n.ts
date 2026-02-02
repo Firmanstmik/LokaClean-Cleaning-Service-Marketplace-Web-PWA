@@ -88,8 +88,8 @@ const translations = {
         speech: "Siap Bersih-bersih? 🧹✨"
       },
       welcome: {
-        title: "Selamat Datang di LokaClean! 👋",
-        desc: "Solusi kebersihan premium untuk kenyamanan Anda."
+        title: "Tahap Pengembangan 🚧",
+        desc: "Mohon maaf jika aplikasi belum maksimal, saat ini sedang dalam pengembangan awal."
       }
     },
     auth: {
@@ -603,8 +603,8 @@ const translations = {
         speech: "Ready to Clean? 🧹✨"
       },
       welcome: {
-        title: "Welcome to LokaClean! 👋",
-        desc: "Premium cleaning solutions for your comfort."
+        title: "Under Development 🚧",
+        desc: "Please excuse any imperfections as we are currently in early development."
       }
     },
     // Auth

@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CheckCircle2, MapPin, Camera, Star, Zap, Shield, Heart, ArrowRight, Handshake, Leaf, Globe, User, Calendar, Clock, Home as HomeIcon, Quote, Check, X } from "lucide-react";
+import { Sparkles, CheckCircle2, MapPin, Camera, Star, Zap, Shield, Heart, ArrowRight, Handshake, Leaf, Globe, User, Calendar, Clock, Home as HomeIcon, Quote, Check, X, Construction } from "lucide-react";
 
 import { useAuth } from "../lib/auth";
 import { Footer } from "../components/Footer";
@@ -106,22 +106,22 @@ export function Home() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed top-4 right-4 z-50 w-[90%] max-w-sm sm:w-auto"
           >
-            <div className="relative overflow-hidden rounded-2xl bg-white/90 backdrop-blur-md p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/50 ring-1 ring-black/5">
+            <div className="relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-amber-200/50 ring-1 ring-black/5">
               
               {/* Decorative gradient line */}
-              <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-teal-400 via-blue-500 to-purple-500" />
+              <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500" />
 
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 rounded-full bg-gradient-to-br from-teal-100 to-blue-100 p-2 shadow-inner">
-                  <Sparkles className="h-5 w-5 text-teal-600" />
+                <div className="flex-shrink-0 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 p-2 shadow-inner">
+                  <Construction className="h-5 w-5 text-amber-600" />
                 </div>
                 
                 <div className="flex-1 pt-0.5">
                   <h3 className="text-sm font-bold text-slate-800">
-                    {t("home.welcome.title") || "Welcome to LokaClean! 👋"}
+                    {t("home.welcome.title") || "Tahap Pengembangan 🚧"}
                   </h3>
                   <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                    {t("home.welcome.desc") || "Experience premium cleaning services for your comfort."}
+                    {t("home.welcome.desc") || "Mohon maaf jika aplikasi belum maksimal, saat ini sedang dalam pengembangan awal."}
                   </p>
                 </div>
 
