@@ -218,7 +218,8 @@ export function AdminLogin() {
                   }
                   
                   setAuth(token, "ADMIN");
-                  navigate("/admin/orders", { replace: true });
+                  // Force a hard redirect to ensure state is picked up correctly
+                  window.location.href = "/admin/orders";
                 } catch (err) {
                   setError(getApiErrorMessage(err));
                 } finally {
