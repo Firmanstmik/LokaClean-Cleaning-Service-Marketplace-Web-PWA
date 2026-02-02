@@ -287,12 +287,16 @@ export function UserRegister() {
                     setLoading(true);
                     setError(null);
                     try {
-                        const resp = await api.post("/auth/user/register", {
-                        full_name: fullName,
-                        email: email.trim().toLowerCase(),
-                        phone_number: normalizedPhone,
-                        password
-                        });
+                        // Artificial delay for smooth loading transition (min 2.5s)
+                        const [resp] = await Promise.all([
+                            api.post("/auth/user/register", {
+                                full_name: fullName,
+                                email: email.trim().toLowerCase(),
+                                phone_number: normalizedPhone,
+                                password
+                            }),
+                            new Promise(resolve => setTimeout(resolve, 2500))
+                        ]);
                         const token = resp.data.data.token as string;
                         setAuth(token, "USER");
                         localStorage.removeItem("lokaclean_welcome_shown");

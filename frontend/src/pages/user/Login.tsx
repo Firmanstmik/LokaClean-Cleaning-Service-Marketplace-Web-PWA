@@ -285,10 +285,14 @@ export function UserLogin() {
                     setLoading(true);
                     setError(null);
                     try {
-                        const resp = await api.post("/auth/user/login", {
-                        login: loginValue,
-                        password
-                        });
+                        // Artificial delay for smooth loading transition (min 2.5s)
+                        const [resp] = await Promise.all([
+                            api.post("/auth/user/login", {
+                                login: loginValue,
+                                password
+                            }),
+                            new Promise(resolve => setTimeout(resolve, 2500))
+                        ]);
                         const token = resp.data.data.token as string;
                         setAuth(token, "USER");
                         localStorage.removeItem("lokaclean_welcome_shown");
