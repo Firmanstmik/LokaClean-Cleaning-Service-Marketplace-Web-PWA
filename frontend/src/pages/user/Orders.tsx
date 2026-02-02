@@ -7,6 +7,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Package, Clock, MapPin, CreditCard, CheckCircle2, AlertCircle, ArrowRight, Calendar, ChevronRight, ChevronLeft, Filter, List, Sparkles, Eye } from "lucide-react";
 
+import { CircularLoader } from "../../components/ui/CircularLoader";
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { AnimatedCard } from "../../components/AnimatedCard";
@@ -230,18 +231,10 @@ export function OrdersPage() {
       </motion.div>
 
       {loading ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center py-12"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="h-12 w-12 rounded-full border-4 border-lombok-ocean-200 border-t-lombok-ocean-500"
-          />
+        <div className="flex flex-col items-center justify-center py-12">
+          <CircularLoader size="lg" />
           <p className="mt-4 text-sm text-slate-600">{t("orders.loading")}</p>
-        </motion.div>
+        </div>
       ) : null}
 
         {error ? (

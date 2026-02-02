@@ -1532,11 +1532,7 @@ export function NewOrderPage() {
               <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-2.5">
                 {submitting ? (
                   <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="h-4 w-4 sm:h-5 sm:w-5 rounded-full border-2 border-white/30 border-t-white flex-shrink-0"
-                    />
+                    <CircularLoader size="sm" />
                     <span className="font-bold">{t("newOrder.creating")}</span>
                   </>
                 ) : (

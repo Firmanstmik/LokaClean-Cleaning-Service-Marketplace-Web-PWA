@@ -106,7 +106,14 @@ export function ProfilePage() {
   }, [photoPreviewUrl]);
 
   // Early returns AFTER all hooks
-  if (loading) return <div className="text-sm text-slate-600">{t("profile.loadingProfile")}</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+        <CircularLoader size="lg" />
+        <p className="mt-4 text-sm text-slate-600">{t("profile.loadingProfile")}</p>
+      </div>
+    );
+  }
   if (loadError) {
     return (
       <div className="rounded-xl border bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.04)]">
@@ -619,11 +626,7 @@ export function ProfilePage() {
             />
             {saving ? (
               <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border-2 border-white/30 border-t-white"
-                />
+                <CircularLoader size="sm" />
                 <span>{t("profile.saving")}</span>
               </>
             ) : (
