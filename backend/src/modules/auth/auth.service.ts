@@ -53,11 +53,14 @@ export async function registerUser(input: {
   password: string;
 }) {
   const email = input.email.trim().toLowerCase();
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) throw new HttpError(409, "Email already registered");
+  const existingEmail = await prisma.user.findUnique({ where: { email } });
+  if (existingEmail) throw new HttpError(409, "Email already registered");
 
   const normalizedPhone = normalizeWhatsAppPhone(input.phone_number);
   if (!normalizedPhone) throw new HttpError(400, "Invalid phone number");
+
+  const existingPhone = await prisma.user.findFirst({ where: { phone_number: normalizedPhone } });
+  if (existingPhone) throw new HttpError(409, "Phone number already registered");
 
   if (input.password.trim().length < 6) throw new HttpError(400, "Invalid password");
   const passwordHash = await bcrypt.hash(input.password, 12);

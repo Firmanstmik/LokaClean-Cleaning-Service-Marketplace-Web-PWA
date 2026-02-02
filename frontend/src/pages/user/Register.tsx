@@ -298,10 +298,14 @@ export function UserRegister() {
                         navigate("/profile/complete?next=/packages", { replace: true });
                     } catch (err) {
                         const rawMessage = getApiErrorMessage(err);
-                        if (rawMessage.toLowerCase().includes("email already registered")) {
-                        setError(t("auth.validation.emailRegistered"));
+                        const lowerMsg = rawMessage.toLowerCase();
+
+                        if (lowerMsg.includes("email already registered")) {
+                            setError(t("auth.validation.emailRegistered"));
+                        } else if (lowerMsg.includes("phone number already registered")) {
+                            setError(t("auth.validation.phoneRegistered"));
                         } else {
-                        setError(rawMessage);
+                            setError(rawMessage);
                         }
                     } finally {
                         setLoading(false);
@@ -393,6 +397,11 @@ export function UserRegister() {
                                     placeholder="••••••••"
                                 />
                             </div>
+                            <p className={`text-[11px] font-medium ml-1 transition-colors ${
+                                password.length > 0 && password.trim().length < 6 ? "text-red-500" : "text-slate-400"
+                            }`}>
+                                {t("auth.validation.passwordMin")}
+                            </p>
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs lg:text-sm font-semibold text-slate-700">{t("auth.register.confirmPasswordLabel")}</label>

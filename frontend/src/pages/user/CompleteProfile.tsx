@@ -315,6 +315,11 @@ export function CompleteProfilePage() {
                 onChange={(e) => {
                   const file = e.target.files?.[0] ?? null;
                   if (file) {
+                    // Validate file size (10MB)
+                    if (file.size > 10 * 1024 * 1024) {
+                      setActionError(t("completeProfile.errorPhotoSize") || "Ukuran file terlalu besar (maks 10MB).");
+                      return;
+                    }
                     setProfilePhoto(file);
                     setActionError(null);
                   }

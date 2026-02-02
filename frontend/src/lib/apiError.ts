@@ -25,6 +25,11 @@ function extractBackendMessage(data: unknown): string | null {
 
 export function getApiErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
+    // Handle 413 Payload Too Large (usually from Nginx or Multer)
+    if (err.response?.status === 413) {
+      return "Ukuran file terlalu besar. Maksimum 10MB.";
+    }
+
     const msg = extractBackendMessage(err.response?.data) ?? err.message;
     return typeof msg === "string" && msg.length > 0 ? msg : "Request failed";
   }

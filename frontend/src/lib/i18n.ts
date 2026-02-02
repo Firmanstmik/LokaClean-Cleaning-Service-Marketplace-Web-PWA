@@ -142,7 +142,8 @@ const translations = {
         passwordMismatch: "Eh, passwordnya beda. Coba samain dulu.",
         nameRequired: "Kenalan dong, namanya siapa?",
         loginFailed: "Ups, kunci salah! Cek email/nomor atau passwordnya lagi ya.",
-        emailRegistered: "Email ini udah ada yang punya. Coba yang lain atau langsung login aja."
+        emailRegistered: "Email ini udah ada yang punya. Coba yang lain atau langsung login aja.",
+        phoneRegistered: "Nomor WA ini udah terdaftar. Coba login aja atau pakai nomor lain."
       }
     },
     // Complete Profile (Simple & Friendly)
@@ -653,7 +654,8 @@ const translations = {
         passwordMismatch: "Passwords don't match. Try again!",
         nameRequired: "Don't be shy, what's your name?",
         loginFailed: "Oops, wrong key! Check your email/number or password.",
-        emailRegistered: "This email is already part of the fam. Try another or login."
+        emailRegistered: "This email is already part of the fam. Try another or login.",
+        phoneRegistered: "This WhatsApp number is already registered. Try logging in or use another number."
       }
     },
     // Complete Profile (Simple & Friendly)

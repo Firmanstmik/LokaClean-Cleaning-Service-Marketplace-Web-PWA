@@ -225,8 +225,14 @@ export function ProfilePage() {
                     accept="image/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
-                      setProfilePhoto(file);
-                      setActionError(null);
+                      if (file) {
+                        if (file.size > 10 * 1024 * 1024) {
+                           setActionError("Ukuran file terlalu besar (maks 10MB).");
+                           return;
+                        }
+                        setProfilePhoto(file);
+                        setActionError(null);
+                      }
                     }}
                   />
                 </motion.label>
