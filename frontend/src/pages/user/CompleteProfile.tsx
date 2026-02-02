@@ -194,7 +194,7 @@ export function CompleteProfilePage() {
   const progressPercentage = (completedFields / totalFields) * 100;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-24 sm:pb-10">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-10">
       {/* Header Section */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -480,8 +480,8 @@ export function CompleteProfilePage() {
         )}
       </AnimatePresence>
 
-      {/* Action Button - Sticky Bottom on Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white/80 backdrop-blur-xl border-t border-slate-200 sm:static sm:bg-transparent sm:border-0 sm:p-0 z-40">
+      {/* Action Button - Bottom of Form */}
+      <div className="mt-6 pt-2 z-40">
         <div className="max-w-3xl mx-auto">
           <motion.button
             whileHover={{ scale: 1.02 }}
