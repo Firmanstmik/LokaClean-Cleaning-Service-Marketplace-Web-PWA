@@ -56,6 +56,7 @@ async function main() {
       data: {
         full_name: adminFullName,
         email: adminEmail,
+        // @ts-ignore
         phone_number: adminPhone, // Add phone
         password: passwordHash,
         role: Role.ADMIN
