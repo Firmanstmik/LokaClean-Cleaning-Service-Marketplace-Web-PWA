@@ -317,6 +317,9 @@ export function Home() {
              <img 
                src="/img/hero.png" 
                alt="LokaClean Hero" 
+               fetchPriority="high"
+               loading="eager"
+               decoding="async"
                className="hidden sm:block w-full h-full object-contain sm:object-contain object-bottom sm:object-right-bottom transition-transform duration-[10s] ease-in-out group-hover:scale-105"
              />
              {/* Gradient Overlay for Readability on Mobile */}
@@ -339,6 +342,9 @@ export function Home() {
                   <motion.img 
                     src="/img/hero.png" 
                     alt="LokaClean Hero" 
+                    fetchPriority="high"
+                    loading="eager"
+                    decoding="async"
                     className="h-[270px] w-auto object-contain drop-shadow-2xl filter contrast-110"
                     animate={{ scale: [1, 1.05, 1] }}
                     transition={{
