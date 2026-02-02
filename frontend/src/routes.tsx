@@ -41,7 +41,9 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/admin" element={<Navigate to="/adminlokacleanmandalika/login" replace />} />
+      {/* Security: Redirect /admin to Home to hide admin login URL */}
+      <Route path="/admin" element={<Navigate to="/" replace />} />
+      <Route path="/admin/login" element={<Navigate to="/" replace />} />
 
       {/* USER auth */}
       <Route path="/login" element={<UserLogin />} />
