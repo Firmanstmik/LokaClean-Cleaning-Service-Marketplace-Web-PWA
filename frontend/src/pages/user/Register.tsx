@@ -121,8 +121,8 @@ export function UserRegister() {
           <LanguageSwitcherPill variant="dark" uniqueId="desktop-register" />
         </div>
 
-        {/* Decorative Circles (Mobile) */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none lg:hidden z-0">
+        {/* Decorative Circles (Mobile) - Hidden on small mobile screens for performance */}
+        <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none lg:hidden z-0">
             <motion.div
               className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-white/20 blur-3xl"
               animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
@@ -153,7 +153,7 @@ export function UserRegister() {
                 className="mb-4 flex flex-col w-full"
               >
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-lg">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 sm:backdrop-blur-md border border-white/30 shadow-lg">
                     <img src="/img/logo.jpg" alt="Logo" className="h-16 w-16 object-contain rounded-xl" />
                   </div>
                 </div>
@@ -167,7 +167,7 @@ export function UserRegister() {
                   {t("auth.hero.subtitle")}
                 </p>
 
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-1.5 pr-3 rounded-full w-fit border border-white/20">
+                <div className="flex items-center gap-3 bg-white/10 sm:backdrop-blur-md p-1.5 pr-3 rounded-full w-fit border border-white/20">
                   <div className="flex -space-x-3">
                       {[1,2,3,4].map(i => (
                       <div key={i} className="w-6 h-6 rounded-full border border-slate-800 bg-slate-700 overflow-hidden">

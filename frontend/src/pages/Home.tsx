@@ -106,7 +106,7 @@ export function Home() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed bottom-4 right-4 z-50 w-[90%] max-w-sm sm:w-auto"
           >
-            <div className="relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-amber-200/50 ring-1 ring-black/5">
+            <div className="relative overflow-hidden rounded-2xl bg-white/95 sm:backdrop-blur-md p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-amber-200/50 ring-1 ring-black/5">
               
               {/* Decorative gradient line */}
               <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500" />
@@ -137,8 +137,8 @@ export function Home() {
         )}
       </AnimatePresence>
 
-      {/* Subtle animated background particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Subtle animated background particles - Hidden on mobile for performance */}
+      <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-blue-100/20 blur-3xl"
           animate={{
@@ -172,7 +172,7 @@ export function Home() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-white/20 bg-white/90 backdrop-blur-xl shadow-sm pt-safe"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-white/20 bg-white/95 sm:bg-white/90 backdrop-blur-sm sm:backdrop-blur-xl shadow-sm pt-safe"
       >
         <div className="w-full flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 lg:px-8 py-2 sm:py-3.5">
           <Link

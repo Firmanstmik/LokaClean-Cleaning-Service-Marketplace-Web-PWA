@@ -30,9 +30,8 @@
 }
 
 @layer base {
-  * {
-    @apply transition-colors duration-200;
-  }
+  /* Removed universal transition as it causes performance issues on mobile */
+  /* * { @apply transition-colors duration-200; } */
 
   body {
     @apply antialiased scrollbar-hide;

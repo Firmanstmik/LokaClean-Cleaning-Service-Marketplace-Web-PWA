@@ -831,8 +831,8 @@ export function UserLayout() {
       </AnimatePresence>
 
     <div className="min-h-dvh flex flex-col bg-gradient-to-br from-tropical-50 via-ocean-50/50 to-sand-50/70 scrollbar-hide overflow-x-hidden relative">
-      {/* Animated background particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Animated background particles - Hidden on mobile for performance */}
+      <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-tropical-200/20 blur-3xl"
           animate={{
