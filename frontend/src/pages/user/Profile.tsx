@@ -13,6 +13,7 @@ import { User as UserIcon, Phone, MapPin, Camera, Save, CheckCircle2, AlertCircl
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { DeleteAccountVerificationDialog } from "../../components/DeleteAccountVerificationDialog";
+import { CircularLoader } from "../../components/ui/CircularLoader";
 
 import { MapPicker, type LatLng } from "../../components/MapPicker";
 import { PageHeaderCard } from "../../components/PageHeaderCard";

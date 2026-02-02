@@ -13,6 +13,7 @@ import type React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { MapPicker, type LatLng } from "../../components/MapPicker";
+import { CircularLoader } from "../../components/ui/CircularLoader";
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { toDatetimeLocalValueWITA } from "../../utils/date";
