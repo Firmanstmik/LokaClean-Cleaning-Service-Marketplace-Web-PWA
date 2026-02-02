@@ -12,6 +12,7 @@ import { api } from "../lib/api";
 import { getApiErrorMessage } from "../lib/apiError";
 import { isUserProfileComplete } from "../lib/profile";
 import type { User } from "../types/api";
+import { CircularLoader } from "./ui/CircularLoader";
 
 export function RequireUserProfileComplete() {
   const location = useLocation();
@@ -53,7 +54,11 @@ export function RequireUserProfileComplete() {
   }, []);
 
   if (loading) {
-    return <div className="text-sm text-slate-600">Checking your profile...</div>;
+    return (
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
+        <CircularLoader size="lg" />
+      </div>
+    );
   }
 
   if (error) {
