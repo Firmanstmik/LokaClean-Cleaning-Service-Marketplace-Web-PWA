@@ -46,11 +46,17 @@ api.interceptors.response.use(
     }
 
     // Handle User Deleted (404 with specific message)
-    const errorMessage = error.response?.data?.error?.message;
+    // Check multiple possible error message locations and loose matching
+    const errorData = error.response?.data;
+    const errorMsg = errorData?.error?.message || errorData?.message || "";
+    
+    // Normalize to lower case for comparison
+    const lowerMsg = typeof errorMsg === 'string' ? errorMsg.toLowerCase() : "";
+    
     const isUserNotFound = error.response?.status === 404 && 
-      (errorMessage === "User account not found" || 
-       errorMessage === "Admin account not found" || 
-       errorMessage === "User not found"); // Handle controller-level error too
+      (lowerMsg.includes("user account not found") || 
+       lowerMsg.includes("admin account not found") || 
+       lowerMsg.includes("user not found"));
 
     if (isUserNotFound) {
       
