@@ -378,7 +378,7 @@ export function AdminLayout() {
               // Clear admin data on logout
               localStorage.removeItem("lokaclean_admin_data");
               logout();
-              navigate("/admin/login", { replace: true });
+              navigate("/adminlokacleanmandalika/login", { replace: true });
             }}
           >
             {/* Button shimmer */}

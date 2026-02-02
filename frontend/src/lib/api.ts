@@ -33,12 +33,12 @@ api.interceptors.response.use(
 
       // Avoid redirect loops if already on login pages
       const path = window.location.pathname;
-      if (path === "/login" || path === "/admin/login") {
+      if (path === "/login" || path === "/adminlokacleanmandalika/login") {
         return Promise.reject(error);
       }
 
       // Determine redirect target based on actor type
-      const target = actor === "ADMIN" ? "/admin/login" : "/login";
+      const target = actor === "ADMIN" ? "/adminlokacleanmandalika/login" : "/login";
       window.location.href = target;
 
       // Return a pending promise to halt downstream error handling (prevent UI error flashes)
