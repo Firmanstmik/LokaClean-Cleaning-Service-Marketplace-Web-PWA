@@ -188,6 +188,7 @@ const translations = {
       completed: "Lengkap",
       required: "Wajib Diisi",
       noteTitle: "Penting",
+      noteSubtitle: "Info penting untuk Anda",
       noteAddress: "Alamat yang akurat memudahkan Anda saat melakukan pemesanan tanpa perlu input ulang.",
       notePhoto: "Foto profil membantu petugas kami mengenali Anda saat tiba di lokasi demi keamanan dan kenyamanan."
     },
@@ -709,6 +710,7 @@ const translations = {
       completed: "Completed",
       required: "Required",
       noteTitle: "Important",
+      noteSubtitle: "Important info for you",
       noteAddress: "Accurate address helps you book orders easily without re-entering details.",
       notePhoto: "Profile photo helps our staff recognize you upon arrival for security and convenience."
     },

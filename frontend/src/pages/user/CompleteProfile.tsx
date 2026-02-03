@@ -391,10 +391,10 @@ export function CompleteProfilePage() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-slate-900 p-5 sm:p-10 text-white shadow-[0_15px_40px_-10px_rgba(15,23,42,0.3)]"
+        className="relative overflow-hidden rounded-2xl bg-slate-900 p-5 sm:p-10 text-white shadow-lg sm:shadow-[0_15px_40px_-10px_rgba(15,23,42,0.3)]"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-slate-900/0 to-slate-900/0" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-blue-600/20 via-slate-900/0 to-slate-900/0" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 sm:bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] sm:from-teal-500/20 sm:via-slate-900/0 sm:to-slate-900/0" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-900 to-slate-800 sm:bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] sm:from-blue-600/20 sm:via-slate-900/0 sm:to-slate-900/0" />
         
         <div className="relative z-10">
           <div className="flex items-start justify-between">
@@ -445,12 +445,12 @@ export function CompleteProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 * index }}
-            className={`relative overflow-hidden rounded-2xl p-[2px] transition-all duration-500 ${
+            className={`relative overflow-hidden rounded-2xl p-[2px] transition-all duration-300 ${
               activeSection === step.id
-                ? "bg-gradient-to-br from-teal-400 via-blue-500 to-purple-600 shadow-xl shadow-blue-500/20 scale-[1.01]"
+                ? "bg-gradient-to-br from-teal-400 via-blue-500 to-purple-600 shadow-lg sm:shadow-xl sm:shadow-blue-500/20 scale-[1.01]"
                 : step.isValid
-                  ? "bg-gradient-to-br from-emerald-400/50 via-teal-400/50 to-emerald-400/50 hover:from-emerald-400 hover:to-teal-400"
-                  : "bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100 hover:from-blue-200 hover:to-purple-200"
+                  ? "bg-gradient-to-br from-emerald-400 via-teal-400 to-emerald-400"
+                  : "bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
             }`}
           >
             <div className="h-full w-full rounded-xl bg-white overflow-hidden">
@@ -459,14 +459,14 @@ export function CompleteProfilePage() {
                 className="w-full flex items-center justify-between p-4 sm:p-6 text-left outline-none group"
               >
                 <div className="flex items-center gap-3.5 sm:gap-4">
-                  <div className={`flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-all duration-500 ${
+                  <div className={`flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-all duration-300 ${
                     step.isValid 
-                      ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]" 
+                      ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 shadow-sm" 
                       : activeSection === step.id 
-                        ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" 
+                        ? "bg-slate-900 text-white shadow-md sm:shadow-lg sm:shadow-slate-900/20" 
                         : "bg-slate-50 text-slate-400 group-hover:bg-white group-hover:shadow-sm"
                   }`}>
-                    <step.icon className={`h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-500 group-hover:scale-110 ${step.isValid ? 'text-emerald-600' : ''}`} />
+                    <step.icon className={`h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-300 group-hover:scale-110 ${step.isValid ? 'text-emerald-600' : ''}`} />
                   </div>
                   <div>
                     <h3 className={`text-sm sm:text-lg font-bold tracking-tight transition-colors ${
@@ -503,12 +503,12 @@ export function CompleteProfilePage() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
                     className="will-change-transform"
                   >
                     <div className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
-                      <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4 sm:mb-6" />
-                      <div className="rounded-2xl bg-slate-50/50 p-3 sm:p-6 border border-slate-100/50">
+                      <div className="h-px w-full bg-slate-100 mb-4 sm:mb-6" />
+                      <div className="rounded-2xl bg-slate-50 p-3 sm:p-6 border border-slate-100">
                         {step.content}
                       </div>
                     </div>
@@ -533,7 +533,7 @@ export function CompleteProfilePage() {
           </div>
           <div>
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">{t("completeProfile.noteTitle")}</h3>
-            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Info penting untuk Anda</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{t("completeProfile.noteSubtitle")}</p>
           </div>
         </div>
         <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
