@@ -60,7 +60,7 @@ export function CompleteProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Accordion State
-  const [activeSection, setActiveSection] = useState<string | null>("photo");
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -387,7 +387,7 @@ export function CompleteProfilePage() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-6 sm:p-10 text-white shadow-[0_20px_60px_-15px_rgba(15,23,42,0.3)]"
+        className="relative overflow-hidden rounded-[1.5rem] bg-slate-900 p-5 sm:p-10 text-white shadow-[0_15px_40px_-10px_rgba(15,23,42,0.3)]"
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-slate-900/0 to-slate-900/0" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-blue-600/20 via-slate-900/0 to-slate-900/0" />
@@ -395,15 +395,15 @@ export function CompleteProfilePage() {
         <div className="relative z-10">
           <div className="flex items-start justify-between">
             <div>
-              <div className="flex items-center gap-2.5 mb-4">
-                <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-white/10 text-teal-300">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-white/10 text-teal-300">
                   {t("completeProfile.step2")}
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-bold tracking-tight leading-tight text-white">
+              <h1 className="text-xl sm:text-4xl font-bold tracking-tight leading-tight text-white">
                 {t("completeProfile.title")}
               </h1>
-              <p className="mt-3 text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed font-medium">
+              <p className="mt-2 text-slate-400 text-xs sm:text-base max-w-lg leading-relaxed font-medium">
                 {t("completeProfile.subtitle")}
               </p>
             </div>
@@ -413,9 +413,9 @@ export function CompleteProfilePage() {
           </div>
 
           {/* Progress Bar */}
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8">
             <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 text-slate-400">
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5">
                 <div className={`h-1.5 w-1.5 rounded-full ${progressPercentage === 100 ? "bg-teal-400" : "bg-slate-500"}`} />
                 {t("completeProfile.completionStatus")}
               </span>
@@ -434,35 +434,35 @@ export function CompleteProfilePage() {
       </motion.div>
 
       {/* Accordion Sections */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {sections.map((step, index) => (
           <motion.div
             key={step.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 * index }}
-            className={`overflow-hidden rounded-[2rem] border transition-all duration-500 ${
+            className={`overflow-hidden rounded-[1.5rem] border transition-all duration-500 ${
               activeSection === step.id
-                ? "bg-white border-teal-500/10 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.08)]"
-                : "bg-white border-transparent shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-md hover:bg-slate-50/50"
+                ? "bg-white border-teal-500/10 shadow-[0_15px_30px_-10px_rgba(0,0,0,0.08)]"
+                : "bg-white border-transparent shadow-[0_2px_10px_-2px_rgba(0,0,0,0.03)] hover:shadow-md hover:bg-slate-50/50"
             }`}
           >
             <button
               onClick={() => setActiveSection(activeSection === step.id ? null : step.id)}
-              className="w-full flex items-center justify-between p-5 sm:p-6 text-left outline-none group"
+              className="w-full flex items-center justify-between p-4 sm:p-6 text-left outline-none group"
             >
-              <div className="flex items-center gap-4">
-                <div className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-all duration-500 ${
+              <div className="flex items-center gap-3.5 sm:gap-4">
+                <div className={`flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-all duration-500 ${
                   step.isValid 
-                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" 
+                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]" 
                     : activeSection === step.id 
                       ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" 
                       : "bg-slate-50 text-slate-400 group-hover:bg-white group-hover:shadow-sm"
                 }`}>
-                  <step.icon className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-500 group-hover:scale-110" />
+                  <step.icon className={`h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-500 group-hover:scale-110 ${step.isValid ? 'text-emerald-600' : ''}`} />
                 </div>
                 <div>
-                  <h3 className={`text-base sm:text-lg font-bold tracking-tight transition-colors ${
+                  <h3 className={`text-sm sm:text-lg font-bold tracking-tight transition-colors ${
                     activeSection === step.id ? "text-slate-900" : "text-slate-600 group-hover:text-slate-900"
                   }`}>
                     {step.title}
@@ -499,8 +499,9 @@ export function CompleteProfilePage() {
                   transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
                   className="will-change-transform"
                 >
-                  <div className="p-5 sm:p-6 pt-0">
-                    <div className="rounded-2xl bg-slate-50/50 p-4 sm:p-6 border border-slate-100/50">
+                  <div className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4 sm:mb-6" />
+                    <div className="rounded-2xl bg-slate-50/50 p-3 sm:p-6 border border-slate-100/50">
                       {step.content}
                     </div>
                   </div>
@@ -516,27 +517,27 @@ export function CompleteProfilePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="rounded-[2rem] bg-gradient-to-br from-white to-slate-50 border border-slate-100 p-6 sm:p-8 shadow-sm"
+        className="rounded-[1.5rem] bg-gradient-to-br from-white to-slate-50 border border-slate-100 p-5 sm:p-6 shadow-sm"
       >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-            <Sparkles className="h-5 w-5" />
+        <div className="flex items-center gap-3 mb-3 sm:mb-4">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900 tracking-tight">{t("completeProfile.noteTitle")}</h3>
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">{t("completeProfile.noteTitle")}</h3>
             <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Info penting untuk Anda</p>
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
-            <div className="mt-1 h-2 w-2 rounded-full bg-blue-500 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+          <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <div className="mt-1 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-blue-500 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+            <p className="text-[10px] sm:text-xs text-slate-600 leading-relaxed font-medium">
               {t("completeProfile.noteAddress")}
             </p>
           </div>
-          <div className="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
-            <div className="mt-1 h-2 w-2 rounded-full bg-teal-500 shrink-0 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+          <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <div className="mt-1 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-500 shrink-0 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+            <p className="text-[10px] sm:text-xs text-slate-600 leading-relaxed font-medium">
               {t("completeProfile.notePhoto")}
             </p>
           </div>
@@ -544,7 +545,7 @@ export function CompleteProfilePage() {
       </motion.div>
 
       {/* Floating Save Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/50 bg-white/80 px-6 py-4 backdrop-blur-xl sm:px-8 sm:py-5">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/50 bg-white/80 px-4 py-3 backdrop-blur-xl sm:px-8 sm:py-5">
         <div className="mx-auto max-w-3xl">
           <button
             onClick={async () => {
@@ -614,22 +615,22 @@ export function CompleteProfilePage() {
               }
             }}
             disabled={saving}
-            className="group relative w-full overflow-hidden rounded-2xl bg-slate-900 p-4 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
+            className="group relative w-full overflow-hidden rounded-xl sm:rounded-2xl bg-slate-900 p-3.5 sm:p-4 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 via-blue-500/20 to-purple-500/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             
-            <div className="relative flex items-center justify-center gap-3">
+            <div className="relative flex items-center justify-center gap-2 sm:gap-3">
               {saving ? (
                 <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="font-bold text-white tracking-wide">{t("completeProfile.saving")}
-</span>
+                  <div className="h-4 w-4 sm:h-5 sm:w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="text-xs sm:text-sm font-bold text-white tracking-wide">{t("completeProfile.saving")}
+                  </span>
                 </>
               ) : (
                 <>
-                  <span className="text-base font-bold text-white tracking-widest uppercase">{t("completeProfile.save")}</span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition-transform duration-300 group-hover:translate-x-1">
-                    <ChevronRight className="h-4 w-4 text-white" />
+                  <span className="text-xs sm:text-base font-bold text-white tracking-widest uppercase">{t("completeProfile.save")}</span>
+                  <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition-transform duration-300 group-hover:translate-x-1">
+                    <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
                   </div>
                 </>
               )}
@@ -639,7 +640,7 @@ export function CompleteProfilePage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 text-center text-xs font-bold text-rose-500 bg-rose-50/80 backdrop-blur-sm py-2.5 px-4 rounded-xl border border-rose-100 shadow-sm"
+              className="mt-2 sm:mt-3 text-center text-[10px] sm:text-xs font-bold text-rose-500 bg-rose-50/80 backdrop-blur-sm py-2 sm:py-2.5 px-4 rounded-xl border border-rose-100 shadow-sm"
             >
               {actionError}
             </motion.div>
