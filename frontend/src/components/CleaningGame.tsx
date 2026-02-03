@@ -39,6 +39,11 @@ export function CleaningGame({ onClose }: CleaningGameProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scoreRef = useRef(score);
+
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
 
   useEffect(() => {
     const savedLast = localStorage.getItem(STORAGE_KEY_LAST_SCORE);
@@ -133,22 +138,25 @@ export function CleaningGame({ onClose }: CleaningGameProps) {
     }, 1000);
   };
 
-  const handleLevelWin = () => {
+  const handleLevelWin = (finalScore?: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setLevelComplete(true);
     setIsPlaying(false);
     
+    // Use passed score or current ref value to avoid stale state
+    const currentScore = finalScore ?? scoreRef.current;
+
     // Save progress
     const nextLevel = level + 1;
     localStorage.setItem(STORAGE_KEY_LEVEL, nextLevel.toString());
     
     // Save scores
-    setLastScore(score);
-    localStorage.setItem(STORAGE_KEY_LAST_SCORE, score.toString());
+    setLastScore(currentScore);
+    localStorage.setItem(STORAGE_KEY_LAST_SCORE, currentScore.toString());
 
-    if (score > highScore) {
-      setHighScore(score);
-      localStorage.setItem(STORAGE_KEY_HIGH_SCORE, score.toString());
+    if (currentScore > highScore) {
+      setHighScore(currentScore);
+      localStorage.setItem(STORAGE_KEY_HIGH_SCORE, currentScore.toString());
     }
 
     confetti({
@@ -177,13 +185,16 @@ export function CleaningGame({ onClose }: CleaningGameProps) {
     setGameOver(true);
     setIsPlaying(false);
     
+    // Use ref to get latest score from closure
+    const currentScore = scoreRef.current;
+
     // Save scores
-    setLastScore(score);
-    localStorage.setItem(STORAGE_KEY_LAST_SCORE, score.toString());
+    setLastScore(currentScore);
+    localStorage.setItem(STORAGE_KEY_LAST_SCORE, currentScore.toString());
     
-    if (score > highScore) {
-      setHighScore(score);
-      localStorage.setItem(STORAGE_KEY_HIGH_SCORE, score.toString());
+    if (currentScore > highScore) {
+      setHighScore(currentScore);
+      localStorage.setItem(STORAGE_KEY_HIGH_SCORE, currentScore.toString());
       // High Score Confetti
       confetti({
         particleCount: 200,
@@ -207,6 +218,13 @@ export function CleaningGame({ onClose }: CleaningGameProps) {
     // "Super Vacuum" effect
     // Sum up scores of all dirt on screen
     const totalPoints = dirts.reduce((acc, d) => acc + d.score, 0);
+    
+    // Check Win Condition immediately
+    const newScore = score + totalPoints;
+    if (newScore >= targetScore) {
+      handleLevelWin(newScore);
+    }
+
     setScore(prev => prev + totalPoints);
     setDirts([]);
     setEnergy(0);
@@ -282,7 +300,7 @@ export function CleaningGame({ onClose }: CleaningGameProps) {
       // Check Win Condition
       const newScore = score + pointsGained;
       if (newScore >= targetScore) {
-        handleLevelWin();
+        handleLevelWin(newScore);
       }
 
       setEnergy(prev => Math.min(prev + (hitDirts.length * 5), 100));
