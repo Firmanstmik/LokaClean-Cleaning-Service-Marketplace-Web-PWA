@@ -206,187 +206,197 @@ export function CompleteProfilePage() {
   const completedFields = totalFields - missing.length;
   const progressPercentage = (completedFields / totalFields) * 100;
 
-  const sections = [
-    {
-      id: "photo",
-      title: t("completeProfile.profilePhoto"),
-      subtitle: t("completeProfile.uploadPhotoHint"),
-      icon: ScanFace,
-      isValid: isPhotoValid,
-      content: (
-        <div className="text-center py-2">
-          <div className="relative mx-auto h-28 w-28 sm:h-32 sm:w-32 group">
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="relative h-full w-full cursor-pointer overflow-hidden rounded-full border-4 border-white bg-slate-50 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.155)] transition-transform duration-300 group-hover:scale-105 group-active:scale-95 ring-4 ring-teal-50"
-            >
-              {photoUrl ? (
-                <img
-                  className="h-full w-full object-cover"
-                  src={photoUrl}
-                  alt="Profile"
-                  crossOrigin="anonymous"
-                />
-              ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center text-slate-300 bg-slate-50">
-                  <UserIcon className="h-10 w-10 sm:h-12 sm:w-12 mb-1" />
-                </div>
-              )}
-              
-              {/* Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                <Camera className="h-8 w-8 text-white" />
+  // Callbacks
+  const handleAddressChange = useMemo(
+    () => (addr: string | undefined) => {
+      if (!addr) return;
+      addressFromMapRef.current = true;
+      setAddress(addr);
+    },
+    []
+  );
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setActionError(t("completeProfile.errorPhotoSize") || "Ukuran file terlalu besar (maks 10MB).");
+        return;
+      }
+      setProfilePhoto(file);
+      setActionError(null);
+    }
+  };
+
+  // Section Content Memoization
+  const photoSection = useMemo(() => ({
+    id: "photo",
+    title: t("completeProfile.profilePhoto"),
+    subtitle: t("completeProfile.uploadPhotoHint"),
+    icon: ScanFace,
+    isValid: isPhotoValid,
+    content: (
+      <div className="text-center py-2">
+        <div className="relative mx-auto h-28 w-28 sm:h-32 sm:w-32 group">
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="relative h-full w-full cursor-pointer overflow-hidden rounded-full border-4 border-white bg-slate-50 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.155)] transition-transform duration-300 group-hover:scale-105 group-active:scale-95 ring-4 ring-teal-50"
+          >
+            {photoUrl ? (
+              <img
+                className="h-full w-full object-cover"
+                src={photoUrl}
+                alt="Profile"
+                crossOrigin="anonymous"
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center text-slate-300 bg-slate-50">
+                <UserIcon className="h-10 w-10 sm:h-12 sm:w-12 mb-1" />
+              </div>
+            )}
+            
+            {/* Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+              <Camera className="h-8 w-8 text-white" />
+            </div>
+          </div>
+
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute bottom-0 right-0 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-teal-600 text-white shadow-lg transition-transform hover:bg-teal-700 hover:scale-110 border-4 border-white"
+          >
+            <Camera className="h-4 w-4" />
+          </button>
+        </div>
+
+        <input
+          ref={fileInputRef}
+          className="hidden"
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoChange}
+        />
+        
+        {profilePhoto && (
+          <motion.div 
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600 border border-emerald-100"
+          >
+            <CheckCircle2 className="h-3 w-3" />
+            {t("completeProfile.photoSelected")}
+          </motion.div>
+        )}
+      </div>
+    )
+  }), [isPhotoValid, photoUrl, profilePhoto, t]);
+
+  const infoSection = useMemo(() => ({
+    id: "info",
+    title: t("completeProfile.personalInfo"),
+    subtitle: t("completeProfile.subtitle"),
+    icon: Fingerprint,
+    isValid: isInfoValid,
+    content: (
+      <div className="space-y-4 sm:space-y-5">
+        <div className="group">
+          <label className="mb-1.5 sm:mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+            {t("completeProfile.fullName")}
+          </label>
+          <div className="relative">
+            <UserIcon className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+            <input
+              className="w-full rounded-2xl border border-slate-200 bg-white pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 shadow-sm"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder={t("completeProfile.fullNamePlaceholder")}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="group">
+          <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">
+            {t("completeProfile.phone")}
+          </label>
+          <div className="relative">
+            <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+            <input
+              className="w-full rounded-2xl border border-slate-200 bg-white pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 shadow-sm"
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder={t("completeProfile.phonePlaceholder")}
+              required
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }), [isInfoValid, fullName, phone, t]);
+
+  const locationSection = useMemo(() => ({
+    id: "location",
+    title: t("completeProfile.defaultLocation"),
+    subtitle: t("completeProfile.locationSubtitle"),
+    icon: Compass,
+    isValid: isLocationValid,
+    content: (
+      <div className="space-y-4">
+        <div className="relative mb-6">
+          <MapPicker
+            value={defaultLoc}
+            onChange={setDefaultLoc}
+            onAddressChange={handleAddressChange}
+            hideLabel
+          />
+          {!defaultLoc && (
+            <div className="absolute top-32 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[400]">
+              <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-lg border border-white/50 text-xs font-bold text-slate-600 whitespace-nowrap animate-bounce">
+                {t("completeProfile.mapHintOverlay")}
               </div>
             </div>
-
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-teal-600 text-white shadow-lg transition-transform hover:bg-teal-700 hover:scale-110 border-4 border-white"
-            >
-              <Camera className="h-4 w-4" />
-            </button>
-          </div>
-
-          <input
-            ref={fileInputRef}
-            className="hidden"
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0] ?? null;
-              if (file) {
-                // Validate file size (10MB)
-                if (file.size > 10 * 1024 * 1024) {
-                  setActionError(t("completeProfile.errorPhotoSize") || "Ukuran file terlalu besar (maks 10MB).");
-                  return;
-                }
-                setProfilePhoto(file);
-                setActionError(null);
-              }
-            }}
-          />
-          
-          {profilePhoto && (
-            <motion.div 
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600 border border-emerald-100"
-            >
-              <CheckCircle2 className="h-3 w-3" />
-              {t("completeProfile.photoSelected")}
-            </motion.div>
           )}
         </div>
-      )
-    },
-    {
-      id: "info",
-      title: t("completeProfile.personalInfo"),
-      subtitle: t("completeProfile.subtitle"),
-      icon: Fingerprint,
-      isValid: isInfoValid,
-      content: (
-        <div className="space-y-4 sm:space-y-5">
-          <div className="group">
-            <label className="mb-1.5 sm:mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
-              {t("completeProfile.fullName")}
-            </label>
-            <div className="relative">
-              <UserIcon className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
-              <input
-                className="w-full rounded-2xl border border-slate-200 bg-white pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 shadow-sm"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder={t("completeProfile.fullNamePlaceholder")}
-                required
-              />
-            </div>
-          </div>
 
-          <div className="group">
-            <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">
-              {t("completeProfile.phone")}
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
-              <input
-                className="w-full rounded-2xl border border-slate-200 bg-white pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 shadow-sm"
-                type="tel"
-                inputMode="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder={t("completeProfile.phonePlaceholder")}
-                required
-              />
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: "location",
-      title: t("completeProfile.defaultLocation"),
-      subtitle: t("completeProfile.locationSubtitle"),
-      icon: Compass,
-      isValid: isLocationValid,
-      content: (
-        <div className="space-y-4">
-          <div className="relative mb-6">
-            <MapPicker
-              value={defaultLoc}
-              onChange={setDefaultLoc}
-              onAddressChange={(addr) => {
-                if (!addr) return;
-                addressFromMapRef.current = true;
-                setAddress(addr);
+        <div className="group bg-slate-50/50 rounded-2xl p-4 border border-slate-100 focus-within:bg-white focus-within:border-rose-200 focus-within:shadow-lg focus-within:shadow-rose-100/50 transition-all duration-300">
+          <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 group-focus-within:text-rose-500 transition-colors">
+            {t("completeProfile.addressDetailLabel")}
+          </label>
+          <div className="relative">
+            <MapPin className="absolute left-0 top-3 h-5 w-5 text-slate-300 group-focus-within:text-rose-500 transition-colors" />
+            <textarea
+              className="w-full min-h-[80px] bg-transparent pl-8 py-2 text-xs sm:text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none resize-none leading-relaxed"
+              value={address}
+              onChange={(e) => {
+                addressFromMapRef.current = false;
+                setAddress(e.target.value);
               }}
-              hideLabel
+              placeholder={t("completeProfile.addressPlaceholder")}
             />
-            {!defaultLoc && (
-              <div className="absolute top-32 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[400]">
-                <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-lg border border-white/50 text-xs font-bold text-slate-600 whitespace-nowrap animate-bounce">
-                  {t("completeProfile.mapHintOverlay")}
-                </div>
+            {geocodingAddress && (
+              <div className="absolute right-0 bottom-0">
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="h-4 w-4 rounded-full border-2 border-slate-300 border-t-rose-500"
+                />
               </div>
             )}
           </div>
-
-          <div className="group bg-slate-50/50 rounded-2xl p-4 border border-slate-100 focus-within:bg-white focus-within:border-rose-200 focus-within:shadow-lg focus-within:shadow-rose-100/50 transition-all duration-300">
-            <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 group-focus-within:text-rose-500 transition-colors">
-              {t("completeProfile.addressDetailLabel")}
-            </label>
-            <div className="relative">
-              <MapPin className="absolute left-0 top-3 h-5 w-5 text-slate-300 group-focus-within:text-rose-500 transition-colors" />
-              <textarea
-                className="w-full min-h-[80px] bg-transparent pl-8 py-2 text-xs sm:text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none resize-none leading-relaxed"
-                value={address}
-                onChange={(e) => {
-                  addressFromMapRef.current = false;
-                  setAddress(e.target.value);
-                }}
-                placeholder={t("completeProfile.addressPlaceholder")}
-              />
-              {geocodingAddress && (
-                <div className="absolute right-0 bottom-0">
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="h-4 w-4 rounded-full border-2 border-slate-300 border-t-rose-500"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="mt-2 text-[10px] text-slate-400 leading-normal border-t border-slate-100 pt-2 group-focus-within:text-slate-500">
-              {t("completeProfile.addressHelp")}
-            </div>
+          <div className="mt-2 text-[10px] text-slate-400 leading-normal border-t border-slate-100 pt-2 group-focus-within:text-slate-500">
+            {t("completeProfile.addressHelp")}
           </div>
         </div>
-      )
-    }
-  ];
+      </div>
+    )
+  }), [isLocationValid, defaultLoc, address, geocodingAddress, handleAddressChange, t]);
+
+  const sections = useMemo(() => [photoSection, infoSection, locationSection], [photoSection, infoSection, locationSection]);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-40">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-12">
       {/* Header Section */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
