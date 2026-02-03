@@ -580,6 +580,13 @@ export function CompleteProfilePage() {
                 const normalizedPhone = normalizeWhatsAppPhone(phone);
                 if (!normalizedPhone) {
                   setActionError(t("profile.invalidPhoneNumber"));
+                  setSaving(false);
+                  return;
+                }
+
+                if (!defaultLoc) {
+                  setActionError(t("completeProfile.errorLocation"));
+                  setSaving(false);
                   return;
                 }
 
