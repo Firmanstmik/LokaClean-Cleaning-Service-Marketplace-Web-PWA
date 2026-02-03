@@ -24,7 +24,11 @@ import {
   Sparkles, 
   ChevronRight,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  ScanFace,
+  Fingerprint,
+  Compass,
+  ShieldCheck
 } from "lucide-react";
 
 import { MapPicker, type LatLng } from "../../components/MapPicker";
@@ -207,7 +211,7 @@ export function CompleteProfilePage() {
       id: "photo",
       title: t("completeProfile.profilePhoto"),
       subtitle: t("completeProfile.uploadPhotoHint"),
-      icon: Camera,
+      icon: ScanFace,
       isValid: isPhotoValid,
       content: (
         <div className="text-center py-2">
@@ -279,7 +283,7 @@ export function CompleteProfilePage() {
       id: "info",
       title: t("completeProfile.personalInfo"),
       subtitle: t("completeProfile.subtitle"),
-      icon: UserIcon,
+      icon: Fingerprint,
       isValid: isInfoValid,
       content: (
         <div className="space-y-4 sm:space-y-5">
@@ -323,7 +327,7 @@ export function CompleteProfilePage() {
       id: "location",
       title: t("completeProfile.defaultLocation"),
       subtitle: t("completeProfile.locationSubtitle"),
-      icon: MapPin,
+      icon: Compass,
       isValid: isLocationValid,
       content: (
         <div className="space-y-4">
@@ -387,7 +391,7 @@ export function CompleteProfilePage() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[1.5rem] bg-slate-900 p-5 sm:p-10 text-white shadow-[0_15px_40px_-10px_rgba(15,23,42,0.3)]"
+        className="relative overflow-hidden rounded-2xl bg-slate-900 p-5 sm:p-10 text-white shadow-[0_15px_40px_-10px_rgba(15,23,42,0.3)]"
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-slate-900/0 to-slate-900/0" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-blue-600/20 via-slate-900/0 to-slate-900/0" />
@@ -441,7 +445,7 @@ export function CompleteProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 * index }}
-            className={`relative overflow-hidden rounded-[1.5rem] p-[2px] transition-all duration-500 ${
+            className={`relative overflow-hidden rounded-2xl p-[2px] transition-all duration-500 ${
               activeSection === step.id
                 ? "bg-gradient-to-br from-teal-400 via-blue-500 to-purple-600 shadow-xl shadow-blue-500/20 scale-[1.01]"
                 : step.isValid
@@ -449,7 +453,7 @@ export function CompleteProfilePage() {
                   : "bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100 hover:from-blue-200 hover:to-purple-200"
             }`}
           >
-            <div className="h-full w-full rounded-[1.4rem] bg-white overflow-hidden">
+            <div className="h-full w-full rounded-xl bg-white overflow-hidden">
               <button
                 onClick={() => setActiveSection(activeSection === step.id ? null : step.id)}
                 className="w-full flex items-center justify-between p-4 sm:p-6 text-left outline-none group"
@@ -521,11 +525,11 @@ export function CompleteProfilePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="rounded-[1.5rem] bg-gradient-to-br from-white to-slate-50 border border-slate-100 p-5 sm:p-6 shadow-sm"
+        className="rounded-2xl bg-gradient-to-br from-white to-slate-50 border border-slate-100 p-5 sm:p-6 shadow-sm"
       >
         <div className="flex items-center gap-3 mb-3 sm:mb-4">
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
+            <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div>
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">{t("completeProfile.noteTitle")}</h3>
@@ -619,7 +623,7 @@ export function CompleteProfilePage() {
               }
             }}
             disabled={saving}
-            className="group relative w-full overflow-hidden rounded-xl sm:rounded-2xl bg-slate-900 p-3.5 sm:p-4 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
+            className="group relative w-full overflow-hidden rounded-xl bg-slate-900 p-3.5 sm:p-4 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 via-blue-500/20 to-purple-500/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             
