@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Plus, List, User as UserIcon, LogOut, Sparkles, Bell, X, CheckCheck, Star, Heart, ArrowRight, Zap, MapPin, CheckCircle2, MessageCircle, Instagram, Facebook, Phone, Mail, Clock, AlertTriangle, Home, History, LayoutGrid, Scan, Wallet } from "lucide-react";
+import { Package, Plus, List, User as UserIcon, LogOut, Sparkles, Bell, X, CheckCheck, Star, Heart, ArrowRight, Zap, MapPin, CheckCircle2, MessageCircle, Instagram, Facebook, Phone, Mail, Clock, AlertTriangle, Home, History, LayoutGrid, Scan, Wallet, House, ScanLine, FileClock, UserRound } from "lucide-react";
 
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -1041,7 +1041,7 @@ export function UserLayout() {
             <NavItem 
               to="/packages" 
               label={t("home.navbar.home")} 
-              icon={Home} 
+              icon={House} 
               exact 
               currentPathname={location.pathname} 
             />
@@ -1049,7 +1049,7 @@ export function UserLayout() {
             <NavItem 
               to="/packages/all" 
               label={t("home.navbar.packages")} 
-              icon={Package} 
+              icon={LayoutGrid} 
               exact 
               currentPathname={location.pathname} 
             />
@@ -1057,7 +1057,7 @@ export function UserLayout() {
             <NavItem 
               to="/orders/new" 
               label={t("home.navbar.newOrder")} 
-              icon={Plus} 
+              icon={ScanLine} 
               exact 
               currentPathname={location.pathname} 
             />
@@ -1065,7 +1065,7 @@ export function UserLayout() {
             <NavItem 
               to="/orders" 
               label={t("orders.title")} 
-              icon={List} 
+              icon={FileClock} 
               currentPathname={location.pathname} 
               badge={unpaidTransferCount} 
             />
@@ -1325,7 +1325,7 @@ export function UserLayout() {
                     whileTap={{ scale: 0.9 }}
                     className="relative"
                   >
-                    <Home className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
+                    <House className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
                   </motion.div>
                   <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
                     {t("home.navbar.home")}
@@ -1351,7 +1351,7 @@ export function UserLayout() {
                     whileTap={{ scale: 0.9 }}
                     className="relative"
                   >
-                    <Package className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
+                    <LayoutGrid className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
                   </motion.div>
                   <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
                     {t("home.navbar.packages")}
@@ -1371,14 +1371,12 @@ export function UserLayout() {
                 <motion.div
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-lombok-ocean-500 to-lombok-tropical-500 shadow-xl shadow-lombok-ocean-500/30 ring-[6px] ring-white overflow-hidden"
+                  className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-lombok-ocean-600 to-lombok-tropical-600 shadow-lg shadow-lombok-ocean-500/30 ring-[4px] ring-white overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-white/20 blur-xl opacity-50"></div>
-                  <Plus className="relative h-8 w-8 text-white stroke-[2.5px]" />
-                  {/* Ripple effect */}
-                  <div className="absolute inset-0 rounded-full border border-white/30 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
+                  <div className="absolute inset-0 bg-white/10 blur-md opacity-50"></div>
+                  <ScanLine className="relative h-6 w-6 text-white stroke-[2.5px]" />
                 </motion.div>
-                <span className="text-[10px] font-bold text-slate-600 group-hover:text-lombok-ocean-600 transition-colors drop-shadow-sm bg-white/80 backdrop-blur-[4px] px-3 py-0.5 rounded-full shadow-sm mt-1">
+                <span className="text-[10px] font-bold text-slate-600 group-hover:text-lombok-ocean-600 transition-colors drop-shadow-sm bg-white/90 backdrop-blur-[4px] px-2.5 py-0.5 rounded-full shadow-sm mt-1">
                   {t("home.navbar.newOrder")}
                 </span>
               </NavLink>
@@ -1413,7 +1411,7 @@ export function UserLayout() {
                     whileTap={{ scale: 0.9 }}
                     className="relative"
                   >
-                    <List className={`h-6 w-6 ${isOrdersActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
+                    <FileClock className={`h-6 w-6 ${isOrdersActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
                     {unpaidTransferCount > 0 && (
                       <motion.div
                         initial={{ scale: 0 }}
@@ -1462,7 +1460,7 @@ export function UserLayout() {
                         />
                       </div>
                     ) : (
-                      <UserIcon className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
+                      <UserRound className={`h-6 w-6 ${isActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
                     )}
                   </motion.div>
                   <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
