@@ -386,7 +386,7 @@ export function CompleteProfilePage() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-24">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-40">
       {/* Header Section */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -400,7 +400,7 @@ export function CompleteProfilePage() {
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-white/10 text-teal-300">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-white/10 text-teal-300">
                   {t("completeProfile.step2")}
                 </span>
               </div>
@@ -553,7 +553,7 @@ export function CompleteProfilePage() {
       </motion.div>
 
       {/* Floating Save Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/50 bg-white/80 px-4 py-3 backdrop-blur-xl sm:px-8 sm:py-5">
+      <div className="mt-8">
         <div className="mx-auto max-w-3xl">
           <button
             onClick={async () => {
@@ -623,7 +623,7 @@ export function CompleteProfilePage() {
               }
             }}
             disabled={saving}
-            className="group relative w-full overflow-hidden rounded-xl bg-slate-900 p-3.5 sm:p-4 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
+            className="group relative w-full overflow-hidden rounded-2xl bg-slate-900 p-4 sm:p-5 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 via-blue-500/20 to-purple-500/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             
