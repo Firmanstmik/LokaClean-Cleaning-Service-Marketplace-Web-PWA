@@ -208,7 +208,7 @@ export function CompleteProfilePage() {
 
   // Callbacks
   const handleAddressChange = useMemo(
-    () => (addr: string | undefined) => {
+    () => (addr: string | null) => {
       if (!addr) return;
       addressFromMapRef.current = true;
       setAddress(addr);
@@ -216,7 +216,7 @@ export function CompleteProfilePage() {
     []
   );
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = useMemo(() => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
@@ -226,7 +226,7 @@ export function CompleteProfilePage() {
       setProfilePhoto(file);
       setActionError(null);
     }
-  };
+  }, [t]);
 
   // Section Content Memoization
   const photoSection = useMemo(() => ({
@@ -289,7 +289,7 @@ export function CompleteProfilePage() {
         )}
       </div>
     )
-  }), [isPhotoValid, photoUrl, profilePhoto, t]);
+  }), [isPhotoValid, photoUrl, profilePhoto, handlePhotoChange, t]);
 
   const infoSection = useMemo(() => ({
     id: "info",
@@ -396,7 +396,7 @@ export function CompleteProfilePage() {
   const sections = useMemo(() => [photoSection, infoSection, locationSection], [photoSection, infoSection, locationSection]);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-12">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-0">
       {/* Header Section */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}

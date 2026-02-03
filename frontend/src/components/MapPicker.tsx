@@ -5,7 +5,7 @@
  * - Optional "use my location" button (browser geolocation)
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, memo } from "react";
 import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import { LocateFixed, Loader2, MapPin, Navigation } from "lucide-react";
 
@@ -74,7 +74,7 @@ function MapResizer() {
   return null;
 }
 
-export function MapPicker({
+export const MapPicker = memo(function MapPicker({
   value,
   onChange,
   onAddressChange,
@@ -486,6 +486,6 @@ export function MapPicker({
       </div>
     </div>
   );
-}
+});
 
 
