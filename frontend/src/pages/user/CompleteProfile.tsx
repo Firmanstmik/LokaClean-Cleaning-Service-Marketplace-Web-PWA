@@ -157,55 +157,6 @@ export function CompleteProfilePage() {
   const isInfoValid = useMemo(() => !!(fullName.trim() && phone.trim()), [fullName, phone]);
   const isLocationValid = useMemo(() => !!defaultLoc, [defaultLoc]);
 
-  if (loading) return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center p-8">
-      <motion.div 
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        className="h-10 w-10 rounded-full border-4 border-indigo-200 border-t-indigo-600"
-      />
-      <p className="mt-4 text-sm font-medium text-slate-500 animate-pulse">{t("completeProfile.preparing")}</p>
-    </div>
-  );
-
-  if (loadError) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-3xl border-2 border-rose-100 bg-white p-8 text-center shadow-xl">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500">
-            <AlertCircle className="h-8 w-8" />
-          </div>
-          <h3 className="text-xl font-black text-slate-900">{t("completeProfile.connectionIssue")}</h3>
-          <p className="mt-2 text-sm text-slate-600">{loadError || t("completeProfile.connectionIssueText")}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-6 w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white transition-transform active:scale-95"
-          >
-            {t("completeProfile.tryAgain")}
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  if (!user) return null;
-
-  // If profile is already complete, send the user to where they wanted to go.
-  if (isUserProfileComplete(user)) {
-    return <Navigate to={next} replace />;
-  }
-
-  const missing: string[] = [];
-  if (!fullName.trim()) missing.push("Full Name");
-  if (!phone.trim()) missing.push("Phone Number");
-  if (!alreadyHasPhoto && !profilePhoto) missing.push("Profile Photo");
-  if (!defaultLoc) missing.push("Default Location");
-
-  // Calculate progress
-  const totalFields = 4;
-  const completedFields = totalFields - missing.length;
-  const progressPercentage = (completedFields / totalFields) * 100;
-
   // Callbacks
   const handleAddressChange = useMemo(
     () => (addr: string | null) => {
@@ -226,7 +177,7 @@ export function CompleteProfilePage() {
       setProfilePhoto(file);
       setActionError(null);
     }
-  }, [t]);
+  }, []); // Remove 't' dependency if t is stable, or keep it. t is usually stable.
 
   // Section Content Memoization
   const photoSection = useMemo(() => ({
@@ -289,7 +240,7 @@ export function CompleteProfilePage() {
         )}
       </div>
     )
-  }), [isPhotoValid, photoUrl, profilePhoto, handlePhotoChange, t]);
+  }), [isPhotoValid, photoUrl, profilePhoto, handlePhotoChange]); // t is global
 
   const infoSection = useMemo(() => ({
     id: "info",
@@ -334,7 +285,7 @@ export function CompleteProfilePage() {
         </div>
       </div>
     )
-  }), [isInfoValid, fullName, phone, t]);
+  }), [isInfoValid, fullName, phone]);
 
   const locationSection = useMemo(() => ({
     id: "location",
@@ -391,9 +342,58 @@ export function CompleteProfilePage() {
         </div>
       </div>
     )
-  }), [isLocationValid, defaultLoc, address, geocodingAddress, handleAddressChange, t]);
+  }), [isLocationValid, defaultLoc, address, geocodingAddress, handleAddressChange]);
 
   const sections = useMemo(() => [photoSection, infoSection, locationSection], [photoSection, infoSection, locationSection]);
+
+  if (loading) return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center p-8">
+      <motion.div 
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className="h-10 w-10 rounded-full border-4 border-indigo-200 border-t-indigo-600"
+      />
+      <p className="mt-4 text-sm font-medium text-slate-500 animate-pulse">{t("completeProfile.preparing")}</p>
+    </div>
+  );
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-3xl border-2 border-rose-100 bg-white p-8 text-center shadow-xl">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500">
+            <AlertCircle className="h-8 w-8" />
+          </div>
+          <h3 className="text-xl font-black text-slate-900">{t("completeProfile.connectionIssue")}</h3>
+          <p className="mt-2 text-sm text-slate-600">{loadError || t("completeProfile.connectionIssueText")}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-6 w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white transition-transform active:scale-95"
+          >
+            {t("completeProfile.tryAgain")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!user) return null;
+
+  // If profile is already complete, send the user to where they wanted to go.
+  if (isUserProfileComplete(user)) {
+    return <Navigate to={next} replace />;
+  }
+
+  const missing: string[] = [];
+  if (!fullName.trim()) missing.push("Full Name");
+  if (!phone.trim()) missing.push("Phone Number");
+  if (!alreadyHasPhoto && !profilePhoto) missing.push("Profile Photo");
+  if (!defaultLoc) missing.push("Default Location");
+
+  // Calculate progress
+  const totalFields = 4;
+  const completedFields = totalFields - missing.length;
+  const progressPercentage = (completedFields / totalFields) * 100;
 
   return (
     <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-0">
