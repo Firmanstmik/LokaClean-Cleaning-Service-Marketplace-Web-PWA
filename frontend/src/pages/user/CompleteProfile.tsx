@@ -12,14 +12,20 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   User as UserIcon, 
   Phone, 
   MapPin, 
   Camera, 
+  Save, 
+  CheckCircle2, 
   AlertCircle, 
+  Sparkles, 
   ChevronRight,
+  ArrowRight,
+  ChevronDown,
+  ScanFace,
   Fingerprint,
   Compass,
   ShieldCheck
@@ -56,6 +62,9 @@ export function CompleteProfilePage() {
   const addressGeocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addressFromMapRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Accordion State
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -197,203 +206,370 @@ export function CompleteProfilePage() {
   const completedFields = totalFields - missing.length;
   const progressPercentage = (completedFields / totalFields) * 100;
 
-  return (
-    <div className="bg-[#F0F2F5]">
-      {/* Header Card (Facebook Style) */}
-      <div className="bg-white shadow-sm mb-4">
-        {/* Cover Photo Area */}
-        <div className="relative h-32 sm:h-48 bg-gradient-to-r from-teal-500 via-blue-600 to-purple-600">
-          <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] bg-[length:20px_20px] opacity-20" />
-        </div>
-
-        {/* Profile Info Area */}
-        <div className="px-4 pb-6 -mt-12 sm:-mt-16 flex flex-col items-center relative z-10">
-          <div className="relative group">
+  const sections = [
+    {
+      id: "photo",
+      title: t("completeProfile.profilePhoto"),
+      subtitle: t("completeProfile.uploadPhotoHint"),
+      icon: ScanFace,
+      isValid: isPhotoValid,
+      content: (
+        <div className="text-center py-2">
+          <div className="relative mx-auto h-28 w-28 sm:h-32 sm:w-32 group">
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-white bg-slate-100 shadow-md overflow-hidden cursor-pointer relative"
+              className="relative h-full w-full cursor-pointer overflow-hidden rounded-full border-4 border-white bg-slate-50 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.155)] transition-transform duration-300 group-hover:scale-105 group-active:scale-95 ring-4 ring-teal-50"
             >
               {photoUrl ? (
-                <img src={photoUrl} className="h-full w-full object-cover" alt="Profile" />
+                <img
+                  className="h-full w-full object-cover"
+                  src={photoUrl}
+                  alt="Profile"
+                  crossOrigin="anonymous"
+                />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-slate-300 bg-slate-50">
-                  <UserIcon className="h-10 w-10 sm:h-12 sm:w-12" />
+                <div className="flex h-full w-full flex-col items-center justify-center text-slate-300 bg-slate-50">
+                  <UserIcon className="h-10 w-10 sm:h-12 sm:w-12 mb-1" />
                 </div>
               )}
+              
+              {/* Overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <Camera className="h-8 w-8 text-white" />
+              </div>
             </div>
+
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-700 shadow-sm border-2 border-white transition-colors hover:bg-slate-300"
+              className="absolute bottom-0 right-0 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-teal-600 text-white shadow-lg transition-transform hover:bg-teal-700 hover:scale-110 border-4 border-white"
             >
               <Camera className="h-4 w-4" />
             </button>
           </div>
+
+          <input
+            ref={fileInputRef}
+            className="hidden"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              if (file) {
+                // Validate file size (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                  setActionError(t("completeProfile.errorPhotoSize") || "Ukuran file terlalu besar (maks 10MB).");
+                  return;
+                }
+                setProfilePhoto(file);
+                setActionError(null);
+              }
+            }}
+          />
           
-          <div className="mt-3 text-center">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{fullName || t("completeProfile.fullNamePlaceholder") || "Nama Pengguna"}</h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">{t("completeProfile.subtitle")}</p>
+          {profilePhoto && (
+            <motion.div 
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600 border border-emerald-100"
+            >
+              <CheckCircle2 className="h-3 w-3" />
+              {t("completeProfile.photoSelected")}
+            </motion.div>
+          )}
+        </div>
+      )
+    },
+    {
+      id: "info",
+      title: t("completeProfile.personalInfo"),
+      subtitle: t("completeProfile.subtitle"),
+      icon: Fingerprint,
+      isValid: isInfoValid,
+      content: (
+        <div className="space-y-4 sm:space-y-5">
+          <div className="group">
+            <label className="mb-1.5 sm:mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+              {t("completeProfile.fullName")}
+            </label>
+            <div className="relative">
+              <UserIcon className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+              <input
+                className="w-full rounded-2xl border border-slate-200 bg-white pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 shadow-sm"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder={t("completeProfile.fullNamePlaceholder")}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="group">
+            <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">
+              {t("completeProfile.phone")}
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+              <input
+                className="w-full rounded-2xl border border-slate-200 bg-white pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 shadow-sm"
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder={t("completeProfile.phonePlaceholder")}
+                required
+              />
+            </div>
           </div>
         </div>
+      )
+    },
+    {
+      id: "location",
+      title: t("completeProfile.defaultLocation"),
+      subtitle: t("completeProfile.locationSubtitle"),
+      icon: Compass,
+      isValid: isLocationValid,
+      content: (
+        <div className="space-y-4">
+          <div className="relative mb-6">
+            <MapPicker
+              value={defaultLoc}
+              onChange={setDefaultLoc}
+              onAddressChange={(addr) => {
+                if (!addr) return;
+                addressFromMapRef.current = true;
+                setAddress(addr);
+              }}
+              hideLabel
+            />
+            {!defaultLoc && (
+              <div className="absolute top-32 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[400]">
+                <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-lg border border-white/50 text-xs font-bold text-slate-600 whitespace-nowrap animate-bounce">
+                  {t("completeProfile.mapHintOverlay")}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="group bg-slate-50/50 rounded-2xl p-4 border border-slate-100 focus-within:bg-white focus-within:border-rose-200 focus-within:shadow-lg focus-within:shadow-rose-100/50 transition-all duration-300">
+            <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 group-focus-within:text-rose-500 transition-colors">
+              {t("completeProfile.addressDetailLabel")}
+            </label>
+            <div className="relative">
+              <MapPin className="absolute left-0 top-3 h-5 w-5 text-slate-300 group-focus-within:text-rose-500 transition-colors" />
+              <textarea
+                className="w-full min-h-[80px] bg-transparent pl-8 py-2 text-xs sm:text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none resize-none leading-relaxed"
+                value={address}
+                onChange={(e) => {
+                  addressFromMapRef.current = false;
+                  setAddress(e.target.value);
+                }}
+                placeholder={t("completeProfile.addressPlaceholder")}
+              />
+              {geocodingAddress && (
+                <div className="absolute right-0 bottom-0">
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="h-4 w-4 rounded-full border-2 border-slate-300 border-t-rose-500"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="mt-2 text-[10px] text-slate-400 leading-normal border-t border-slate-100 pt-2 group-focus-within:text-slate-500">
+              {t("completeProfile.addressHelp")}
+            </div>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-40">
+      {/* Header Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-2xl bg-slate-900 p-5 sm:p-10 text-white shadow-lg sm:shadow-[0_15px_40px_-10px_rgba(15,23,42,0.3)]"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 sm:bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] sm:from-teal-500/20 sm:via-slate-900/0 sm:to-slate-900/0" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-900 to-slate-800 sm:bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] sm:from-blue-600/20 sm:via-slate-900/0 sm:to-slate-900/0" />
+        
+        <div className="relative z-10">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-white/10 text-teal-300">
+                  {t("completeProfile.step2")}
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-4xl font-bold tracking-tight leading-tight text-white">
+                {t("completeProfile.title")}
+              </h1>
+              <p className="mt-2 text-slate-400 text-xs sm:text-base max-w-lg leading-relaxed font-medium">
+                {t("completeProfile.subtitle")}
+              </p>
+            </div>
+            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-blue-500 shadow-lg shadow-teal-500/20 rotate-3">
+              <Sparkles className="h-7 w-7 text-white" />
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mt-6 sm:mt-8">
+            <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <div className={`h-1.5 w-1.5 rounded-full ${progressPercentage === 100 ? "bg-teal-400" : "bg-slate-500"}`} />
+                {t("completeProfile.completionStatus")}
+              </span>
+              <span className="text-white">{Math.round(progressPercentage)}%</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercentage}%` }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="h-full bg-gradient-to-r from-teal-400 to-blue-500 shadow-[0_0_20px_rgba(45,212,191,0.5)]"
+              />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Accordion Sections */}
+      <div className="space-y-3 sm:space-y-4">
+        {sections.map((step, index) => (
+          <motion.div
+            key={step.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * index }}
+            className={`relative overflow-hidden rounded-2xl p-[2px] transition-all duration-300 ${
+              activeSection === step.id
+                ? "bg-gradient-to-br from-teal-400 via-blue-500 to-purple-600 shadow-lg sm:shadow-xl sm:shadow-blue-500/20"
+                : step.isValid
+                  ? "bg-gradient-to-br from-emerald-400 via-teal-400 to-emerald-400"
+                  : "bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
+            }`}
+          >
+            <div className="h-full w-full rounded-xl bg-white overflow-hidden">
+              <button
+                onClick={() => setActiveSection(activeSection === step.id ? null : step.id)}
+                className="w-full flex items-center justify-between p-4 sm:p-6 text-left outline-none group"
+              >
+                <div className="flex items-center gap-3.5 sm:gap-4">
+                  <div className={`flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-all duration-300 ${
+                    step.isValid 
+                      ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 shadow-sm" 
+                      : activeSection === step.id 
+                        ? "bg-slate-900 text-white shadow-md sm:shadow-lg sm:shadow-slate-900/20" 
+                        : "bg-slate-50 text-slate-400 group-hover:bg-white group-hover:shadow-sm"
+                  }`}>
+                    <step.icon className={`h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-300 group-hover:scale-110 ${step.isValid ? 'text-emerald-600' : ''}`} />
+                  </div>
+                  <div>
+                    <h3 className={`text-sm sm:text-lg font-bold tracking-tight transition-colors ${
+                      activeSection === step.id ? "text-slate-900" : "text-slate-600 group-hover:text-slate-900"
+                    }`}>
+                      {step.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      {step.isValid ? (
+                        <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-emerald-600 tracking-wide">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          {t("completeProfile.completed")}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-rose-500 tracking-wide">
+                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+                          {t("completeProfile.required")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  activeSection === step.id ? "bg-slate-100 rotate-180" : "bg-transparent group-hover:bg-slate-50"
+                }`}>
+                  <ChevronDown className={`h-5 w-5 transition-colors ${
+                    activeSection === step.id ? "text-slate-900" : "text-slate-400"
+                  }`} />
+                </div>
+              </button>
+              
+              {/* CSS Grid Animation for smooth performance & Map persistence */}
+              <div 
+                className={`grid transition-[grid-template-rows] duration-300 ease-out will-change-[grid-template-rows] ${
+                  activeSection === step.id ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                }`}
+              >
+                <div className="overflow-hidden transition-opacity duration-300">
+                  <div className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
+                    <div className="h-px w-full bg-slate-100 mb-4 sm:mb-6" />
+                    <div className="rounded-2xl bg-slate-50 p-3 sm:p-6 border border-slate-100">
+                      {step.content}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 pb-4 space-y-3">
-        {/* Progress Indicator */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 mb-2">
-          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest mb-2 text-slate-400">
-            <span>{t("completeProfile.completionStatus")}</span>
-            <span className="text-blue-600">{Math.round(progressPercentage)}%</span>
+      {/* Important Note Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="rounded-2xl bg-gradient-to-br from-white to-slate-50 border border-slate-100 p-5 sm:p-6 shadow-sm"
+      >
+        <div className="flex items-center gap-3 mb-3 sm:mb-4">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+            <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
-          <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercentage}%` }}
-              className="h-full bg-gradient-to-r from-teal-400 to-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Grid Layout for Inputs (Facebook Menu Style) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          
-          {/* Full Name Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex flex-col gap-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-                <UserIcon className="h-5 w-5" />
-              </div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t("completeProfile.fullName")}</label>
-            </div>
-            <input
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder={t("completeProfile.fullNamePlaceholder")}
-            />
-          </div>
-
-          {/* Phone Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex flex-col gap-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="h-8 w-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-600 shrink-0">
-                <Phone className="h-5 w-5" />
-              </div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t("completeProfile.phone")}</label>
-            </div>
-            <input
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all"
-              type="tel"
-              inputMode="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder={t("completeProfile.phonePlaceholder")}
-            />
-          </div>
-
-          {/* Location Map Card (Full Width) */}
-          <div className="sm:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex flex-col gap-3">
-             <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 shrink-0">
-                  <Compass className="h-5 w-5" />
-                </div>
-                <h2 className="text-sm font-bold text-slate-900">{t("completeProfile.defaultLocation")}</h2>
-             </div>
-             <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm">
-                <MapPicker
-                  value={defaultLoc}
-                  onChange={setDefaultLoc}
-                  onAddressChange={(addr) => {
-                    if (!addr) return;
-                    addressFromMapRef.current = true;
-                    setAddress(addr);
-                  }}
-                  hideLabel
-                />
-             </div>
-          </div>
-
-          {/* Address Detail Card (Full Width) */}
-          <div className="sm:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex flex-col gap-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t("completeProfile.addressDetailLabel")}</label>
-            </div>
-            <div className="relative">
-               <textarea
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-900 outline-none focus:border-teal-500 focus:bg-white focus:ring-2 focus:ring-teal-500/10 transition-all min-h-[80px] resize-none leading-relaxed"
-                  value={address}
-                  onChange={(e) => {
-                     addressFromMapRef.current = false;
-                     setAddress(e.target.value);
-                  }}
-                  placeholder={t("completeProfile.addressPlaceholder")}
-               />
-               {geocodingAddress && (
-                 <div className="absolute right-3 bottom-3">
-                   <motion.div 
-                     animate={{ rotate: 360 }}
-                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                     className="h-4 w-4 rounded-full border-2 border-slate-300 border-t-teal-500"
-                   />
-                 </div>
-               )}
-            </div>
+          <div>
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">{t("completeProfile.noteTitle")}</h3>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">{t("completeProfile.noteSubtitle")}</p>
           </div>
         </div>
-
-        {/* Important Note Section (Grid Style) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex items-start gap-2">
-              <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
-              <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                {t("completeProfile.noteAddress")}
-              </p>
-            </div>
-            <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex items-start gap-2">
-              <div className="mt-1 h-1.5 w-1.5 rounded-full bg-teal-500 shrink-0" />
-              <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                {t("completeProfile.notePhoto")}
-              </p>
-            </div>
+        <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+          <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <div className="mt-1 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-blue-500 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+            <p className="text-[10px] sm:text-xs text-slate-600 leading-relaxed font-medium">
+              {t("completeProfile.noteAddress")}
+            </p>
+          </div>
+          <div className="flex items-start gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <div className="mt-1 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-500 shrink-0 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+            <p className="text-[10px] sm:text-xs text-slate-600 leading-relaxed font-medium">
+              {t("completeProfile.notePhoto")}
+            </p>
+          </div>
         </div>
+      </motion.div>
 
-        {/* File Input */}
-        <input
-          ref={fileInputRef}
-          className="hidden"
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-            const file = e.target.files?.[0] ?? null;
-            if (file) {
-              if (file.size > 10 * 1024 * 1024) {
-                setActionError(t("completeProfile.errorPhotoSize") || "Ukuran file terlalu besar (maks 10MB).");
-                return;
-              }
-              setProfilePhoto(file);
-              setActionError(null);
-            }
-          }}
-        />
-
-        {/* Save Button */}
-        <div className="pt-2 pb-2">
+      {/* Floating Save Button */}
+      <div className="mt-8">
+        <div className="mx-auto max-w-3xl">
           <button
             onClick={async () => {
               if (saving) return;
 
               // Validate sections
               if (!isPhotoValid) {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setActiveSection("photo");
                 setActionError(t("completeProfile.errorPhoto"));
                 return;
               }
               if (!isInfoValid) {
-                setActionError(t("completeProfile.errorName"));
+                setActiveSection("info");
+                setActionError(t("completeProfile.errorName")); // Simplified error
                 return;
               }
               if (!isLocationValid) {
+                setActiveSection("location");
                 setActionError(t("completeProfile.errorLocation"));
                 return;
               }
@@ -420,18 +596,24 @@ export function CompleteProfilePage() {
                 fd.append("phone_number", normalizedPhone);
                 fd.append("default_latitude", String(defaultLoc.lat));
                 fd.append("default_longitude", String(defaultLoc.lng));
+                // backend expects 'profile_photo' or 'photo'? The original code said 'profile_photo'
                 if (profilePhoto) fd.append("profile_photo", profilePhoto);
 
                 const resp = await api.put("/users/me", fd);
                 const updated = resp.data.data.user as User;
                 
+                // Cleanup preview URL
                 if (photoPreviewUrl) {
                   URL.revokeObjectURL(photoPreviewUrl);
                 }
                 
                 setUser(updated);
                 setProfilePhoto(null);
+
+                // Notify navbar
                 window.dispatchEvent(new Event("profileUpdated"));
+
+                // Navigate
                 navigate(next, { replace: true });
               } catch (err) {
                 setActionError(getApiErrorMessage(err));
@@ -439,26 +621,32 @@ export function CompleteProfilePage() {
               }
             }}
             disabled={saving}
-            className="w-full rounded-xl bg-gradient-to-r from-teal-500 to-blue-600 p-4 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
+            className="group relative w-full overflow-hidden rounded-2xl bg-slate-900 p-4 sm:p-5 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
           >
-             {saving ? (
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 via-blue-500/20 to-purple-500/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            
+            <div className="relative flex items-center justify-center gap-2 sm:gap-3">
+              {saving ? (
                 <>
-                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                   <span className="font-bold text-sm uppercase tracking-wider">{t("completeProfile.saving")}</span>
+                  <div className="h-4 w-4 sm:h-5 sm:w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="text-xs sm:text-sm font-bold text-white tracking-wide">{t("completeProfile.saving")}
+                  </span>
                 </>
-             ) : (
+              ) : (
                 <>
-                   <span className="font-bold text-sm uppercase tracking-wider">{t("completeProfile.save")}</span>
-                   <ChevronRight className="h-5 w-5" />
+                  <span className="text-xs sm:text-base font-bold text-white tracking-widest uppercase">{t("completeProfile.save")}</span>
+                  <div className="flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition-transform duration-300 group-hover:translate-x-1">
+                    <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+                  </div>
                 </>
-             )}
+              )}
+            </div>
           </button>
-          
           {actionError && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 text-center text-xs font-bold text-rose-500 bg-rose-50 py-3 px-4 rounded-xl border border-rose-100 shadow-sm"
+              className="mt-2 sm:mt-3 text-center text-[10px] sm:text-xs font-bold text-rose-500 bg-rose-50/80 backdrop-blur-sm py-2 sm:py-2.5 px-4 rounded-xl border border-rose-100 shadow-sm"
             >
               {actionError}
             </motion.div>
