@@ -51,6 +51,29 @@ function osmLink(lat: number, lng: number, zoom = 18) {
   )}#map=${zoom}/${encodeURIComponent(lat)}/${encodeURIComponent(lng)}`;
 }
 
+
+function MapResizer() {
+  const map = useMap();
+
+  useEffect(() => {
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    
+    const container = map.getContainer();
+    if (container) {
+      observer.observe(container);
+    }
+    
+    // Also invalidate immediately on mount/update
+    map.invalidateSize();
+
+    return () => observer.disconnect();
+  }, [map]);
+
+  return null;
+}
+
 export function MapPicker({
   value,
   onChange,
@@ -325,6 +348,7 @@ export function MapPicker({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <RecenterOnChange center={center} />
+          <MapResizer />
           <ClickToPick onPick={handleManualPick} />
           {value ? <Marker key={`marker-${value.lat}-${value.lng}`} position={value} /> : null}
           {value && accuracyMeters ? (

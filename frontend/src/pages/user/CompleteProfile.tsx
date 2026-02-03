@@ -447,7 +447,7 @@ export function CompleteProfilePage() {
             transition={{ delay: 0.1 * index }}
             className={`relative overflow-hidden rounded-2xl p-[2px] transition-all duration-300 ${
               activeSection === step.id
-                ? "bg-gradient-to-br from-teal-400 via-blue-500 to-purple-600 shadow-lg sm:shadow-xl sm:shadow-blue-500/20 scale-[1.01]"
+                ? "bg-gradient-to-br from-teal-400 via-blue-500 to-purple-600 shadow-lg sm:shadow-xl sm:shadow-blue-500/20"
                 : step.isValid
                   ? "bg-gradient-to-br from-emerald-400 via-teal-400 to-emerald-400"
                   : "bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100"
@@ -497,24 +497,22 @@ export function CompleteProfilePage() {
                   }`} />
                 </div>
               </button>
-              <AnimatePresence initial={false}>
-                {activeSection === step.id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="will-change-transform"
-                  >
-                    <div className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
-                      <div className="h-px w-full bg-slate-100 mb-4 sm:mb-6" />
-                      <div className="rounded-2xl bg-slate-50 p-3 sm:p-6 border border-slate-100">
-                        {step.content}
-                      </div>
+              
+              {/* CSS Grid Animation for smooth performance & Map persistence */}
+              <div 
+                className={`grid transition-[grid-template-rows] duration-300 ease-out will-change-[grid-template-rows] ${
+                  activeSection === step.id ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                }`}
+              >
+                <div className="overflow-hidden transition-opacity duration-300">
+                  <div className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
+                    <div className="h-px w-full bg-slate-100 mb-4 sm:mb-6" />
+                    <div className="rounded-2xl bg-slate-50 p-3 sm:p-6 border border-slate-100">
+                      {step.content}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         ))}
