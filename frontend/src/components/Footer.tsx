@@ -56,9 +56,9 @@ export function Footer({ variant = "all" }: FooterProps) {
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 pb-28 sm:pb-8 lg:pb-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 text-center sm:text-left">
           {/* Brand Section */}
-          <div className="space-y-3 sm:space-y-4 flex flex-col items-center sm:items-start">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/20 flex-shrink-0 shadow-lg">
+          <div className="space-y-2 sm:space-y-4 flex flex-col items-center sm:items-start">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/20 flex-shrink-0 shadow-lg">
                 <img
                   src="/img/Logo_LokaClean.jpg"
                   alt="LokaClean Logo"
@@ -66,23 +66,23 @@ export function Footer({ variant = "all" }: FooterProps) {
                 />
               </div>
               <div className="text-left">
-                <h3 className="text-lg sm:text-lg lg:text-xl font-black text-white tracking-tight">LokaClean</h3>
-                <p className="text-[10px] sm:text-xs text-slate-300 font-medium">{t('home.footer.tagline')}</p>
+                <h3 className="text-base sm:text-lg lg:text-xl font-black text-white tracking-tight">LokaClean</h3>
+                <p className="text-[9px] sm:text-xs text-slate-300 font-medium">{t('home.footer.tagline')}</p>
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs sm:max-w-none mx-auto sm:mx-0">
+            <p className="text-[10px] sm:text-sm text-slate-300 leading-relaxed max-w-xs sm:max-w-none mx-auto sm:mx-0">
               {t('home.footer.description')}
             </p>
           </div>
 
           {/* Contact Information */}
           {(variant === "all" || variant === "contact-only") && (
-            <div className="space-y-4 sm:space-y-4 flex flex-col items-center sm:items-start">
-              <h4 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider bg-white/5 px-3 py-1 rounded-full sm:bg-transparent sm:px-0 sm:py-0 inline-block mb-2 sm:mb-4">{t('home.footer.contactUs')}</h4>
-              <div className="space-y-3 w-full max-w-xs sm:max-w-none">
-                <div className="flex items-center gap-3 text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
-                  <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-tropical-500/20 flex items-center justify-center">
-                    <Phone className="h-4 w-4 text-tropical-400" />
+            <div className="space-y-3 sm:space-y-4 flex flex-col items-center sm:items-start">
+              <h4 className="text-xs sm:text-base font-bold text-white uppercase tracking-wider bg-white/5 px-3 py-1 rounded-full sm:bg-transparent sm:px-0 sm:py-0 inline-block mb-1 sm:mb-4">{t('home.footer.contactUs')}</h4>
+              <div className="space-y-2 w-full max-w-[280px] sm:max-w-none">
+                <div className="flex items-center gap-3 text-[11px] sm:text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
+                  <div className="flex-shrink-0 h-7 w-7 rounded-lg bg-tropical-500/20 flex items-center justify-center">
+                    <Phone className="h-3.5 w-3.5 text-tropical-400" />
                   </div>
                   <a
                     href="tel:+6281236893055"
@@ -91,9 +91,9 @@ export function Footer({ variant = "all" }: FooterProps) {
                     0812-3689-3055
                   </a>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
-                  <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-ocean-500/20 flex items-center justify-center">
-                    <Mail className="h-4 w-4 text-ocean-400" />
+                <div className="flex items-center gap-3 text-[11px] sm:text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
+                  <div className="flex-shrink-0 h-7 w-7 rounded-lg bg-ocean-500/20 flex items-center justify-center">
+                    <Mail className="h-3.5 w-3.5 text-ocean-400" />
                   </div>
                   <a
                     href="mailto:lokacleanmandalika@gmail.com"
@@ -102,9 +102,9 @@ export function Footer({ variant = "all" }: FooterProps) {
                     lokacleanmandalika@gmail.com
                   </a>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
-                  <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-sun-500/20 flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-sun-400" />
+                <div className="flex items-center gap-3 text-[11px] sm:text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
+                  <div className="flex-shrink-0 h-7 w-7 rounded-lg bg-sun-500/20 flex items-center justify-center">
+                    <Clock className="h-3.5 w-3.5 text-sun-400" />
                   </div>
                   <span className="font-medium">{t('home.footer.hours')}</span>
                 </div>
@@ -114,8 +114,8 @@ export function Footer({ variant = "all" }: FooterProps) {
 
           {/* Social Media & Links - Premium Glassmorphism Design */}
           {variant === "all" && (
-            <div className="space-y-4 sm:space-y-4 flex flex-col items-center sm:items-start">
-              <h4 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider bg-white/5 px-3 py-1 rounded-full sm:bg-transparent sm:px-0 sm:py-0 inline-block mb-2 sm:mb-4">{t('home.footer.followUs')}</h4>
+            <div className="space-y-3 sm:space-y-4 flex flex-col items-center sm:items-start">
+              <h4 className="text-xs sm:text-base font-bold text-white uppercase tracking-wider bg-white/5 px-3 py-1 rounded-full sm:bg-transparent sm:px-0 sm:py-0 inline-block mb-1 sm:mb-4">{t('home.footer.followUs')}</h4>
               <div className="flex items-center gap-3 justify-center sm:justify-start">
                 {/* Instagram - Premium Glassmorphism */}
                 <motion.a

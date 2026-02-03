@@ -1049,7 +1049,7 @@ export function UserLayout() {
             <NavItem 
               to="/packages/all" 
               label={t("home.navbar.packages")} 
-              icon={LayoutGrid} 
+              icon={Package} 
               exact 
               currentPathname={location.pathname} 
             />
@@ -1057,7 +1057,7 @@ export function UserLayout() {
             <NavItem 
               to="/orders/new" 
               label={t("home.navbar.newOrder")} 
-              icon={Scan} 
+              icon={Plus} 
               exact 
               currentPathname={location.pathname} 
             />
@@ -1065,7 +1065,7 @@ export function UserLayout() {
             <NavItem 
               to="/orders" 
               label={t("orders.title")} 
-              icon={History} 
+              icon={List} 
               currentPathname={location.pathname} 
               badge={unpaidTransferCount} 
             />
@@ -1315,7 +1315,7 @@ export function UserLayout() {
               onClick={() => window.navigator?.vibrate?.(10)}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                  isActive ? "text-lombok-ocean-600" : "text-slate-600 hover:text-slate-800"
+                  isActive ? "text-lombok-ocean-600" : "text-slate-400 hover:text-slate-600"
                 }`
               }
             >
@@ -1327,7 +1327,7 @@ export function UserLayout() {
                   >
                     <Home className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
                   </motion.div>
-                  <span className={`text-[10px] font-bold ${isActive ? "font-extrabold" : ""}`}>
+                  <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
                     {t("home.navbar.home")}
                   </span>
                 </>
@@ -1341,7 +1341,7 @@ export function UserLayout() {
               onClick={() => window.navigator?.vibrate?.(10)}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                  isActive ? "text-lombok-ocean-600" : "text-slate-600 hover:text-slate-800"
+                  isActive ? "text-lombok-ocean-600" : "text-slate-400 hover:text-slate-600"
                 }`
               }
             >
@@ -1351,9 +1351,9 @@ export function UserLayout() {
                     whileTap={{ scale: 0.9 }}
                     className="relative"
                   >
-                    <LayoutGrid className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
+                    <Package className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
                   </motion.div>
-                  <span className={`text-[10px] font-bold ${isActive ? "font-extrabold" : ""}`}>
+                  <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
                     {t("home.navbar.packages")}
                   </span>
                 </>
@@ -1371,13 +1371,14 @@ export function UserLayout() {
                 <motion.div
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-b from-lombok-ocean-500 to-lombok-tropical-600 shadow-xl shadow-lombok-ocean-500/30 ring-[6px] ring-white"
+                  className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-lombok-ocean-500 to-lombok-tropical-500 shadow-xl shadow-lombok-ocean-500/30 ring-[6px] ring-white overflow-hidden"
                 >
-                  <Scan className="h-8 w-8 text-white stroke-[2px]" />
+                  <div className="absolute inset-0 bg-white/20 blur-xl opacity-50"></div>
+                  <Plus className="relative h-8 w-8 text-white stroke-[2.5px]" />
                   {/* Ripple effect */}
-                  <div className="absolute inset-0 rounded-full border border-white/20 animate-ping" />
+                  <div className="absolute inset-0 rounded-full border border-white/30 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
                 </motion.div>
-                <span className="text-[10px] font-extrabold text-slate-700 group-hover:text-lombok-ocean-600 transition-colors drop-shadow-sm bg-white/50 backdrop-blur-[2px] px-2 rounded-full">
+                <span className="text-[10px] font-bold text-slate-600 group-hover:text-lombok-ocean-600 transition-colors drop-shadow-sm bg-white/80 backdrop-blur-[4px] px-3 py-0.5 rounded-full shadow-sm mt-1">
                   {t("home.navbar.newOrder")}
                 </span>
               </NavLink>
@@ -1405,14 +1406,14 @@ export function UserLayout() {
                   end={true}
                   onClick={() => window.navigator?.vibrate?.(10)}
                   className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                    isOrdersActive ? "text-lombok-ocean-600" : "text-slate-600 hover:text-slate-800"
+                    isOrdersActive ? "text-lombok-ocean-600" : "text-slate-400 hover:text-slate-600"
                   }`}
                 >
                   <motion.div
                     whileTap={{ scale: 0.9 }}
                     className="relative"
                   >
-                    <History className={`h-6 w-6 ${isOrdersActive ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
+                    <List className={`h-6 w-6 ${isOrdersActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
                     {unpaidTransferCount > 0 && (
                       <motion.div
                         initial={{ scale: 0 }}
@@ -1423,7 +1424,7 @@ export function UserLayout() {
                       </motion.div>
                     )}
                   </motion.div>
-                  <span className={`text-[10px] font-bold ${isOrdersActive ? "font-extrabold" : ""}`}>
+                  <span className={`text-[10px] font-medium ${isOrdersActive ? "font-bold" : ""}`}>
                     {t("orders.title")}
                   </span>
                 </NavLink>
@@ -1437,7 +1438,7 @@ export function UserLayout() {
               onClick={() => window.navigator?.vibrate?.(10)}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                  isActive ? "text-lombok-ocean-600" : "text-slate-600 hover:text-slate-800"
+                  isActive ? "text-lombok-ocean-600" : "text-slate-400 hover:text-slate-600"
                 }`
               }
             >
@@ -1464,7 +1465,7 @@ export function UserLayout() {
                       <UserIcon className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
                     )}
                   </motion.div>
-                  <span className={`text-[10px] font-bold ${isActive ? "font-extrabold" : ""}`}>
+                  <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
                     {t("profile.title")}
                   </span>
                 </>
