@@ -326,7 +326,7 @@ export function Home() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
-                  className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
+                  className="text-2xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
                 >
                   <span className="inline-block">
                     {t("home.hero.titlePart1")}
@@ -363,7 +363,7 @@ export function Home() {
                 >
                   <Link
                     to="/register"
-                    className="flex-1 sm:flex-none sm:w-64 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 px-4 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-base font-bold text-white shadow-[0_8px_32px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_48px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-105 text-center flex items-center justify-center"
+                    className="w-36 sm:w-64 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-white shadow-[0_8px_32px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_48px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-105 text-center flex items-center justify-center whitespace-nowrap"
                   >
                     <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
                       {t("home.hero.ctaRegister")}
@@ -384,7 +384,7 @@ export function Home() {
                   </Link>
                   <Link
                     to="/login"
-                    className="flex-1 sm:flex-none sm:w-64 relative rounded-xl sm:rounded-2xl border-2 border-slate-300 bg-white/90 sm:backdrop-blur-xl px-4 sm:px-8 py-3 sm:py-3.5 text-xs sm:text-base font-bold text-slate-700 hover:bg-white hover:border-slate-400 hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden group text-center block"
+                    className="w-36 sm:w-64 relative rounded-xl sm:rounded-2xl border-2 border-slate-300 bg-white/90 sm:backdrop-blur-xl px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-slate-700 hover:bg-white hover:border-slate-400 hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden group text-center block whitespace-nowrap"
                   >
                     <span className="relative z-10">{t("home.hero.ctaLogin")}</span>
                     <motion.div
