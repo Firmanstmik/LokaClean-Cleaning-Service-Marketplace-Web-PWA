@@ -12,6 +12,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   User as UserIcon, 
@@ -38,6 +39,7 @@ import { normalizeWhatsAppPhone } from "../../lib/phone";
 import { isUserProfileComplete } from "../../lib/profile";
 import { toAbsoluteUrl } from "../../lib/urls";
 import { t, useCurrentLanguage } from "../../lib/i18n";
+import { compressImage } from "../../lib/image";
 import type { User } from "../../types/api";
 
 export function CompleteProfilePage() {
