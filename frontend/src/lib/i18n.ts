@@ -185,6 +185,8 @@ const translations = {
       mapHintOverlay: "Tap peta buat pilih lokasi",
       addressDetailLabel: "Detail Alamat",
       addressHelp: "Tulis detail biar petugas nggak nyasar, misal: warna pagar, patokan dekat mana.",
+      completed: "Selesai ✅",
+      required: "Wajib diisi ⚠️",
     },
     // Notifications
     notifications: {
@@ -701,6 +703,8 @@ const translations = {
       mapHintOverlay: "Tap map to select location",
       addressDetailLabel: "Address Detail",
       addressHelp: "Add details so we don't get lost, e.g., fence color, nearby landmarks.",
+      completed: "Completed ✅",
+      required: "Required ⚠️",
     },
     // Notifications
     notifications: {
