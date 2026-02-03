@@ -458,21 +458,21 @@ export function CompleteProfilePage() {
             transition={{ delay: 0.1 * index }}
             className={`overflow-hidden rounded-3xl border transition-all duration-300 ${
               activeSection === step.id
-                ? "bg-white border-teal-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)]"
-                : "bg-white border-transparent shadow-sm hover:bg-slate-50"
+                ? "bg-white border-slate-200 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.05)] ring-1 ring-slate-100"
+                : "bg-white border-slate-100 shadow-sm hover:shadow-md hover:bg-slate-50/50"
             }`}
           >
             <button
               onClick={() => setActiveSection(activeSection === step.id ? null : step.id)}
-              className="w-full flex items-center justify-between p-4 sm:p-5 text-left outline-none"
+              className="w-full flex items-center justify-between p-4 sm:p-5 text-left outline-none group"
             >
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl transition-colors ${
+                <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl transition-colors duration-300 ${
                   step.isValid 
-                    ? "bg-emerald-100 text-emerald-600" 
+                    ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
                     : activeSection === step.id 
-                      ? "bg-teal-100 text-teal-600" 
-                      : "bg-slate-100 text-slate-500"
+                      ? "bg-teal-50 text-teal-600 border border-teal-100" 
+                      : "bg-slate-50 text-slate-400 border border-slate-100"
                 }`}>
                   <step.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
@@ -482,48 +482,36 @@ export function CompleteProfilePage() {
                   }`}>
                     {step.title}
                   </h3>
-                  <p className={`text-[10px] sm:text-xs mt-0.5 line-clamp-1 transition-colors ${
-                    step.isValid ? "text-emerald-600 font-medium" : "text-rose-500 font-medium"
-                  }`}>
-                    {step.isValid ? t("completeProfile.completed") : t("completeProfile.required")}
-                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {step.isValid ? (
+                      <span className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {t("completeProfile.completed")}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                        <AlertCircle className="h-3 w-3" />
+                        {t("completeProfile.required")}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                {step.isValid ? (
-                  <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                    <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </div>
-                ) : (
-                  <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-rose-50 text-rose-500">
-                    <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </div>
-                )}
-                <ChevronDown 
-                  className={`h-5 w-5 text-slate-400 transition-transform duration-300 ${
-                    activeSection === step.id ? "rotate-180 text-teal-500" : ""
-                  }`} 
-                />
-              </div>
+              <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform duration-300 ${
+                activeSection === step.id ? "rotate-180 text-teal-600" : "group-hover:text-slate-600"
+              }`} />
             </button>
-
             <AnimatePresence initial={false}>
               {activeSection === step.id && (
                 <motion.div
-                  initial="collapsed"
-                  animate="open"
-                  exit="collapsed"
-                  variants={{
-                    open: { height: "auto", opacity: 1 },
-                    collapsed: { height: 0, opacity: 0 }
-                  }}
-                  transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }} // Smooth easeOut
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+                  className="will-change-transform"
                 >
-                  <div className="px-4 pb-5 pt-0 sm:px-6 sm:pb-6">
-                    <div className="border-t border-slate-100 pt-5">
-                      {step.content}
-                    </div>
+                  <div className="border-t border-slate-50 p-4 sm:p-5 bg-slate-50/30">
+                    {step.content}
                   </div>
                 </motion.div>
               )}
@@ -532,59 +520,62 @@ export function CompleteProfilePage() {
         ))}
       </div>
 
-      {/* Error Message Toast */}
-      <AnimatePresence>
-        {actionError && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 sm:bottom-28 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 max-w-md z-50"
-          >
-            <div className="flex items-center gap-3 rounded-2xl bg-rose-600 p-4 text-white shadow-2xl shadow-rose-900/20">
-              <AlertCircle className="h-6 w-6 flex-shrink-0 text-white/90" />
-              <p className="text-sm font-bold">{actionError}</p>
-              <button 
-                onClick={() => setActionError(null)}
-                className="ml-auto rounded-lg bg-white/20 p-1 hover:bg-white/30"
-              >
-                <div className="h-4 w-4 rotate-45 border-l-2 border-t-2 border-white" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Important Note Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="rounded-3xl border border-blue-100 bg-blue-50/50 p-5 sm:p-6"
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <h3 className="text-sm font-bold text-blue-900">{t("completeProfile.noteTitle")}</h3>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+            <p className="text-xs sm:text-sm text-blue-800/80 leading-relaxed">
+              {t("completeProfile.noteAddress")}
+            </p>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+            <p className="text-xs sm:text-sm text-blue-800/80 leading-relaxed">
+              {t("completeProfile.notePhoto")}
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
-      {/* Action Button - Sticky Bottom or just bottom */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 z-40 sm:relative sm:bg-transparent sm:border-0 sm:p-0 sm:mt-8">
+      {/* Floating Save Button */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 bg-gradient-to-t from-white via-white to-transparent pb-6 pt-12">
         <div className="max-w-3xl mx-auto">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500 via-blue-600 to-purple-600 py-3.5 sm:py-5 text-white shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={saving}
+          <button
             onClick={async () => {
-              setActionError(null);
+              if (saving) return;
 
-              // Enforce completion before continuing.
-              if (!fullName.trim()) {
-                setActiveSection("info");
-                return setActionError(t("completeProfile.errorName"));
-              }
-              if (!phone.trim()) {
-                setActiveSection("info");
-                return setActionError(t("completeProfile.errorPhone"));
-              }
-              if (!defaultLoc) {
-                setActiveSection("location");
-                return setActionError(t("completeProfile.errorLocation"));
-              }
-              if (!alreadyHasPhoto && !profilePhoto) {
+              // Validate sections
+              if (!isPhotoValid) {
                 setActiveSection("photo");
-                return setActionError(t("completeProfile.errorPhoto"));
+                setActionError(t("completeProfile.errorPhoto"));
+                return;
+              }
+              if (!isInfoValid) {
+                setActiveSection("info");
+                setActionError(t("completeProfile.errorName")); // Simplified error
+                return;
+              }
+              if (!isLocationValid) {
+                setActiveSection("location");
+                setActionError(t("completeProfile.errorLocation"));
+                return;
               }
 
               setSaving(true);
+              setActionError(null);
+
               try {
                 const normalizedPhone = normalizeWhatsAppPhone(phone);
                 if (!normalizedPhone) {
@@ -597,12 +588,13 @@ export function CompleteProfilePage() {
                 fd.append("phone_number", normalizedPhone);
                 fd.append("default_latitude", String(defaultLoc.lat));
                 fd.append("default_longitude", String(defaultLoc.lng));
+                // backend expects 'profile_photo' or 'photo'? The original code said 'profile_photo'
                 if (profilePhoto) fd.append("profile_photo", profilePhoto);
 
                 const resp = await api.put("/users/me", fd);
                 const updated = resp.data.data.user as User;
                 
-                // Cleanup preview URL before updating user
+                // Cleanup preview URL
                 if (photoPreviewUrl) {
                   URL.revokeObjectURL(photoPreviewUrl);
                 }
@@ -610,41 +602,47 @@ export function CompleteProfilePage() {
                 setUser(updated);
                 setProfilePhoto(null);
 
-                // Notify navbar to refresh profile photo
+                // Notify navbar
                 window.dispatchEvent(new Event("profileUpdated"));
 
-                // If complete, go to next route.
-                if (isUserProfileComplete(updated)) {
-                  navigate(next, { replace: true });
-                }
+                // Navigate
+                navigate(next, { replace: true });
               } catch (err) {
                 setActionError(getApiErrorMessage(err));
-              } finally {
                 setSaving(false);
               }
             }}
+            disabled={saving}
+            className="group relative w-full overflow-hidden rounded-2xl bg-slate-900 p-4 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.4)] transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-600 via-blue-600 to-purple-600 opacity-100 transition-opacity group-hover:opacity-90" />
-            <div className="absolute inset-0 bg-[url('/patterns/noise.png')] opacity-10 mix-blend-overlay" />
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500 via-blue-600 to-purple-600 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             
-            <span className="relative flex items-center justify-center gap-2 text-sm sm:text-lg font-black tracking-wide">
+            <div className="relative flex items-center justify-center gap-3">
               {saving ? (
                 <>
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="h-4 w-4 sm:h-5 sm:w-5 rounded-full border-2 border-white/30 border-t-white"
-                  />
-                  {t("completeProfile.saving")}
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="font-bold text-white">{t("completeProfile.saving")}
+</span>
                 </>
               ) : (
                 <>
-                  {t("completeProfile.save")}
-                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" />
+                  <span className="text-base font-bold text-white tracking-wide">{t("completeProfile.save")}</span>
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                    <ChevronRight className="h-4 w-4 text-white" />
+                  </div>
                 </>
               )}
-            </span>
-          </motion.button>
+            </div>
+          </button>
+          {actionError && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 text-center text-xs font-bold text-rose-500 bg-rose-50/80 backdrop-blur-sm py-2 px-4 rounded-xl border border-rose-100"
+            >
+              {actionError}
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
