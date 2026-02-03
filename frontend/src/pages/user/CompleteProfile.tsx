@@ -50,6 +50,8 @@ export function CompleteProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -395,6 +397,102 @@ export function CompleteProfilePage() {
   const completedFields = totalFields - missing.length;
   const progressPercentage = (completedFields / totalFields) * 100;
 
+  const handleSave = async () => {
+    if (saving) return;
+
+    // Validate sections
+    if (!isPhotoValid) {
+      setActiveSection("photo");
+      setActionError(t("completeProfile.errorPhoto"));
+      return;
+    }
+    if (!isInfoValid) {
+      setActiveSection("info");
+      setActionError(t("completeProfile.errorName"));
+      return;
+    }
+    if (!isLocationValid) {
+      setActiveSection("location");
+      setActionError(t("completeProfile.errorLocation"));
+      return;
+    }
+
+    setSaving(true);
+    setActionError(null);
+    setUploadProgress(0);
+
+    // Cancel previous request if any
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const normalizedPhone = normalizeWhatsAppPhone(phone);
+      if (!normalizedPhone) {
+        setActionError(t("profile.invalidPhoneNumber"));
+        setSaving(false);
+        return;
+      }
+
+      if (!defaultLoc) {
+        setActionError(t("completeProfile.errorLocation"));
+        setSaving(false);
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("full_name", fullName);
+      fd.append("phone_number", normalizedPhone);
+      fd.append("default_latitude", String(defaultLoc.lat));
+      fd.append("default_longitude", String(defaultLoc.lng));
+      
+      // Compress and append photo if exists
+      if (profilePhoto) {
+        try {
+          const compressed = await compressImage(profilePhoto);
+          fd.append("profile_photo", compressed);
+        } catch (err) {
+          console.warn("Image compression failed, using original", err);
+          fd.append("profile_photo", profilePhoto);
+        }
+      }
+
+      const resp = await api.put("/users/me", fd, {
+        signal: abortControllerRef.current.signal,
+        onUploadProgress: (progressEvent) => {
+          const total = progressEvent.total || 1;
+          const progress = Math.round((progressEvent.loaded * 100) / total);
+          setUploadProgress(progress);
+        }
+      });
+      
+      const updated = resp.data.data.user as User;
+      
+      // Cleanup preview URL
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+      
+      setUser(updated);
+      setProfilePhoto(null);
+
+      // Notify navbar
+      window.dispatchEvent(new Event("profileUpdated"));
+
+      // Navigate
+      navigate(next, { replace: true });
+    } catch (err) {
+      if (axios.isCancel(err)) {
+        return;
+      }
+      setActionError(getApiErrorMessage(err));
+      setSaving(false);
+    } finally {
+      abortControllerRef.current = null;
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 pb-0">
       {/* Header Section */}
@@ -561,75 +659,10 @@ export function CompleteProfilePage() {
       </motion.div>
 
       {/* Floating Save Button */}
-      <div className="mt-8">
+      <div className="mt-4">
         <div className="mx-auto max-w-3xl">
           <button
-            onClick={async () => {
-              if (saving) return;
-
-              // Validate sections
-              if (!isPhotoValid) {
-                setActiveSection("photo");
-                setActionError(t("completeProfile.errorPhoto"));
-                return;
-              }
-              if (!isInfoValid) {
-                setActiveSection("info");
-                setActionError(t("completeProfile.errorName")); // Simplified error
-                return;
-              }
-              if (!isLocationValid) {
-                setActiveSection("location");
-                setActionError(t("completeProfile.errorLocation"));
-                return;
-              }
-
-              setSaving(true);
-              setActionError(null);
-
-              try {
-                const normalizedPhone = normalizeWhatsAppPhone(phone);
-                if (!normalizedPhone) {
-                  setActionError(t("profile.invalidPhoneNumber"));
-                  setSaving(false);
-                  return;
-                }
-
-                if (!defaultLoc) {
-                  setActionError(t("completeProfile.errorLocation"));
-                  setSaving(false);
-                  return;
-                }
-
-                const fd = new FormData();
-                fd.append("full_name", fullName);
-                fd.append("phone_number", normalizedPhone);
-                fd.append("default_latitude", String(defaultLoc.lat));
-                fd.append("default_longitude", String(defaultLoc.lng));
-                // backend expects 'profile_photo' or 'photo'? The original code said 'profile_photo'
-                if (profilePhoto) fd.append("profile_photo", profilePhoto);
-
-                const resp = await api.put("/users/me", fd);
-                const updated = resp.data.data.user as User;
-                
-                // Cleanup preview URL
-                if (photoPreviewUrl) {
-                  URL.revokeObjectURL(photoPreviewUrl);
-                }
-                
-                setUser(updated);
-                setProfilePhoto(null);
-
-                // Notify navbar
-                window.dispatchEvent(new Event("profileUpdated"));
-
-                // Navigate
-                navigate(next, { replace: true });
-              } catch (err) {
-                setActionError(getApiErrorMessage(err));
-                setSaving(false);
-              }
-            }}
+            onClick={handleSave}
             disabled={saving}
             className="group relative w-full overflow-hidden rounded-2xl bg-slate-900 p-4 sm:p-5 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
           >
@@ -639,7 +672,8 @@ export function CompleteProfilePage() {
               {saving ? (
                 <>
                   <div className="h-4 w-4 sm:h-5 sm:w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="text-xs sm:text-sm font-bold text-white tracking-wide">{t("completeProfile.saving")}
+                  <span className="text-xs sm:text-sm font-bold text-white tracking-wide">
+                    {uploadProgress > 0 ? `${uploadProgress}%` : t("completeProfile.saving")}
                   </span>
                 </>
               ) : (

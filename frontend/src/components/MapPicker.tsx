@@ -216,12 +216,12 @@ export const MapPicker = memo(function MapPicker({
         pos = await Promise.race([
           getPos({
             enableHighAccuracy: true,
-            timeout: 25_000, // 25 seconds
-            maximumAge: 0 // Force fresh position
+            timeout: 5_000, // 5 seconds (was 25s)
+            maximumAge: 10_000 // Allow 10s old cached position
           }),
           // Fallback timeout wrapper (in case browser doesn't respect timeout)
           new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error("TIMEOUT")), 30_000);
+            setTimeout(() => reject(new Error("TIMEOUT")), 7_000);
           })
         ]);
       } catch (err) {
@@ -235,11 +235,11 @@ export const MapPicker = memo(function MapPicker({
             pos = await Promise.race([
               getPos({
                 enableHighAccuracy: false, // Use network/cell towers
-                timeout: 15_000,
+                timeout: 5_000,
                 maximumAge: 60_000 // Accept cached position up to 1 minute old
               }),
               new Promise<never>((_, reject) => {
-                setTimeout(() => reject(new Error("TIMEOUT")), 20_000);
+                setTimeout(() => reject(new Error("TIMEOUT")), 7_000);
               })
             ]);
           } catch (fallbackErr) {
