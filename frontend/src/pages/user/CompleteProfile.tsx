@@ -290,7 +290,7 @@ export function CompleteProfilePage() {
             <div className="relative">
               <UserIcon className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
               <input
-                className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50/50 pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3.5 text-xs sm:text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10"
+                className="w-full rounded-2xl border border-slate-200 bg-white pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 shadow-sm"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder={t("completeProfile.fullNamePlaceholder")}
@@ -300,13 +300,13 @@ export function CompleteProfilePage() {
           </div>
 
           <div className="group">
-            <label className="mb-1.5 sm:mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+            <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">
               {t("completeProfile.phone")}
             </label>
             <div className="relative">
-              <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+              <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
               <input
-                className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50/50 pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3.5 text-xs sm:text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10"
+                className="w-full rounded-2xl border border-slate-200 bg-white pl-10 sm:pl-12 pr-4 py-3 sm:py-4 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 shadow-sm"
                 type="tel"
                 inputMode="tel"
                 value={phone}
@@ -387,61 +387,46 @@ export function CompleteProfilePage() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-500 via-blue-600 to-purple-700 p-5 sm:p-10 text-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] ring-1 ring-white/20"
+        className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-6 sm:p-10 text-white shadow-[0_20px_60px_-15px_rgba(15,23,42,0.3)]"
       >
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3] 
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/20 blur-2xl will-change-transform" 
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.4, 0.2] 
-          }}
-          transition={{ duration: 10, repeat: Infinity, delay: 1 }}
-          className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-teal-400/30 blur-xl will-change-transform" 
-        />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-teal-500/20 via-slate-900/0 to-slate-900/0" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-blue-600/20 via-slate-900/0 to-slate-900/0" />
         
         <div className="relative z-10">
           <div className="flex items-start justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-[9px] sm:text-xs font-bold uppercase tracking-wider border border-white/10 shadow-sm">
+              <div className="flex items-center gap-2.5 mb-4">
+                <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[10px] sm:text-xs font-bold uppercase tracking-widest border border-white/10 text-teal-300">
                   {t("completeProfile.step2")}
                 </span>
-                <span className="flex h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-teal-300 animate-pulse" />
               </div>
-              <h1 className="text-xl sm:text-4xl font-black tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-4xl font-bold tracking-tight leading-tight text-white">
                 {t("completeProfile.title")}
               </h1>
-              <p className="mt-2 sm:mt-3 text-blue-50 text-xs sm:text-base max-w-lg leading-relaxed font-medium">
+              <p className="mt-3 text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed font-medium">
                 {t("completeProfile.subtitle")}
               </p>
             </div>
-            <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-inner rotate-3 hover:rotate-6 transition-transform">
-              <Sparkles className="h-8 w-8 text-yellow-300 drop-shadow-lg" />
+            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-blue-500 shadow-lg shadow-teal-500/20 rotate-3">
+              <Sparkles className="h-7 w-7 text-white" />
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="mt-6 sm:mt-8">
-            <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1.5 sm:mb-2 text-blue-100">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <div className="mt-8">
+            <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 text-slate-400">
+              <span className="flex items-center gap-2">
+                <div className={`h-1.5 w-1.5 rounded-full ${progressPercentage === 100 ? "bg-teal-400" : "bg-slate-500"}`} />
                 {t("completeProfile.completionStatus")}
               </span>
-              <span>{Math.round(progressPercentage)}%</span>
+              <span className="text-white">{Math.round(progressPercentage)}%</span>
             </div>
-            <div className="h-2 sm:h-3 w-full rounded-full bg-black/20 backdrop-blur-sm overflow-hidden border border-white/10">
+            <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercentage}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-teal-300 via-emerald-300 to-teal-300 shadow-[0_0_15px_rgba(94,234,212,0.6)]"
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="h-full bg-gradient-to-r from-teal-400 to-blue-500 shadow-[0_0_20px_rgba(45,212,191,0.5)]"
               />
             </div>
           </div>
@@ -449,57 +434,61 @@ export function CompleteProfilePage() {
       </motion.div>
 
       {/* Accordion Sections */}
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-4">
         {sections.map((step, index) => (
           <motion.div
             key={step.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 * index }}
-            className={`overflow-hidden rounded-3xl border transition-all duration-300 ${
+            className={`overflow-hidden rounded-[2rem] border transition-all duration-500 ${
               activeSection === step.id
-                ? "bg-white border-slate-200 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.05)] ring-1 ring-slate-100"
-                : "bg-white border-slate-100 shadow-sm hover:shadow-md hover:bg-slate-50/50"
+                ? "bg-white border-teal-500/10 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.08)]"
+                : "bg-white border-transparent shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] hover:shadow-md hover:bg-slate-50/50"
             }`}
           >
             <button
               onClick={() => setActiveSection(activeSection === step.id ? null : step.id)}
-              className="w-full flex items-center justify-between p-4 sm:p-5 text-left outline-none group"
+              className="w-full flex items-center justify-between p-5 sm:p-6 text-left outline-none group"
             >
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl transition-colors duration-300 ${
+              <div className="flex items-center gap-4">
+                <div className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-all duration-500 ${
                   step.isValid 
-                    ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
+                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" 
                     : activeSection === step.id 
-                      ? "bg-teal-50 text-teal-600 border border-teal-100" 
-                      : "bg-slate-50 text-slate-400 border border-slate-100"
+                      ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" 
+                      : "bg-slate-50 text-slate-400 group-hover:bg-white group-hover:shadow-sm"
                 }`}>
-                  <step.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <step.icon className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-500 group-hover:scale-110" />
                 </div>
                 <div>
-                  <h3 className={`text-sm sm:text-base font-bold transition-colors ${
-                    activeSection === step.id ? "text-slate-900" : "text-slate-700"
+                  <h3 className={`text-base sm:text-lg font-bold tracking-tight transition-colors ${
+                    activeSection === step.id ? "text-slate-900" : "text-slate-600 group-hover:text-slate-900"
                   }`}>
                     {step.title}
                   </h3>
-                  <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="flex items-center gap-2 mt-1">
                     {step.isValid ? (
-                      <span className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                        <CheckCircle2 className="h-3 w-3" />
+                      <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-emerald-600 tracking-wide">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
                         {t("completeProfile.completed")}
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-                        <AlertCircle className="h-3 w-3" />
+                      <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-rose-500 tracking-wide">
+                        <div className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
                         {t("completeProfile.required")}
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-              <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform duration-300 ${
-                activeSection === step.id ? "rotate-180 text-teal-600" : "group-hover:text-slate-600"
-              }`} />
+              <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                activeSection === step.id ? "bg-slate-100 rotate-180" : "bg-transparent group-hover:bg-slate-50"
+              }`}>
+                <ChevronDown className={`h-5 w-5 transition-colors ${
+                  activeSection === step.id ? "text-slate-900" : "text-slate-400"
+                }`} />
+              </div>
             </button>
             <AnimatePresence initial={false}>
               {activeSection === step.id && (
@@ -507,11 +496,13 @@ export function CompleteProfilePage() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+                  transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
                   className="will-change-transform"
                 >
-                  <div className="border-t border-slate-50 p-4 sm:p-5 bg-slate-50/30">
-                    {step.content}
+                  <div className="p-5 sm:p-6 pt-0">
+                    <div className="rounded-2xl bg-slate-50/50 p-4 sm:p-6 border border-slate-100/50">
+                      {step.content}
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -525,24 +516,27 @@ export function CompleteProfilePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="rounded-3xl border border-blue-100 bg-blue-50/50 p-5 sm:p-6"
+        className="rounded-[2rem] bg-gradient-to-br from-white to-slate-50 border border-slate-100 p-6 sm:p-8 shadow-sm"
       >
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-            <Sparkles className="h-4 w-4" />
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+            <Sparkles className="h-5 w-5" />
           </div>
-          <h3 className="text-sm font-bold text-blue-900">{t("completeProfile.noteTitle")}</h3>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight">{t("completeProfile.noteTitle")}</h3>
+            <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Info penting untuk Anda</p>
+          </div>
         </div>
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
-            <p className="text-xs sm:text-sm text-blue-800/80 leading-relaxed">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <div className="mt-1 h-2 w-2 rounded-full bg-blue-500 shrink-0 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               {t("completeProfile.noteAddress")}
             </p>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
-            <p className="text-xs sm:text-sm text-blue-800/80 leading-relaxed">
+          <div className="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-100 shadow-sm">
+            <div className="mt-1 h-2 w-2 rounded-full bg-teal-500 shrink-0 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
               {t("completeProfile.notePhoto")}
             </p>
           </div>
@@ -550,8 +544,8 @@ export function CompleteProfilePage() {
       </motion.div>
 
       {/* Floating Save Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 bg-gradient-to-t from-white via-white to-transparent pb-6 pt-12">
-        <div className="max-w-3xl mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/50 bg-white/80 px-6 py-4 backdrop-blur-xl sm:px-8 sm:py-5">
+        <div className="mx-auto max-w-3xl">
           <button
             onClick={async () => {
               if (saving) return;
@@ -620,21 +614,21 @@ export function CompleteProfilePage() {
               }
             }}
             disabled={saving}
-            className="group relative w-full overflow-hidden rounded-2xl bg-slate-900 p-4 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.4)] transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
+            className="group relative w-full overflow-hidden rounded-2xl bg-slate-900 p-4 shadow-xl shadow-slate-900/20 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-500 via-blue-600 to-purple-600 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 via-blue-500/20 to-purple-500/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             
             <div className="relative flex items-center justify-center gap-3">
               {saving ? (
                 <>
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  <span className="font-bold text-white">{t("completeProfile.saving")}
+                  <span className="font-bold text-white tracking-wide">{t("completeProfile.saving")}
 </span>
                 </>
               ) : (
                 <>
-                  <span className="text-base font-bold text-white tracking-wide">{t("completeProfile.save")}</span>
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                  <span className="text-base font-bold text-white tracking-widest uppercase">{t("completeProfile.save")}</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm transition-transform duration-300 group-hover:translate-x-1">
                     <ChevronRight className="h-4 w-4 text-white" />
                   </div>
                 </>
@@ -645,7 +639,7 @@ export function CompleteProfilePage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 text-center text-xs font-bold text-rose-500 bg-rose-50/80 backdrop-blur-sm py-2 px-4 rounded-xl border border-rose-100"
+              className="mt-3 text-center text-xs font-bold text-rose-500 bg-rose-50/80 backdrop-blur-sm py-2.5 px-4 rounded-xl border border-rose-100 shadow-sm"
             >
               {actionError}
             </motion.div>
