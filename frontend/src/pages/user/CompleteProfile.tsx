@@ -441,73 +441,77 @@ export function CompleteProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 * index }}
-            className={`overflow-hidden rounded-[1.5rem] border transition-all duration-500 ${
+            className={`relative overflow-hidden rounded-[1.5rem] p-[2px] transition-all duration-500 ${
               activeSection === step.id
-                ? "bg-white border-teal-500/10 shadow-[0_15px_30px_-10px_rgba(0,0,0,0.08)]"
-                : "bg-white border-transparent shadow-[0_2px_10px_-2px_rgba(0,0,0,0.03)] hover:shadow-md hover:bg-slate-50/50"
+                ? "bg-gradient-to-br from-teal-400 via-blue-500 to-purple-600 shadow-xl shadow-blue-500/20 scale-[1.01]"
+                : step.isValid
+                  ? "bg-gradient-to-br from-emerald-400/50 via-teal-400/50 to-emerald-400/50 hover:from-emerald-400 hover:to-teal-400"
+                  : "bg-gradient-to-br from-slate-100 via-slate-200 to-slate-100 hover:from-blue-200 hover:to-purple-200"
             }`}
           >
-            <button
-              onClick={() => setActiveSection(activeSection === step.id ? null : step.id)}
-              className="w-full flex items-center justify-between p-4 sm:p-6 text-left outline-none group"
-            >
-              <div className="flex items-center gap-3.5 sm:gap-4">
-                <div className={`flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-all duration-500 ${
-                  step.isValid 
-                    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]" 
-                    : activeSection === step.id 
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" 
-                      : "bg-slate-50 text-slate-400 group-hover:bg-white group-hover:shadow-sm"
-                }`}>
-                  <step.icon className={`h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-500 group-hover:scale-110 ${step.isValid ? 'text-emerald-600' : ''}`} />
-                </div>
-                <div>
-                  <h3 className={`text-sm sm:text-lg font-bold tracking-tight transition-colors ${
-                    activeSection === step.id ? "text-slate-900" : "text-slate-600 group-hover:text-slate-900"
+            <div className="h-full w-full rounded-[1.4rem] bg-white overflow-hidden">
+              <button
+                onClick={() => setActiveSection(activeSection === step.id ? null : step.id)}
+                className="w-full flex items-center justify-between p-4 sm:p-6 text-left outline-none group"
+              >
+                <div className="flex items-center gap-3.5 sm:gap-4">
+                  <div className={`flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-all duration-500 ${
+                    step.isValid 
+                      ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]" 
+                      : activeSection === step.id 
+                        ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20" 
+                        : "bg-slate-50 text-slate-400 group-hover:bg-white group-hover:shadow-sm"
                   }`}>
-                    {step.title}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    {step.isValid ? (
-                      <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-emerald-600 tracking-wide">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        {t("completeProfile.completed")}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-rose-500 tracking-wide">
-                        <div className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
-                        {t("completeProfile.required")}
-                      </span>
-                    )}
+                    <step.icon className={`h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-500 group-hover:scale-110 ${step.isValid ? 'text-emerald-600' : ''}`} />
                   </div>
-                </div>
-              </div>
-              <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                activeSection === step.id ? "bg-slate-100 rotate-180" : "bg-transparent group-hover:bg-slate-50"
-              }`}>
-                <ChevronDown className={`h-5 w-5 transition-colors ${
-                  activeSection === step.id ? "text-slate-900" : "text-slate-400"
-                }`} />
-              </div>
-            </button>
-            <AnimatePresence initial={false}>
-              {activeSection === step.id && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
-                  className="will-change-transform"
-                >
-                  <div className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
-                    <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4 sm:mb-6" />
-                    <div className="rounded-2xl bg-slate-50/50 p-3 sm:p-6 border border-slate-100/50">
-                      {step.content}
+                  <div>
+                    <h3 className={`text-sm sm:text-lg font-bold tracking-tight transition-colors ${
+                      activeSection === step.id ? "text-slate-900" : "text-slate-600 group-hover:text-slate-900"
+                    }`}>
+                      {step.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      {step.isValid ? (
+                        <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-emerald-600 tracking-wide">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          {t("completeProfile.completed")}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-rose-500 tracking-wide">
+                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+                          {t("completeProfile.required")}
+                        </span>
+                      )}
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
+                <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  activeSection === step.id ? "bg-slate-100 rotate-180" : "bg-transparent group-hover:bg-slate-50"
+                }`}>
+                  <ChevronDown className={`h-5 w-5 transition-colors ${
+                    activeSection === step.id ? "text-slate-900" : "text-slate-400"
+                  }`} />
+                </div>
+              </button>
+              <AnimatePresence initial={false}>
+                {activeSection === step.id && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+                    className="will-change-transform"
+                  >
+                    <div className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
+                      <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4 sm:mb-6" />
+                      <div className="rounded-2xl bg-slate-50/50 p-3 sm:p-6 border border-slate-100/50">
+                        {step.content}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         ))}
       </div>
