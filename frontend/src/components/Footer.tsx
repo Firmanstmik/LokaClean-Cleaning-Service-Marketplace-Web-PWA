@@ -53,60 +53,60 @@ export function Footer({ variant = "all" }: FooterProps) {
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-3 sm:py-8 lg:py-12 pb-8 sm:pb-8 lg:pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-8 lg:gap-12">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 pb-28 sm:pb-8 lg:pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 lg:gap-12 text-center sm:text-left">
           {/* Brand Section */}
-          <div className="space-y-1.5 sm:space-y-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-7 w-7 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-lg sm:rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/20 flex-shrink-0">
+          <div className="space-y-3 sm:space-y-4 flex flex-col items-center sm:items-start">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/20 flex-shrink-0 shadow-lg">
                 <img
                   src="/img/Logo_LokaClean.jpg"
                   alt="LokaClean Logo"
                   className="h-full w-full object-contain p-0.5 sm:p-1"
                 />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-xs sm:text-lg lg:text-xl font-black text-white truncate">LokaClean</h3>
-                <p className="text-[9px] sm:text-xs text-slate-300 truncate">{t('home.footer.tagline')}</p>
+              <div className="text-left">
+                <h3 className="text-lg sm:text-lg lg:text-xl font-black text-white tracking-tight">LokaClean</h3>
+                <p className="text-[10px] sm:text-xs text-slate-300 font-medium">{t('home.footer.tagline')}</p>
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed hidden sm:block">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xs sm:max-w-none mx-auto sm:mx-0">
               {t('home.footer.description')}
             </p>
           </div>
 
           {/* Contact Information */}
           {(variant === "all" || variant === "contact-only") && (
-            <div className="space-y-1.5 sm:space-y-4">
-              <h4 className="text-[11px] sm:text-base font-bold text-white mb-1.5 sm:mb-4">{t('home.footer.contactUs')}</h4>
-              <div className="space-y-3 sm:space-y-3">
-                <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-300">
-                  <div className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 rounded-md sm:rounded-lg bg-tropical-500/20 flex items-center justify-center">
-                    <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-tropical-400" />
+            <div className="space-y-4 sm:space-y-4 flex flex-col items-center sm:items-start">
+              <h4 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider bg-white/5 px-3 py-1 rounded-full sm:bg-transparent sm:px-0 sm:py-0 inline-block mb-2 sm:mb-4">{t('home.footer.contactUs')}</h4>
+              <div className="space-y-3 w-full max-w-xs sm:max-w-none">
+                <div className="flex items-center gap-3 text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-tropical-500/20 flex items-center justify-center">
+                    <Phone className="h-4 w-4 text-tropical-400" />
                   </div>
                   <a
-                    href="tel:+6281234567890"
-                    className="hover:text-tropical-400 transition-colors text-xs sm:text-sm"
+                    href="tel:+6281236893055"
+                    className="hover:text-tropical-400 transition-colors font-medium"
                   >
-                    +62 812-3456-7890
+                    0812-3689-3055
                   </a>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-300">
-                  <div className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 rounded-md sm:rounded-lg bg-ocean-500/20 flex items-center justify-center">
-                    <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-ocean-400" />
+                <div className="flex items-center gap-3 text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-ocean-500/20 flex items-center justify-center">
+                    <Mail className="h-4 w-4 text-ocean-400" />
                   </div>
                   <a
-                    href="mailto:info@lokaclean.com"
-                    className="hover:text-ocean-400 transition-colors break-all text-xs sm:text-sm"
+                    href="mailto:lokacleanmandalika@gmail.com"
+                    className="hover:text-ocean-400 transition-colors break-all font-medium"
                   >
-                    info@lokaclean.com
+                    lokacleanmandalika@gmail.com
                   </a>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-300">
-                  <div className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8 rounded-md sm:rounded-lg bg-sun-500/20 flex items-center justify-center">
-                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-sun-400" />
+                <div className="flex items-center gap-3 text-sm text-slate-300 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-sun-500/20 flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-sun-400" />
                   </div>
-                  <span className="text-xs sm:text-sm">{t('home.footer.hours')}</span>
+                  <span className="font-medium">{t('home.footer.hours')}</span>
                 </div>
               </div>
             </div>
@@ -114,9 +114,9 @@ export function Footer({ variant = "all" }: FooterProps) {
 
           {/* Social Media & Links - Premium Glassmorphism Design */}
           {variant === "all" && (
-            <div className="space-y-1.5 sm:space-y-4">
-              <h4 className="text-[11px] sm:text-base font-bold text-white mb-2 sm:mb-4">{t('home.footer.followUs')}</h4>
-              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <div className="space-y-4 sm:space-y-4 flex flex-col items-center sm:items-start">
+              <h4 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider bg-white/5 px-3 py-1 rounded-full sm:bg-transparent sm:px-0 sm:py-0 inline-block mb-2 sm:mb-4">{t('home.footer.followUs')}</h4>
+              <div className="flex items-center gap-3 justify-center sm:justify-start">
                 {/* Instagram - Premium Glassmorphism */}
                 <motion.a
                   href="https://instagram.com/lokaclean"
@@ -128,11 +128,11 @@ export function Footer({ variant = "all" }: FooterProps) {
                     rotate: [0, -5, 5, -5, 0]
                   }}
                   whileTap={{ scale: 0.9 }}
-                  className="group relative h-10 w-10 sm:h-12 sm:w-12 rounded-xl overflow-hidden"
+                  className="group relative h-12 w-12 rounded-xl overflow-hidden"
                   aria-label="Instagram"
                 >
                   {/* Glassmorphism Background */}
-                  <div className="absolute inset-0 bg-white/10 sm:backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
                   
                   {/* Gradient Overlay on Hover */}
                   <motion.div
@@ -148,7 +148,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   
                   {/* Icon */}
                   <div className="relative z-10 h-full w-full flex items-center justify-center">
-                    <Instagram className="h-5 w-5 sm:h-6 sm:w-6 text-white drop-shadow-lg" />
+                    <Instagram className="h-6 w-6 text-white drop-shadow-lg" />
                   </div>
                 </motion.a>
 
@@ -163,11 +163,11 @@ export function Footer({ variant = "all" }: FooterProps) {
                     rotate: [0, 5, -5, 5, 0]
                   }}
                   whileTap={{ scale: 0.9 }}
-                  className="group relative h-10 w-10 sm:h-12 sm:w-12 rounded-xl overflow-hidden"
+                  className="group relative h-12 w-12 rounded-xl overflow-hidden"
                   aria-label="Twitter"
                 >
                   {/* Glassmorphism Background */}
-                  <div className="absolute inset-0 bg-white/10 sm:backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
                   
                   {/* Gradient Overlay on Hover */}
                   <motion.div
@@ -183,7 +183,7 @@ export function Footer({ variant = "all" }: FooterProps) {
                   
                   {/* Icon */}
                   <div className="relative z-10 h-full w-full flex items-center justify-center">
-                    <Twitter className="h-5 w-5 sm:h-6 sm:w-6 text-white drop-shadow-lg" />
+                    <Twitter className="h-6 w-6 text-white drop-shadow-lg" />
                   </div>
                 </motion.a>
 
@@ -198,11 +198,11 @@ export function Footer({ variant = "all" }: FooterProps) {
                     rotate: [0, -3, 3, -3, 0]
                   }}
                   whileTap={{ scale: 0.9 }}
-                  className="group relative h-10 w-10 sm:h-12 sm:w-12 rounded-xl overflow-hidden"
+                  className="group relative h-12 w-12 rounded-xl overflow-hidden"
                   aria-label="YouTube"
                 >
                   {/* Glassmorphism Background */}
-                  <div className="absolute inset-0 bg-white/10 sm:backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
                   
                   {/* Red Gradient Overlay on Hover */}
                   <motion.div
@@ -218,13 +218,13 @@ export function Footer({ variant = "all" }: FooterProps) {
                   
                   {/* Icon */}
                   <div className="relative z-10 h-full w-full flex items-center justify-center">
-                    <Youtube className="h-5 w-5 sm:h-6 sm:w-6 text-white drop-shadow-lg transition-colors duration-300 group-hover:text-red-100" />
+                    <Youtube className="h-6 w-6 text-white drop-shadow-lg transition-colors duration-300 group-hover:text-red-100" />
                   </div>
                 </motion.a>
 
                 {/* WhatsApp - Premium Glassmorphism */}
                 <motion.a
-                  href="https://wa.me/6281234567890"
+                  href="https://wa.me/6281236893055"
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ 
@@ -233,11 +233,11 @@ export function Footer({ variant = "all" }: FooterProps) {
                     rotate: [0, -5, 5, -5, 0]
                   }}
                   whileTap={{ scale: 0.9 }}
-                  className="group relative h-10 w-10 sm:h-12 sm:w-12 rounded-xl overflow-hidden"
+                  className="group relative h-12 w-12 rounded-xl overflow-hidden"
                   aria-label="WhatsApp"
                 >
                   {/* Glassmorphism Background */}
-                  <div className="absolute inset-0 bg-white/10 sm:backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
+                  <div className="absolute inset-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/30" />
                   
                   {/* Gradient Overlay on Hover */}
                   <motion.div
@@ -253,11 +253,11 @@ export function Footer({ variant = "all" }: FooterProps) {
                   
                   {/* Icon */}
                   <div className="relative z-10 h-full w-full flex items-center justify-center">
-                    <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white drop-shadow-lg" />
+                    <MessageCircle className="h-6 w-6 text-white drop-shadow-lg" />
                   </div>
                 </motion.a>
               </div>
-              <p className="text-[10px] sm:text-xs text-slate-400 mt-2 sm:mt-4 hidden sm:block">
+              <p className="text-xs text-slate-400 mt-2 sm:mt-4 hidden sm:block">
                 {t('home.footer.socialText')}
               </p>
             </div>
