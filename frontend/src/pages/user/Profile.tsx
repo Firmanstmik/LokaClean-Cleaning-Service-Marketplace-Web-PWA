@@ -230,12 +230,13 @@ export function ProfilePage() {
               <div className="relative flex-shrink-0 group cursor-pointer" onClick={() => setIsEditing(true)}>
                  <div className="h-24 w-24 rounded-full p-1 bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-400 shadow-lg shadow-teal-200/50 group-hover:shadow-teal-300/60 transition-all duration-300 group-hover:scale-105">
                     <img 
-                      src={displayPhotoUrl || ""} 
-                      className="h-full w-full rounded-full object-cover border-4 border-white bg-slate-100"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${user.full_name}&background=random`;
-                      }}
-                    />
+                     src={displayPhotoUrl || ""} 
+                     alt={user.full_name || "Profile Photo"}
+                     className="h-full w-full rounded-full object-cover border-4 border-white bg-slate-100"
+                     onError={(e) => {
+                       (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${user.full_name}&background=random`;
+                     }}
+                   />
                  </div>
                  <div className="absolute -bottom-1 -right-1 bg-white text-emerald-500 p-1.5 rounded-full shadow-md border border-slate-100 group-hover:rotate-12 transition-transform">
                     <Edit2 className="h-4 w-4" />
