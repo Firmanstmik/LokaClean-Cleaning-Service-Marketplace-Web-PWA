@@ -30,7 +30,7 @@ export function Footer({ variant = "all" }: FooterProps) {
         <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-ocean-500/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 pb-24 sm:pb-8 lg:pb-12">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 pb-40 sm:pb-8 lg:pb-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-8 lg:gap-12 text-center sm:text-left">
           {/* Brand Section */}
           <div className="space-y-2 sm:space-y-4 flex flex-col items-center sm:items-start">
