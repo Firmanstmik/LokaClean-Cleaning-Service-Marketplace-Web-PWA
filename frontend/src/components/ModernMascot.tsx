@@ -218,7 +218,7 @@ export function ModernMascot({
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            className={`fixed bottom-[80px] right-[60px] sm:bottom-[180px] sm:right-[150px] ${className} pointer-events-auto`}
+            className={`fixed bottom-[110px] right-[20px] sm:bottom-[180px] sm:right-[150px] ${className} pointer-events-auto`}
             style={{ 
               // Removed drag for mobile to ensure it stays fixed perfectly
               cursor: isMobile ? "default" : "grab", 

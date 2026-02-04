@@ -839,6 +839,7 @@ const translations = {
       addressDetailLabel: "Address Detail",
       addressHelp: "Add details to help staff find the location (e.g., fence color, landmarks).",
       completed: "Completed",
+      optional: "Optional",
       required: "Required",
       noteTitle: "Important",
       noteSubtitle: "Important info for you",
