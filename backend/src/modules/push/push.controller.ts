@@ -87,7 +87,7 @@ export async function sendPushToUser(userId: number, payload: {
   });
 
   await Promise.all(
-    subs.map(async (s) => {
+    subs.map(async (s: any) => {
       try {
         await webpush.sendNotification(
           {
