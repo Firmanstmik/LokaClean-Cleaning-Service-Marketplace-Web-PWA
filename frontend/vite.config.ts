@@ -27,15 +27,15 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "/img/logo.jpg",
+            src: "/img/logo_full.png",
             sizes: "192x192",
-            type: "image/jpeg",
+            type: "image/png",
             purpose: "any"
           },
           {
-            src: "/img/logo.jpg",
+            src: "/img/logo_full.png",
             sizes: "512x512",
-            type: "image/jpeg",
+            type: "image/png",
             purpose: "any"
           }
         ]
