@@ -228,7 +228,7 @@ export function UserHomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8 relative z-10">
           {/* Header Row */}
           <div className="flex items-center justify-between mb-8 sm:mb-12">
-            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
               <motion.div 
                 initial={{ scale: 0, rotate: -10 }}
                 animate={{ scale: 1, rotate: 0 }}
@@ -243,8 +243,8 @@ export function UserHomePage() {
                 />
               </motion.div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">LokaClean</h1>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 tracking-wider uppercase">{t("home.header.subtitle")}</p>
+                <h1 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">LokaClean</h1>
+                <p className="text-[10px] sm:text-sm font-medium text-slate-500 tracking-wider uppercase">{t("home.header.subtitle")}</p>
               </div>
             </div>
             
@@ -252,7 +252,7 @@ export function UserHomePage() {
               onClick={() => navigate("/orders/new")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="group relative flex items-center gap-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-5 py-3 rounded-full text-xs sm:text-sm font-bold shadow-[0_10px_20px_-5px_rgba(13,148,136,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)] transition-all duration-300 overflow-hidden"
+              className="group relative flex items-center gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-3 py-2 sm:px-5 sm:py-3 rounded-full text-[10px] sm:text-sm font-bold shadow-[0_10px_20px_-5px_rgba(13,148,136,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)] transition-all duration-300 overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
               <div className="bg-white/20 rounded-full p-1 group-hover:rotate-180 transition-transform duration-500 backdrop-blur-sm">
@@ -270,12 +270,12 @@ export function UserHomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-4">
+                <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-4">
                   {t("home.userHero.titlePart1")} <br/>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-blue-600">{t("home.userHero.titleHighlight")}</span> <br/>
                   {t("home.userHero.titlePart2")}
                 </h2>
-                <p className="text-slate-500 text-base sm:text-lg max-w-md leading-relaxed">
+                <p className="text-slate-500 text-sm sm:text-lg max-w-md leading-relaxed">
                   {t("home.userHero.description")}
                 </p>
               </motion.div>
@@ -284,16 +284,16 @@ export function UserHomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="flex flex-wrap gap-4"
+                className="flex flex-wrap gap-3 sm:gap-4"
               >
                 {[
                   { icon: MapPin, text: t("home.userHero.feature1") },
                   { icon: ShieldCheck, text: t("home.userHero.feature2") },
                   { icon: Handshake, text: t("home.userHero.feature3") }
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-white border border-slate-100 px-3 py-2 rounded-lg shadow-sm">
-                    <item.icon className="w-4 h-4 text-teal-600" />
-                    <span className="text-sm font-semibold text-slate-700">{item.text}</span>
+                  <div key={i} className="flex items-center gap-1.5 sm:gap-2 bg-white border border-slate-100 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg shadow-sm">
+                    <item.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-teal-600" />
+                    <span className="text-xs sm:text-sm font-semibold text-slate-700">{item.text}</span>
                   </div>
                 ))}
               </motion.div>
@@ -414,8 +414,7 @@ export function UserHomePage() {
                             <p className="text-sm text-slate-400 font-medium">{t("packages.startingFrom")}</p>
                             <p className="text-2xl font-black text-slate-900">
                               <span className="text-sm font-bold align-top mr-0.5">Rp</span>
-                              {(pkg.price / 1000).toLocaleString("id-ID")}
-                              <span className="text-sm font-bold text-slate-400">k</span>
+                              {pkg.price.toLocaleString("id-ID")}
                             </p>
                           </div>
                           <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-lg group-active:scale-95 transition-transform">
@@ -516,8 +515,8 @@ export function UserHomePage() {
                              <div>
                                <p className="text-xs text-slate-400 uppercase font-bold tracking-wider">Harga Mulai</p>
                                <p className="text-3xl font-black text-slate-900 tracking-tight">
-                                 {(pkg.price / 1000).toLocaleString("id-ID")}<span className="text-lg text-slate-400 ml-0.5">k</span>
-                               </p>
+                                Rp {pkg.price.toLocaleString("id-ID")}
+                              </p>
                              </div>
                              <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors">
                                <ArrowRight className="w-6 h-6" />
@@ -536,24 +535,24 @@ export function UserHomePage() {
 
       {/* 3. Trust Section (Premium Grid) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-24">
-        <div className="text-center mb-10 sm:mb-16">
+        <div className="text-center mb-6 sm:mb-16">
           <span className="text-teal-600 font-bold tracking-wider uppercase text-xs sm:text-sm">{t("home.userFeatures.eyebrow")}</span>
-          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{t("home.userFeatures.titleLine1")}<br/>{t("home.userFeatures.titleLine2")}</h3>
+          <h3 className="text-xl sm:text-3xl font-black text-slate-900 mt-2">{t("home.userFeatures.titleLine1")}<br/>{t("home.userFeatures.titleLine2")}</h3>
         </div>
         
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
            {[
              { title: t("home.userFeatures.guarantee.title"), desc: t("home.userFeatures.guarantee.desc"), icon: BadgeCheck, color: "text-blue-600", bg: "bg-blue-50" },
              { title: t("home.userFeatures.trusted.title"), desc: t("home.userFeatures.trusted.desc"), icon: UserCheck, color: "text-purple-600", bg: "bg-purple-50" },
              { title: t("home.userFeatures.equipment.title"), desc: t("home.userFeatures.equipment.desc"), icon: Sparkles, color: "text-amber-600", bg: "bg-amber-50" },
              { title: t("home.userFeatures.location.title"), desc: t("home.userFeatures.location.desc"), icon: MapPin, color: "text-teal-600", bg: "bg-teal-50" }
            ].map((item, i) => (
-             <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 ring-1 ring-slate-900/5 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-2">
-               <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center mb-4`}>
-                 <item.icon className={`w-6 h-6 ${item.color}`} />
+             <div key={i} className="bg-white p-4 rounded-2xl border border-slate-100 ring-1 ring-slate-900/5 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-2">
+               <div className={`w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center mb-3`}>
+                 <item.icon className={`w-5 h-5 ${item.color}`} />
                </div>
-               <h4 className="font-bold text-slate-900 mb-1">{item.title}</h4>
-               <p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
+               <h4 className="font-bold text-sm sm:text-base text-slate-900 mb-1">{item.title}</h4>
+               <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
              </div>
            ))}
         </div>
@@ -561,25 +560,25 @@ export function UserHomePage() {
 
       {/* 4. How it Works (Dark Premium Card) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-24">
-        <div className="bg-slate-900 rounded-[40px] p-8 sm:p-12 relative overflow-hidden border border-slate-800 ring-1 ring-white/10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-500 hover:shadow-[0_30px_70px_-12px_rgba(20,184,166,0.2)] hover:border-teal-500/30 hover:ring-teal-500/30 group">
+        <div className="bg-slate-900 rounded-[32px] sm:rounded-[40px] p-6 sm:p-12 relative overflow-hidden border border-slate-800 ring-1 ring-white/10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-500 hover:shadow-[0_30px_70px_-12px_rgba(20,184,166,0.2)] hover:border-teal-500/30 hover:ring-teal-500/30 group">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-teal-900/20 rounded-full blur-3xl -mr-20 -mt-20" />
           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-900/20 rounded-full blur-3xl -ml-10 -mb-10" />
           
-          <div className="relative z-10 text-center sm:text-left mb-10">
-            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t("home.howItWorks.title")}</h3>
-            <p className="text-slate-400">{t("home.howItWorks.subtitle")}</p>
+          <div className="relative z-10 text-center sm:text-left mb-6 sm:mb-10">
+            <h3 className="text-xl sm:text-3xl font-bold text-white mb-2">{t("home.howItWorks.title")}</h3>
+            <p className="text-slate-400 text-sm sm:text-base">{t("home.howItWorks.subtitle")}</p>
           </div>
 
-          <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
+          <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 sm:gap-8">
             {steps.map((step, i) => (
               <div key={i} className="flex flex-col items-center sm:items-start text-center sm:text-left relative">
                  {i < 3 && <div className="hidden sm:block absolute top-6 left-12 right-0 h-[2px] bg-slate-800" />}
                  
-                 <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-4 relative z-10 text-teal-400 font-bold text-lg shadow-lg">
+                 <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-3 sm:mb-4 relative z-10 text-teal-400 font-bold text-sm sm:text-lg shadow-lg">
                    {i + 1}
                  </div>
-                 <h4 className="text-white font-bold mb-1">{step.title}</h4>
-                 <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
+                 <h4 className="text-white text-sm sm:text-base font-bold mb-1">{step.title}</h4>
+                 <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
