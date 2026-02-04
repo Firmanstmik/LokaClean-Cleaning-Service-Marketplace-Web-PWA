@@ -296,7 +296,7 @@ export function UserLogin() {
                         const token = resp.data.data.token as string;
                         setAuth(token, "USER");
                         localStorage.removeItem("lokaclean_welcome_shown");
-                        navigate("/packages", { replace: true });
+                        navigate("/home", { replace: true });
                     } catch (err) {
                         const errorMessage = getApiErrorMessage(err);
                         let friendlyMessage = errorMessage;

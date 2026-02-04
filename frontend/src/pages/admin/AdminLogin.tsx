@@ -24,7 +24,7 @@ export function AdminLogin() {
   // - Logged-in USER should not see admin login page.
   // - Logged-in ADMIN should be sent to admin dashboard.
   if (token) {
-    return <Navigate to={actor === "ADMIN" ? "/admin/orders" : "/packages"} replace />;
+    return <Navigate to={actor === "ADMIN" ? "/admin/orders" : "/home"} replace />;
   }
 
   return (
