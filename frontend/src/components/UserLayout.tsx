@@ -929,7 +929,7 @@ export function UserLayout() {
       </div>
       
       {/* Modern Premium Mascot - Smart Clean Assistant */}
-      {showPromotionalMascot && (
+      {showPromotionalMascot && location.pathname === '/complete-profile' && (
         <ModernMascot
           variant="greeting"
           size="medium"
