@@ -150,14 +150,11 @@ export function ModernMascot({
 
   // --- Animations ---
   
-  // Mobile: Simple float without rotation to save resources
+  // Mobile: Static position to look "grounded", no rotation
   const mobileAnimation = {
-    y: [0, -8, 0],
-    transition: {
-      duration: 4,
-      repeat: Infinity,
-      ease: "easeInOut" as const
-    }
+    y: 0,
+    rotate: 0,
+    transition: { duration: 0 } // No animation
   };
 
   // Floating / Hovering (General Idle)
@@ -380,11 +377,16 @@ export function ModernMascot({
                  </div>
               </motion.div>
 
-              {/* --- SHADOW --- */}
-              <motion.div 
-                className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2/3 h-3 bg-black/20 rounded-full blur-md"
-                animate={isMobile ? { opacity: 0.2 } : shadowAnimation}
-              />
+              {/* --- SHADOW / FLOOR --- */}
+              {isMobile ? (
+                 // Mobile Floor: A more solid base to look like he is standing on something
+                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[120%] h-4 bg-gradient-to-b from-black/10 to-transparent rounded-[100%] blur-[2px]" />
+              ) : (
+                <motion.div 
+                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2/3 h-3 bg-black/20 rounded-full blur-md"
+                  animate={shadowAnimation}
+                />
+              )}
             </div>
           </motion.div>
         )}
