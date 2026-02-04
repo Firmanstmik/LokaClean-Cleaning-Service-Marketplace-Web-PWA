@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Share, PlusSquare, X } from "lucide-react";
+import { Share, PlusSquare, X, Info } from "lucide-react";
 
 interface IOSInstallPromptProps {
   isOpen: boolean;
@@ -39,6 +39,22 @@ export function IOSInstallPrompt({ isOpen, onClose }: IOSInstallPromptProps) {
               >
                 <X className="w-5 h-5" />
               </button>
+            </div>
+
+            {/* Info Box */}
+            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
+              <div className="flex gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10 shrink-0 h-fit">
+                  <Info className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <h4 className="text-amber-500 font-bold text-sm mb-1">Khusus Pengguna iPhone</h4>
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    Apple mewajibkan instalasi manual untuk semua aplikasi web. Silakan ikuti panduan resmi di bawah ini.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-6">
