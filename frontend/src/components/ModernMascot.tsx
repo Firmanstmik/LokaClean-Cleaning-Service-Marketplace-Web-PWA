@@ -101,9 +101,17 @@ export function ModernMascot({
   
   const [, setLang] = useState(getLanguage());
   
-  const currentSize = sizes[size];
+  const [isMobile, setIsMobile] = useState(false);
+  const currentSize = isMobile ? sizes.small : sizes[size];
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleLanguageChange = () => setLang(getLanguage());
@@ -142,6 +150,16 @@ export function ModernMascot({
 
   // --- Animations ---
   
+  // Mobile: Simple float without rotation to save resources
+  const mobileAnimation = {
+    y: [0, -8, 0],
+    transition: {
+      duration: 4,
+      repeat: Infinity,
+      ease: "easeInOut" as const
+    }
+  };
+
   // Floating / Hovering (General Idle)
   const hoverAnimation = {
     y: [0, -12, 0],
@@ -189,6 +207,8 @@ export function ModernMascot({
 
   // Determine animation based on variant
   const getAnimation = () => {
+    if (isMobile) return mobileAnimation;
+    
     switch (variant) {
       case "greeting": return greetingAnimation;
       case "action": return moppingAnimation; // 'action' can be mopping
@@ -202,7 +222,13 @@ export function ModernMascot({
         {isVisible && (
           <motion.div
             className={`absolute bottom-[80px] right-[60px] sm:bottom-[180px] sm:right-[150px] ${className} pointer-events-auto`}
-            style={{ cursor: "grab", width: currentSize.character, height: currentSize.character, touchAction: "none" }}
+            style={{ 
+              cursor: "grab", 
+              width: currentSize.character, 
+              height: currentSize.character, 
+              touchAction: "none",
+              willChange: isMobile ? "transform" : "auto" 
+            }}
             initial={{ 
               opacity: 0, 
               scale: 0.5,
@@ -313,21 +339,23 @@ export function ModernMascot({
             {/* --- MASCOT IMAGE --- */}
             <div className="relative pointer-events-auto" onClick={handleClick}>
               
-              {/* Particle Effects (Sparkles & Bubbles) */}
-              <div className="absolute inset-0 -z-10 pointer-events-none">
-                <SparkleEffect delay={0} x={-20} y={10} />
-                <SparkleEffect delay={1.5} x={currentSize.character + 10} y={20} />
-                <SparkleEffect delay={0.8} x={currentSize.character / 2} y={-30} />
-                
-                <BubbleEffect delay={0.5} x={-10} y={currentSize.character} />
-                <BubbleEffect delay={2.2} x={currentSize.character + 5} y={currentSize.character - 20} />
-              </div>
+              {/* Particle Effects (Sparkles & Bubbles) - Desktop Only */}
+              {!isMobile && (
+                <div className="absolute inset-0 -z-10 pointer-events-none">
+                  <SparkleEffect delay={0} x={-20} y={10} />
+                  <SparkleEffect delay={1.5} x={currentSize.character + 10} y={20} />
+                  <SparkleEffect delay={0.8} x={currentSize.character / 2} y={-30} />
+                  
+                  <BubbleEffect delay={0.5} x={-10} y={currentSize.character} />
+                  <BubbleEffect delay={2.2} x={currentSize.character + 5} y={currentSize.character - 20} />
+                </div>
+              )}
 
-              {/* Animated Glow/Aura */}
+              {/* Animated Glow/Aura - Reduced for Mobile */}
               <motion.div
                 className="absolute inset-0 bg-blue-400/30 rounded-full blur-2xl -z-10"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
-                transition={{ duration: 3, repeat: Infinity }}
+                animate={isMobile ? { opacity: 0.2 } : { scale: [1, 1.3, 1], opacity: [0.2, 0.5, 0.2] }}
+                transition={isMobile ? {} : { duration: 3, repeat: Infinity }}
               />
 
               <motion.div 
@@ -355,7 +383,7 @@ export function ModernMascot({
               {/* --- SHADOW --- */}
               <motion.div 
                 className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2/3 h-3 bg-black/20 rounded-full blur-md"
-                animate={shadowAnimation}
+                animate={isMobile ? { opacity: 0.2 } : shadowAnimation}
               />
             </div>
           </motion.div>
