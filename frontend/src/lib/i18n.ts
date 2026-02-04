@@ -21,10 +21,27 @@ const translations = {
         feature3: { title: "Terpercaya", desc: "Lokal & Wisatawan" },
         ctaRegister: "Daftar Sekarang",
         ctaLogin: "Masuk"
+      },
+      packages: {
+        title: "Pilihan Paket Terbaik",
+        subtitle: "Pilih layanan kebersihan sesuai kebutuhan Anda."
+      },
+      premiumCTA: {
+        badge: "Aplikasi Mobile LokaClean",
+        title: {
+          part1: "Upgrade ke",
+          part2: "Pengalaman Premium"
         },
-        header: {
-          subtitle: "Layanan Kebersihan Premium"
+        description: "Login sekarang untuk kemudahan pemesanan & pelacakan lokasi. Atau install aplikasi untuk pengalaman yang lebih cepat dan praktis!",
+        buttons: {
+          login: "Login Member Web",
+          install: "Install Aplikasi Mobile"
         },
+        socialProof: "Telah digunakan oleh 1,000+ pengguna di Lombok"
+      },
+      header: {
+        subtitle: "Layanan Kebersihan Premium"
+      },
         userHero: {
           titlePart1: "Kebersihan",
           titleHighlight: "Profesional",
@@ -591,6 +608,23 @@ const translations = {
         feature3: { title: "Trusted", desc: "Locals & Tourists" },
         ctaRegister: "Register Now",
         ctaLogin: "Login"
+      },
+      packages: {
+        title: "Best Package Selection",
+        subtitle: "Choose cleaning service according to your needs."
+      },
+      premiumCTA: {
+        badge: "LokaClean Mobile App",
+        title: {
+          part1: "Upgrade to",
+          part2: "Premium Experience"
+        },
+        description: "Login now for easy booking & location tracking. Or install the app for a faster and more practical experience!",
+        buttons: {
+          login: "Login Member Web",
+          install: "Install Mobile App"
+        },
+        socialProof: "Used by 1,000+ users in Lombok"
       },
       header: {
         subtitle: "Premium Cleaning Service"

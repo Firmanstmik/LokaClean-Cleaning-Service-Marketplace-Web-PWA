@@ -17,6 +17,8 @@ import { LanguageSwitcherPill } from "../components/LanguageSwitcher";
 import { api } from "../lib/api";
 import type { PaketCleaning } from "../types/api";
 import { getPackageImage } from "../utils/packageImage";
+import { PackageDetailModal } from "../components/PackageDetailModal";
+import { LoginRequiredModal } from "../components/LoginRequiredModal";
 
 export function Home() {
   const { token, actor } = useAuth();
@@ -26,6 +28,8 @@ export function Home() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [packages, setPackages] = useState<PaketCleaning[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [selectedPackage, setSelectedPackage] = useState<PaketCleaning | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -651,7 +655,7 @@ export function Home() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 max-w-7xl mx-auto">
             {packages.map((pkg, index) => (
               <motion.div
                 key={pkg.id}
@@ -659,32 +663,44 @@ export function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300"
+                className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-md border border-slate-300 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] hover:border-teal-500/50 transition-all duration-300"
               >
-                <div className="relative h-48 overflow-hidden">
+                <div 
+                  className="relative aspect-[4/3] sm:aspect-video overflow-hidden cursor-pointer bg-slate-100"
+                  onClick={() => setSelectedPackage(pkg)}
+                >
                   <img 
                     src={getPackageImage(pkg.name, pkg.image)} 
                     alt={pkg.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3 text-white">
-                    <h3 className="text-lg font-bold leading-tight">{pkg.name}</h3>
-                    <p className="text-sm font-medium text-teal-200">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                  
+                  {/* Floating Price Badge */}
+                  <div className="absolute bottom-2 left-2 right-auto sm:bottom-3 sm:left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg shadow-sm border border-white/50">
+                     <p className="text-xs sm:text-sm font-bold text-teal-700">
                        Rp {pkg.price.toLocaleString("id-ID")}
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-1 flex-col p-4">
-                  <p className="mb-4 text-sm text-slate-600 line-clamp-2">
+
+                <div className="flex flex-1 flex-col p-3 sm:p-5">
+                  <div className="mb-2 sm:mb-3">
+                    <h3 className="text-sm sm:text-lg font-bold text-slate-800 leading-tight mb-1 line-clamp-1 group-hover:text-teal-600 transition-colors">{pkg.name}</h3>
+                    <div className="h-0.5 w-8 sm:w-12 bg-teal-500/30 rounded-full" />
+                  </div>
+                  
+                  <p className="mb-4 text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed">
                     {pkg.description}
                   </p>
-                  <Link
-                    to="/packages/all"
-                    className="mt-auto block w-full rounded-xl bg-slate-50 py-2.5 text-center text-sm font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                  
+                  <button
+                    onClick={() => setSelectedPackage(pkg)}
+                    className="mt-auto flex items-center justify-center gap-1.5 w-full rounded-xl bg-slate-50 border border-slate-200 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 transition-all duration-300 group/btn"
                   >
-                    Lihat Detail
-                  </Link>
+                    <span>{t("orders.viewDetails")}</span>
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
+                  </button>
                 </div>
               </motion.div>
             ))}
@@ -700,63 +716,214 @@ export function Home() {
           </div>
         </section>
 
-        {/* Login & Install App CTA */}
-        <motion.section
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mb-12 sm:mb-24 relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 p-8 sm:p-12 text-center text-white shadow-2xl mx-4 sm:mx-0"
-        >
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          
-          <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner ring-1 ring-white/30">
-              <Zap className="h-8 w-8 text-yellow-300 fill-yellow-300" />
+        {/* Premium Login & Install App CTA - Redesigned */}
+        <section className="mb-12 sm:mb-24 px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.6)] transition-all duration-500 isolate group hover:shadow-[0_0_50px_-10px_rgba(20,184,166,0.3)]"
+          >
+            {/* Animated Dashed Border */}
+            <div className="absolute inset-0 z-0 pointer-events-none rounded-[2.5rem]">
+               <svg className="absolute inset-0 w-full h-full" style={{ overflow: 'visible' }}>
+                 <defs>
+                   <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                     <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.4" />
+                     <stop offset="50%" stopColor="#2dd4bf" stopOpacity="1" />
+                     <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.4" />
+                   </linearGradient>
+                 </defs>
+                 <motion.rect
+                   x="2" y="2"
+                   width="calc(100% - 4px)" height="calc(100% - 4px)"
+                   rx="38" ry="38"
+                   fill="none"
+                   stroke="url(#borderGradient)"
+                   strokeWidth="3"
+                   strokeDasharray="20 15"
+                   strokeLinecap="round"
+                   initial={{ strokeDashoffset: 0 }}
+                   animate={{ strokeDashoffset: -1000 }}
+                   transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                 />
+               </svg>
             </div>
+
+            {/* Animated Background Elements */}
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[30rem] h-[30rem] bg-teal-500/20 rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700" />
+            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[25rem] h-[25rem] bg-indigo-500/20 rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700" />
             
-            <h2 className="mb-4 text-2xl sm:text-3xl font-black tracking-tight">
-              Lebih Mudah dengan Aplikasi!
-            </h2>
-            <p className="mb-8 text-indigo-100 text-sm sm:text-lg leading-relaxed">
-              Login untuk melakukan pemesanan dengan cepat, lacak status order, dan dapatkan promo eksklusif. Atau install aplikasi kami untuk pengalaman terbaik.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/login"
-                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-bold text-indigo-600 shadow-lg transition-all hover:bg-indigo-50 hover:scale-105 active:scale-95"
-              >
-                <LogIn className="h-5 w-5" />
-                <span>Login Sekarang</span>
-              </Link>
+            {/* Noise Texture & Grid Overlay */}
+            <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_70%)] pointer-events-none" />
+
+            <div className="relative z-10 grid lg:grid-cols-12 gap-8 items-center p-8 sm:p-12 lg:p-16">
               
-              <button
-                onClick={() => {
-                   if (deferredPrompt) {
-                     deferredPrompt.prompt();
-                     deferredPrompt.userChoice.then((choiceResult: any) => {
-                       if (choiceResult.outcome === "accepted") {
-                         setDeferredPrompt(null);
+              {/* Left Content */}
+              <div className="lg:col-span-7 text-left space-y-8">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-md">
+                   <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                    </span>
+                   <span className="text-xs font-bold tracking-widest text-teal-400 uppercase">{t("home.premiumCTA.badge")}</span>
+                </div>
+
+                <div className="space-y-4 relative">
+                  <div className="flex items-center justify-between gap-4">
+                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight relative z-10">
+                       {t("home.premiumCTA.title.part1")} <br/>
+                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-400">{t("home.premiumCTA.title.part2")}</span>
+                     </h2>
+                     
+                     {/* Mobile Only Mini 3D Phone - Smaller & Next to Text */}
+                     <div className="lg:hidden block relative w-12 h-20 flex-shrink-0" style={{ perspective: "600px" }}>
+                       <motion.div 
+                          initial={{ rotateY: 12, rotateZ: 6 }}
+                          animate={{ rotateY: [12, -12, 12], rotateZ: [6, -6, 6] }}
+                          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                          className="relative w-full h-full"
+                          style={{ transformStyle: "preserve-3d" }}
+                       >
+                          <div className="absolute inset-0 bg-slate-900 rounded-lg border-2 border-slate-700/50 shadow-lg flex flex-col overflow-hidden">
+                              {/* Fake App UI Mini */}
+                              <div className="h-1/3 bg-gradient-to-br from-teal-600 to-emerald-600 p-1 relative overflow-hidden">
+                                 <div className="absolute top-0 right-0 w-4 h-4 bg-white/10 rounded-full blur-sm -mr-1 -mt-1" />
+                                 <div className="flex items-center justify-between mb-0.5">
+                                    <div className="w-1.5 h-1.5 bg-white/20 rounded-full" />
+                                    <div className="w-3 h-0.5 bg-white/20 rounded-full" />
+                                 </div>
+                              </div>
+                              <div className="flex-1 bg-slate-800 p-1 space-y-0.5">
+                                 <div className="h-3 bg-slate-700/50 rounded animate-pulse" />
+                                 <div className="h-3 bg-slate-700/50 rounded animate-pulse delay-75" />
+                              </div>
+                              {/* Reflection */}
+                              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
+                          </div>
+                          
+                          {/* Mini Floating Icon */}
+                          <motion.div 
+                            animate={{ y: [0, -2, 0] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute -right-1 top-1/4 p-0.5 bg-white/10 backdrop-blur-md rounded border border-white/20 shadow-sm"
+                          >
+                             <Zap className="w-2 h-2 text-yellow-400 fill-yellow-400" />
+                          </motion.div>
+                       </motion.div>
+                       {/* Mini Glow */}
+                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-teal-500/20 blur-[10px] -z-10 rounded-full" />
+                     </div>
+                  </div>
+
+                  <p className="text-slate-400 text-base sm:text-lg leading-relaxed max-w-lg">
+                    {t("home.premiumCTA.description")}
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                  <Link
+                    to="/login"
+                    className="group/btn relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-white opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                    <LogIn className="w-5 h-5 text-slate-900 relative z-10" />
+                    <span className="relative z-10">{t("home.premiumCTA.buttons.login")}</span>
+                  </Link>
+                  
+                  <button
+                    onClick={() => {
+                       if (deferredPrompt) {
+                         deferredPrompt.prompt();
+                         deferredPrompt.userChoice.then((choiceResult: any) => {
+                           if (choiceResult.outcome === "accepted") {
+                             setDeferredPrompt(null);
+                           }
+                         });
+                       } else {
+                         alert("Silakan buka menu browser Anda dan pilih 'Add to Home Screen' atau 'Install App' untuk menginstall LokaClean.");
                        }
-                     });
-                   } else {
-                     alert("Silakan buka menu browser Anda dan pilih 'Add to Home Screen' atau 'Install App' untuk menginstall LokaClean.");
-                   }
-                }}
-                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-6 py-3.5 font-bold text-white backdrop-blur-md transition-all hover:bg-white/20 hover:border-white/50 active:scale-95"
-              >
-                <Download className="h-5 w-5" />
-                <span>Install Aplikasi</span>
-              </button>
+                    }}
+                    className="group/btn relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white/5 text-white font-bold backdrop-blur-md border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
+                  >
+                    <Download className="w-5 h-5 text-teal-400 group-hover/btn:text-teal-300 transition-colors" />
+                    <span>{t("home.premiumCTA.buttons.install")}</span>
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-4 pt-4 border-t border-slate-800/50">
+                   <div className="flex -space-x-3">
+                      {[1,2,3].map(i => (
+                        <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[10px] text-slate-400 overflow-hidden">
+                           <User className="w-4 h-4 text-slate-500" />
+                        </div>
+                      ))}
+                      <div className="w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[10px] text-white font-bold bg-teal-600">
+                        +1k
+                      </div>
+                   </div>
+                   <p className="text-xs text-slate-500 font-medium">{t("home.premiumCTA.socialProof")}</p>
+                </div>
+              </div>
+
+              {/* Right Visual - 3D Abstract Phone Card */}
+              <div className="hidden lg:block lg:col-span-5 relative" style={{ perspective: "1000px" }}>
+                 <motion.div 
+                    initial={{ rotateY: 12, rotateZ: 6 }}
+                    whileHover={{ rotateY: 0, rotateZ: 0 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    className="relative w-64 mx-auto aspect-[9/18]"
+                    style={{ transformStyle: "preserve-3d" }}
+                 >
+                    <div className="absolute inset-0 bg-slate-900 rounded-[2rem] border-4 border-slate-700/50 shadow-2xl flex flex-col overflow-hidden">
+                        {/* Fake App UI */}
+                        <div className="h-1/3 bg-gradient-to-br from-teal-600 to-emerald-600 p-4 relative overflow-hidden">
+                           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+                           <div className="flex items-center justify-between mb-4">
+                              <div className="w-8 h-8 bg-white/20 rounded-full backdrop-blur-md" />
+                              <div className="w-16 h-4 bg-white/20 rounded-full backdrop-blur-md" />
+                           </div>
+                           <div className="space-y-2">
+                              <div className="w-2/3 h-4 bg-white/20 rounded-full" />
+                              <div className="w-1/2 h-3 bg-white/10 rounded-full" />
+                           </div>
+                        </div>
+                        <div className="flex-1 bg-slate-800 p-4 space-y-3">
+                           <div className="h-20 bg-slate-700/50 rounded-xl animate-pulse" />
+                           <div className="h-20 bg-slate-700/50 rounded-xl animate-pulse delay-75" />
+                           <div className="h-20 bg-slate-700/50 rounded-xl animate-pulse delay-150" />
+                        </div>
+                        
+                        {/* Reflection */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
+                    </div>
+                    
+                    {/* Floating Elements */}
+                    <motion.div 
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute -right-8 top-1/4 p-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg"
+                    >
+                       <Zap className="w-6 h-6 text-yellow-400 fill-yellow-400" />
+                    </motion.div>
+                    
+                    <motion.div 
+                      animate={{ y: [0, 10, 0] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                      className="absolute -left-8 bottom-1/3 p-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg"
+                    >
+                       <Shield className="w-6 h-6 text-teal-400" />
+                    </motion.div>
+                 </motion.div>
+                 
+                 {/* Glow behind */}
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-teal-500/30 blur-[60px] -z-10 rounded-full" />
+              </div>
+
             </div>
-            
-            <p className="mt-6 text-xs text-indigo-200/80">
-              *Klik "Install Aplikasi" atau gunakan menu browser untuk menambahkan ke layar utama.
-            </p>
-          </div>
-        </motion.section>
+          </motion.div>
+        </section>
 
         {/* Testimonials - Aligned with How It Works Design */}
         <section className="mb-6 sm:mb-24 relative z-10">
@@ -921,6 +1088,23 @@ export function Home() {
         </div>
       </main>
 
+
+      {selectedPackage && (
+        <PackageDetailModal
+          isOpen={!!selectedPackage}
+          onClose={() => setSelectedPackage(null)}
+          pkg={selectedPackage}
+          onBook={() => {
+            setSelectedPackage(null);
+            setShowLoginModal(true);
+          }}
+        />
+      )}
+
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
 
       {/* Footer */}
       <Footer variant="all" />
