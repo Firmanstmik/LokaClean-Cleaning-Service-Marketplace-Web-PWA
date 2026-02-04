@@ -72,7 +72,16 @@ export function IOSInstallPrompt({ isOpen, onClose }: IOSInstallPromptProps) {
             </div>
 
             {/* Visual Arrow for Safari Bottom Bar */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-[#1c1c1e]" />
+            <motion.div 
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -bottom-4 left-1/2 -translate-x-1/2 translate-y-full flex flex-col items-center gap-2"
+            >
+              <div className="text-white/80 text-xs font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10 whitespace-nowrap mb-1">
+                Tap di sini
+              </div>
+              <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[14px] border-t-blue-500 filter drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+            </motion.div>
           </motion.div>
         </>
       )}
