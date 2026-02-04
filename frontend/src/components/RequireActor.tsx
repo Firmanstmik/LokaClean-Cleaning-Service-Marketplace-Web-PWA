@@ -21,7 +21,7 @@ export function RequireActor({ actor, children }: { actor: Actor; children: Reac
     // Hard separation: if a USER tries to access ADMIN routes (or vice versa),
     // redirect them to their correct area instead of letting them see the other login pages.
     if (currentActor === "ADMIN") return <Navigate to="/admin/orders" replace />;
-    if (currentActor === "USER") return <Navigate to="/packages" replace />;
+    if (currentActor === "USER") return <Navigate to="/home" replace />;
     return <Navigate to="/" replace />;
   }
 

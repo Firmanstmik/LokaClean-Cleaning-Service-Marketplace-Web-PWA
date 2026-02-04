@@ -47,7 +47,7 @@ export function CompleteProfilePage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
-  const next = params.get("next") ?? "/packages";
+  const next = params.get("next") ?? "/home";
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

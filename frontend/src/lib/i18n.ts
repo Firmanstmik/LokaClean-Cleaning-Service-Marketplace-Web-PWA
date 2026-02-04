@@ -27,7 +27,8 @@ const translations = {
         register: "Daftar",
         home: "Beranda",
         packages: "Paket",
-        newOrder: "Pesan"
+        newOrder: "Pesan",
+        profile: "Profil"
       },
       featured: {
         newHome: {

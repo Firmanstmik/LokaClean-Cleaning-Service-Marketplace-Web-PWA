@@ -5,7 +5,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Plus, List, User as UserIcon, LogOut, Sparkles, Bell, X, CheckCheck, Star, Heart, ArrowRight, Zap, MapPin, CheckCircle2, MessageCircle, Instagram, Facebook, Phone, Mail, Clock, AlertTriangle, Home, History, LayoutGrid, Scan, Wallet, House, ScanLine, FileClock, UserRound } from "lucide-react";
+import { Package, Plus, List, User as UserIcon, LogOut, Sparkles, Bell, X, CheckCheck, Star, Heart, ArrowRight, Zap, MapPin, CheckCircle2, MessageCircle, Instagram, Facebook, Phone, Mail, Clock, AlertTriangle, Home, History, LayoutGrid, Scan, Wallet, House, ScanLine, FileClock, UserRound, Box, ClipboardList, LayoutDashboard, Cuboid, Receipt, ScanFace, Compass, Layers, Fingerprint, Store, SprayCan, Brush } from "lucide-react";
 
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -909,7 +909,7 @@ export function UserLayout() {
       <header className="fixed top-0 left-1/2 -translate-x-1/2 lg:left-0 lg:translate-x-0 w-full max-w-md lg:max-w-full z-40 bg-transparent sm:border-b sm:border-slate-200/70 sm:bg-gradient-to-r sm:from-white/95 sm:via-tropical-50/80 sm:to-white/95 sm:backdrop-blur-2xl sm:shadow-[0_10px_30px_rgba(15,23,42,0.08)] pt-safe">
         <div className="relative mx-auto flex w-full max-w-full items-center justify-between gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 lg:px-6 lg:py-3">
           <NavLink
-            to="/packages"
+            to="/home"
             className="flex items-center gap-2.5 sm:gap-3.5 flex-1 min-w-0 group"
           >
             <motion.div
@@ -1039,7 +1039,7 @@ export function UserLayout() {
           <nav className="hidden lg:flex items-center gap-4 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             {/* 1. Beranda */}
             <NavItem 
-              to="/packages" 
+              to="/home" 
               label={t("home.navbar.home")} 
               icon={House} 
               exact 
@@ -1303,168 +1303,142 @@ export function UserLayout() {
       {/* Footer Component */}
       <Footer variant="all" />
 
-      {/* Mobile bottom nav - Premium DANA-like Design */}
-      <nav className="lg:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 pointer-events-none">
-        <div className="pointer-events-auto relative bg-white/95 backdrop-blur-xl border-t border-slate-100 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.05)] pb-safe rounded-t-2xl">
-          <div className="relative mx-auto grid max-w-md grid-cols-5 items-center h-20">
+      {/* Mobile bottom nav - DANA Style (Floating Center Button) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        {/* Safe area spacer */}
+        <div className="absolute bottom-0 w-full h-full bg-transparent pointer-events-none" />
+        
+        <div className="pointer-events-auto relative bg-white border-t border-slate-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] pb-safe">
+          <div className="relative mx-auto flex items-end justify-between px-2 h-[64px] pb-1">
             
-            {/* 1. Beranda */}
+            {/* 1. Beranda - Store (House shape but different design/aesthetic) */}
             <NavLink
-              to="/packages"
+              to="/home"
               end
               onClick={() => window.navigator?.vibrate?.(10)}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                  isActive ? "text-lombok-ocean-600" : "text-slate-400 hover:text-slate-600"
-                }`
+              className={({ isActive }) => 
+                `relative flex flex-col items-center justify-center gap-0.5 h-full flex-1 group cursor-pointer pb-1`
               }
             >
               {({ isActive }) => (
                 <>
                   <motion.div
+                    animate={{ scale: isActive ? 1.05 : 1 }}
                     whileTap={{ scale: 0.9 }}
-                    className="relative"
+                    className="relative p-1"
                   >
-                    <House className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
+                    <Store className={`h-6 w-6 transition-colors duration-200 ${isActive ? "text-lombok-tropical-600 fill-lombok-tropical-600/10" : "text-slate-400"}`} strokeWidth={isActive ? 2.5 : 2} />
                   </motion.div>
-                  <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
+                  <span className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? "text-lombok-tropical-600 font-bold" : "text-slate-500"}`}>
                     {t("home.navbar.home")}
                   </span>
                 </>
               )}
             </NavLink>
 
-            {/* 2. Paket */}
-            <NavLink
-              to="/packages/all"
-              end
-              onClick={() => window.navigator?.vibrate?.(10)}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                  isActive ? "text-lombok-ocean-600" : "text-slate-400 hover:text-slate-600"
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    className="relative"
-                  >
-                    <LayoutGrid className={`h-6 w-6 ${isActive ? "fill-current" : "stroke-[1.5px]"}`} />
-                  </motion.div>
-                  <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
-                    {t("home.navbar.packages")}
-                  </span>
-                </>
-              )}
-            </NavLink>
-
-            {/* 3. Center - Scan/Pesan Baru */}
-            <div className="relative -top-10 flex justify-center">
-              <NavLink
-                to="/orders/new"
-                end
-                onClick={() => window.navigator?.vibrate?.(15)}
-                className="group flex flex-col items-center justify-center gap-1"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-lombok-ocean-600 to-lombok-tropical-600 shadow-lg shadow-lombok-ocean-500/30 ring-[4px] ring-white overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-white/10 blur-md opacity-50"></div>
-                  <ScanLine className="relative h-6 w-6 text-white stroke-[2.5px]" />
-                </motion.div>
-                <span className="text-[10px] font-bold text-slate-600 group-hover:text-lombok-ocean-600 transition-colors drop-shadow-sm bg-white/90 backdrop-blur-[4px] px-2.5 py-0.5 rounded-full shadow-sm mt-1">
-                  {t("home.navbar.newOrder")}
-                </span>
-              </NavLink>
-            </div>
-
-            {/* 4. Pesanan (History) */}
+            {/* 2. Pesanan - SprayCan (Cleaning Service Orders) */}
             {(() => {
               const pathname = location.pathname;
-              let isOrdersActive = false;
-              
-              if (pathname === "/orders/new" || pathname.startsWith("/orders/new/")) {
-                isOrdersActive = false;
-              } else if (pathname === "/orders") {
-                isOrdersActive = true;
-              } else {
-                const ordersIdMatch = pathname.match(/^\/orders\/(\d+)$/);
-                if (ordersIdMatch) {
-                  isOrdersActive = true;
-                }
-              }
+              // Logic matches desktop NavItem for /orders
+              const isOrdersActive = (pathname === "/orders" || (pathname.startsWith("/orders/") && pathname !== "/orders/new" && !pathname.startsWith("/orders/new/")));
               
               return (
                 <NavLink
                   to="/orders"
-                  end={true}
                   onClick={() => window.navigator?.vibrate?.(10)}
-                  className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                    isOrdersActive ? "text-lombok-ocean-600" : "text-slate-400 hover:text-slate-600"
-                  }`}
+                  className={`relative flex flex-col items-center justify-center gap-0.5 h-full flex-1 group cursor-pointer pb-1`}
                 >
                   <motion.div
+                    animate={{ scale: isOrdersActive ? 1.05 : 1 }}
                     whileTap={{ scale: 0.9 }}
-                    className="relative"
+                    className="relative p-1"
                   >
-                    <FileClock className={`h-6 w-6 ${isOrdersActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
+                    <SprayCan className={`h-6 w-6 transition-colors duration-200 ${isOrdersActive ? "text-lombok-tropical-600 fill-lombok-tropical-600/10" : "text-slate-400"}`} strokeWidth={isOrdersActive ? 2.5 : 2} />
                     {unpaidTransferCount > 0 && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white ring-2 ring-white"
-                      >
+                      <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white ring-1 ring-white">
                         {unpaidTransferCount > 9 ? "9+" : unpaidTransferCount}
-                      </motion.div>
+                      </span>
                     )}
                   </motion.div>
-                  <span className={`text-[10px] font-medium ${isOrdersActive ? "font-bold" : ""}`}>
+                  <span className={`text-[10px] font-medium transition-colors duration-200 ${isOrdersActive ? "text-lombok-tropical-600 font-bold" : "text-slate-500"}`}>
                     {t("orders.title")}
                   </span>
                 </NavLink>
               );
             })()}
 
-            {/* 5. Profil */}
+            {/* 3. Pesan Baru - CENTER FLOATING BUTTON (DANA 'PAY' Style) */}
+            <div className="relative flex-1 flex justify-center h-full pointer-events-none">
+               <NavLink
+                to="/orders/new"
+                onClick={() => window.navigator?.vibrate?.(10)}
+                className="absolute -top-6 pointer-events-auto flex flex-col items-center justify-center gap-1 group"
+              >
+                {({ isActive }) => (
+                  <>
+                    <motion.div
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`relative flex items-center justify-center h-16 w-16 rounded-full shadow-[0_8px_20px_-5px_rgba(13,148,136,0.5)] transition-all duration-300 ${
+                        isActive 
+                          ? "bg-gradient-to-br from-lombok-tropical-500 to-lombok-ocean-600 ring-4 ring-white" 
+                          : "bg-gradient-to-br from-lombok-tropical-500 to-lombok-ocean-600"
+                      }`}
+                    >
+                      <Brush className="h-8 w-8 text-white stroke-[2px]" />
+                    </motion.div>
+                    <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? "text-lombok-tropical-600" : "text-slate-500"}`}>
+                      {t("home.navbar.newOrder").toUpperCase()}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            </div>
+
+            {/* 4. Paket - LayoutGrid (Moved to pos 4 to match DANA 'Dompet') */}
             <NavLink
-              to="/profile"
-              end
+              to="/packages/all"
               onClick={() => window.navigator?.vibrate?.(10)}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 transition-all duration-300 ${
-                  isActive ? "text-lombok-ocean-600" : "text-slate-400 hover:text-slate-600"
-                }`
+              className={({ isActive }) => 
+                `relative flex flex-col items-center justify-center gap-0.5 h-full flex-1 group cursor-pointer pb-1`
               }
             >
               {({ isActive }) => (
                 <>
                   <motion.div
+                    animate={{ scale: isActive ? 1.05 : 1 }}
                     whileTap={{ scale: 0.9 }}
-                    className="relative"
+                    className="relative p-1"
                   >
-                    {profilePhotoUrl ? (
-                      <div className={`h-6 w-6 overflow-hidden rounded-full border transition-all ${isActive ? "border-lombok-ocean-600 ring-1 ring-lombok-ocean-600" : "border-transparent"}`}>
-                        <img
-                          className="h-full w-full object-cover"
-                          src={profilePhotoUrl}
-                          alt={t("profile.title")}
-                          crossOrigin="anonymous"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <UserRound className={`h-6 w-6 ${isActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
-                    )}
+                    <LayoutGrid className={`h-6 w-6 transition-colors duration-200 ${isActive ? "text-lombok-tropical-600 fill-lombok-tropical-600/10" : "text-slate-400"}`} strokeWidth={isActive ? 2.5 : 2} />
                   </motion.div>
-                  <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
-                    {t("profile.title")}
+                  <span className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? "text-lombok-tropical-600 font-bold" : "text-slate-500"}`}>
+                    {t("home.navbar.packages")}
+                  </span>
+                </>
+              )}
+            </NavLink>
+
+            {/* 5. Profil - UserRound (Aesthetic) */}
+            <NavLink
+              to="/profile"
+              end
+              onClick={() => window.navigator?.vibrate?.(10)}
+              className={({ isActive }) => 
+                `relative flex flex-col items-center justify-center gap-0.5 h-full flex-1 group cursor-pointer pb-1`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <motion.div
+                    animate={{ scale: isActive ? 1.05 : 1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="relative p-1"
+                  >
+                    <UserRound className={`h-6 w-6 transition-colors duration-200 ${isActive ? "text-lombok-tropical-600 fill-lombok-tropical-600/10" : "text-slate-400"}`} strokeWidth={isActive ? 2.5 : 2} />
+                  </motion.div>
+                  <span className={`text-[10px] font-medium transition-colors duration-200 ${isActive ? "text-lombok-tropical-600 font-bold" : "text-slate-500"}`}>
+                    {t("home.navbar.profile")}
                   </span>
                 </>
               )}

@@ -39,7 +39,7 @@ export function UserLogin() {
   // - Logged-in ADMIN should not see user login page.
   // - Logged-in USER should be sent to the user area.
   if (token) {
-    return <Navigate to={actor === "ADMIN" ? "/admin/orders" : "/packages"} replace />;
+    return <Navigate to={actor === "ADMIN" ? "/admin/orders" : "/home"} replace />;
   }
 
   return (

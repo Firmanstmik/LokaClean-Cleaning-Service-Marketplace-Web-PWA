@@ -291,7 +291,7 @@ export function ProfilePage() {
                 <MenuItem 
                   icon={Package} 
                   label={currentLanguage === 'id' ? "Daftar Paket" : "Package List"} 
-                  onClick={() => navigate('/packages')} 
+                  onClick={() => navigate('/home')} 
                   color="text-indigo-500"
                   bgColor="bg-indigo-50"
                 />

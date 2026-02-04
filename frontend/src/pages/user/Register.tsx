@@ -300,7 +300,7 @@ export function UserRegister() {
                         const token = resp.data.data.token as string;
                         setAuth(token, "USER");
                         localStorage.removeItem("lokaclean_welcome_shown");
-                        navigate("/profile/complete?next=/packages", { replace: true });
+                        navigate("/profile/complete?next=/home", { replace: true });
                     } catch (err) {
                         const rawMessage = getApiErrorMessage(err);
                         const lowerMsg = rawMessage.toLowerCase();

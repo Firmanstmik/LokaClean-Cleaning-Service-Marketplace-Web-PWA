@@ -37,7 +37,7 @@ export function Home() {
 
   // Logged-in users should not see the marketing landing page again.
   if (actor === "ADMIN") return <Navigate to="/admin/orders" replace />;
-  if (token) return <Navigate to="/packages" replace />;
+  if (token) return <Navigate to="/home" replace />;
 
   const features = [
     {
