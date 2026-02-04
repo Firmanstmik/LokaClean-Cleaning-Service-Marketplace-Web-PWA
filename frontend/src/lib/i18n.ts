@@ -236,6 +236,7 @@ const translations = {
       addressDetailLabel: "Detail Alamat",
       addressHelp: "Tambahkan detail agar petugas mudah menemukan lokasi (cth: warna pagar, patokan).",
       completed: "Lengkap",
+      optional: "Opsional",
       required: "Wajib Diisi",
       noteTitle: "Penting",
       noteSubtitle: "Info penting untuk Anda",
