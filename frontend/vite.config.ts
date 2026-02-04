@@ -30,13 +30,13 @@ export default defineConfig({
             src: "/img/logo.jpg",
             sizes: "192x192",
             type: "image/jpeg",
-            purpose: "any maskable"
+            purpose: "any"
           },
           {
             src: "/img/logo.jpg",
             sizes: "512x512",
             type: "image/jpeg",
-            purpose: "any maskable"
+            purpose: "any"
           }
         ]
       }

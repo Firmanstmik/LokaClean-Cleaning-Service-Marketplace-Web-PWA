@@ -15,7 +15,6 @@ import { getNotificationMessage, t, useCurrentLanguage } from "../lib/i18n";
 import { NotificationToastContainer } from "./NotificationToast";
 import { NotificationDetailModal } from "./NotificationDetailModal";
 import { ScrollToTop } from "./ScrollToTop";
-import { WelcomeScreen } from "./WelcomeScreen";
 import { ModernMascot } from "./ModernMascot";
 import { Footer } from "./Footer";
 import { playOrderNotificationSound } from "../utils/sound";
@@ -726,16 +725,10 @@ export function UserLayout() {
     return allNotifications.slice(0, 2);
   }, [notifications, reminderOrders, currentLanguage, dismissedToastIds, isPageReady]); // Include isPageReady to re-evaluate
 
-  // Welcome screen state - PERMANENTLY DISABLED
-  const [showWelcome, setShowWelcome] = useState(false);
-
+  // Get unread notifications including reminders (max 2 to prevent stacking)
+  
   return (
     <>
-      {/* Welcome/Splash Screen - REMOVED */}
-      {showWelcome && (
-        <WelcomeScreen onComplete={() => setShowWelcome(false)} />
-      )}
-      
       {/* Mobile Notifications Modal - Outside header to avoid z-index issues */}
       <AnimatePresence>
         {showNotifications && (

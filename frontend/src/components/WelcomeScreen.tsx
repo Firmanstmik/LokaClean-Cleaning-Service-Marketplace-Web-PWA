@@ -15,22 +15,31 @@ export function WelcomeScreen({ onComplete }: { onComplete: () => void }) {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    // Check if welcome screen was shown recently (within last 5 minutes)
-    const lastShown = localStorage.getItem(STORAGE_KEY);
+    // Detect if PWA (Standalone)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    
+    // Use sessionStorage for PWA (show once per launch/session), localStorage for Web (show less frequently)
+    const storage = isStandalone ? sessionStorage : localStorage;
+    
+    // Check if welcome screen was shown recently
+    const lastShown = storage.getItem(STORAGE_KEY);
     const now = Date.now();
-    const FIVE_MINUTES = 5 * 60 * 1000;
+    const COOLDOWN = isStandalone ? 0 : 5 * 60 * 1000; // No cooldown for PWA session (shows once per session), 5 min for web
 
-    if (lastShown && now - parseInt(lastShown) < FIVE_MINUTES) {
-      // Was shown recently, skip
-      setShow(false);
-      onComplete();
-      return;
+    if (lastShown && (now - parseInt(lastShown) < COOLDOWN || isStandalone)) {
+      // If PWA: if exists in sessionStorage, it means it was shown this session -> Skip.
+      // If Web: if exists and < 5 mins -> Skip.
+      if (isStandalone || (now - parseInt(lastShown) < COOLDOWN)) {
+          setShow(false);
+          onComplete();
+          return;
+      }
     }
 
     // Show welcome screen
     const timer = setTimeout(() => {
       setShow(false);
-      localStorage.setItem(STORAGE_KEY, now.toString());
+      storage.setItem(STORAGE_KEY, now.toString());
       // Wait for exit animation to complete
       setTimeout(onComplete, EXIT_DURATION);
     }, WELCOME_DURATION);
