@@ -157,7 +157,8 @@ export function CompleteProfilePage() {
   }, [address]);
 
   // Validation States
-  const isPhotoValid = useMemo(() => !!photoUrl, [photoUrl]);
+  // Profile photo is now optional (suggested only)
+  const isPhotoValid = true; // Always valid since it's optional
   const isInfoValid = useMemo(() => !!(fullName.trim() && phone.trim()), [fullName, phone]);
   const isLocationValid = useMemo(() => !!defaultLoc, [defaultLoc]);
 
@@ -189,7 +190,8 @@ export function CompleteProfilePage() {
     title: t("completeProfile.profilePhoto"),
     subtitle: t("completeProfile.uploadPhotoHint"),
     icon: ScanFace,
-    isValid: isPhotoValid,
+    isValid: !!photoUrl, // Only show green check if photo is actually present
+    isOptional: true, // New flag for UI
     content: (
       <div className="text-center py-2">
         <div className="relative mx-auto h-28 w-28 sm:h-32 sm:w-32 group">
@@ -391,11 +393,12 @@ export function CompleteProfilePage() {
   const missing: string[] = [];
   if (!fullName.trim()) missing.push("Full Name");
   if (!phone.trim()) missing.push("Phone Number");
-  if (!alreadyHasPhoto && !profilePhoto) missing.push("Profile Photo");
+  // Photo is optional now
+  // if (!alreadyHasPhoto && !profilePhoto) missing.push("Profile Photo");
   if (!defaultLoc) missing.push("Default Location");
 
   // Calculate progress
-  const totalFields = 4;
+  const totalFields = 3; // Reduced from 4 (photo removed)
   const completedFields = totalFields - missing.length;
   const progressPercentage = (completedFields / totalFields) * 100;
 
@@ -403,11 +406,7 @@ export function CompleteProfilePage() {
     if (saving) return;
 
     // Validate sections
-    if (!isPhotoValid) {
-      setActiveSection("photo");
-      setActionError(t("completeProfile.errorPhoto"));
-      return;
-    }
+    // Photo check removed as it is optional
     if (!isInfoValid) {
       setActiveSection("info");
       setActionError(t("completeProfile.errorName"));
@@ -585,10 +584,24 @@ export function CompleteProfilePage() {
                       {step.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-1">
-                      {step.isValid ? (
+                      {step.isValid && !step.isOptional ? (
                         <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-emerald-600 tracking-wide">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           {t("completeProfile.completed")}
+                        </span>
+                      ) : step.isOptional ? (
+                        <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-slate-500 tracking-wide">
+                           {step.isValid ? (
+                             <>
+                               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                               <span className="text-emerald-600">{t("completeProfile.completed")}</span>
+                             </>
+                           ) : (
+                             <>
+                               <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                               {t("completeProfile.optional") || "Optional"}
+                             </>
+                           )}
                         </span>
                       ) : (
                         <span className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-rose-500 tracking-wide">

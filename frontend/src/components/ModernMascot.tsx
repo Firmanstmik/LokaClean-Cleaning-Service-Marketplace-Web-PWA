@@ -6,7 +6,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { t, getLanguage } from "../lib/i18n";
 
@@ -218,13 +218,15 @@ export function ModernMascot({
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            className={`absolute bottom-[80px] right-[60px] sm:bottom-[180px] sm:right-[150px] ${className} pointer-events-auto`}
+            className={`fixed bottom-[80px] right-[60px] sm:bottom-[180px] sm:right-[150px] ${className} pointer-events-auto`}
             style={{ 
-              cursor: "grab", 
+              // Removed drag for mobile to ensure it stays fixed perfectly
+              cursor: isMobile ? "default" : "grab", 
               width: currentSize.character, 
               height: currentSize.character, 
               touchAction: "none",
-              willChange: isMobile ? "transform" : "auto" 
+              willChange: "transform", // Optimize for composition
+              zIndex: 9999
             }}
             initial={{ 
               opacity: 0, 
@@ -248,7 +250,7 @@ export function ModernMascot({
               damping: 20,
               stiffness: 150
             }}
-            drag
+            drag={!isMobile} // Disable drag on mobile to prevent accidental moves
             dragMomentum={false}
             whileDrag={{ scale: 1.1, cursor: "grabbing" }}
             whileHover={{ scale: 1.05 }}
@@ -379,14 +381,31 @@ export function ModernMascot({
 
               {/* --- SHADOW / FLOOR --- */}
               {isMobile ? (
-                 // Mobile Floor: A more solid base to look like he is standing on something
-                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[120%] h-4 bg-gradient-to-b from-black/10 to-transparent rounded-[100%] blur-[2px]" />
+                 // Mobile Floor: A realistic perspective floor
+                 <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[160%] h-8 z-0 pointer-events-none">
+                    {/* Main shadow core */}
+                    <div className="absolute inset-0 bg-black/30 rounded-[100%] blur-[4px] scale-y-50" />
+                    {/* Outer soft shadow */}
+                    <div className="absolute inset-0 bg-black/10 rounded-[100%] blur-[8px] scale-y-75 scale-x-110" />
+                 </div>
               ) : (
                 <motion.div 
                   className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2/3 h-3 bg-black/20 rounded-full blur-md"
                   animate={shadowAnimation}
                 />
               )}
+
+              {/* --- COMPANION ELEMENT (Trash Bin / Bucket) --- */}
+              <div className={`absolute -bottom-1 -left-4 z-20 ${isMobile ? 'block' : 'hidden sm:block'}`}>
+                  <div className="relative group cursor-pointer" onClick={() => navigate('/packages')}>
+                    {/* Trash Bin Icon */}
+                    <div className="relative z-10 bg-white p-1.5 rounded-lg border-2 border-slate-200 shadow-sm transform -rotate-6 hover:rotate-0 transition-transform">
+                       <Trash2 className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    {/* Bin Shadow */}
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-full h-1 bg-black/20 blur-[1px] rounded-full" />
+                  </div>
+              </div>
             </div>
           </motion.div>
         )}
