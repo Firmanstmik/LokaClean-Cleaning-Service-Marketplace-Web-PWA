@@ -267,7 +267,7 @@ export function Home() {
 
              <Link
                to="/login"
-               className="relative rounded-lg sm:rounded-xl border-2 border-slate-200 bg-white/80 backdrop-blur px-2.5 sm:px-4 lg:px-5 py-1 sm:py-2 lg:py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm overflow-hidden group"
+               className="relative rounded-lg sm:rounded-xl border-2 border-slate-200 bg-white sm:bg-white/80 sm:backdrop-blur px-2.5 sm:px-4 lg:px-5 py-1 sm:py-2 lg:py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm overflow-hidden group"
              >
                <span className="relative z-10">{t("home.navbar.login")}</span>
                <motion.div
@@ -677,7 +677,7 @@ export function Home() {
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
                   
                   {/* Floating Price Badge */}
-                  <div className="absolute bottom-2 left-2 right-auto sm:bottom-3 sm:left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg shadow-sm border border-white/50">
+                  <div className="absolute bottom-2 left-2 right-auto sm:bottom-3 sm:left-3 bg-white sm:bg-white/90 sm:backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg shadow-sm border border-white/50">
                      <p className="text-xs sm:text-sm font-bold text-teal-700">
                        Rp {pkg.price.toLocaleString("id-ID")}
                     </p>
@@ -750,13 +750,13 @@ export function Home() {
                </svg>
             </div>
 
-            {/* Animated Background Elements */}
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[30rem] h-[30rem] bg-teal-500/20 rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700" />
-            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[25rem] h-[25rem] bg-indigo-500/20 rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700" />
+            {/* Animated Background Elements - Optimized for Mobile (Hidden on small screens) */}
+            <div className="hidden sm:block absolute top-0 right-0 -mr-20 -mt-20 w-[30rem] h-[30rem] bg-teal-500/20 rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700" />
+            <div className="hidden sm:block absolute bottom-0 left-0 -ml-20 -mb-20 w-[25rem] h-[25rem] bg-indigo-500/20 rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700" />
             
-            {/* Noise Texture & Grid Overlay */}
-            <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_70%)] pointer-events-none" />
+            {/* Noise Texture & Grid Overlay - Hidden on Mobile for Performance */}
+            <div className="hidden sm:block absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
+            <div className="hidden sm:block absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_70%)] pointer-events-none" />
 
             <div className="relative z-10 grid lg:grid-cols-12 gap-8 items-center p-8 sm:p-12 lg:p-16">
               
@@ -783,7 +783,7 @@ export function Home() {
                           initial={{ rotateY: 12, rotateZ: 6 }}
                           animate={{ rotateY: [12, -12, 12], rotateZ: [6, -6, 6] }}
                           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                          className="relative w-full h-full"
+                          className="relative w-full h-full will-change-transform"
                           style={{ transformStyle: "preserve-3d" }}
                        >
                           <div className="absolute inset-0 bg-slate-900 rounded-lg border-2 border-slate-700/50 shadow-lg flex flex-col overflow-hidden">
