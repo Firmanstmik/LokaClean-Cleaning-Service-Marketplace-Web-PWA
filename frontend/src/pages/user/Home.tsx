@@ -14,8 +14,6 @@ import {
   Handshake, BadgeCheck
 } from "lucide-react";
 
-import { useAuth } from "../../lib/auth";
-import { LoginRequiredModal } from "../../components/LoginRequiredModal";
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { getPackageImage } from "../../utils/packageImage";
@@ -25,17 +23,6 @@ import type { PaketCleaning } from "../../types/api";
 
 export function UserHomePage() {
   const navigate = useNavigate();
-  const { token } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
-
-  const handleInteraction = (action: () => void) => {
-    if (!token) {
-      setShowLoginModal(true);
-    } else {
-      action();
-    }
-  };
-
   const [language, setLanguage] = useState(getLanguage());
   
   useEffect(() => {
@@ -262,7 +249,7 @@ export function UserHomePage() {
             </div>
             
             <motion.button 
-              onClick={() => handleInteraction(() => navigate("/orders/new"))}
+              onClick={() => navigate("/orders/new")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="group relative flex items-center gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-3 py-2 sm:px-5 sm:py-3 rounded-full text-[10px] sm:text-sm font-bold shadow-[0_10px_20px_-5px_rgba(13,148,136,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)] transition-all duration-300 overflow-hidden"
@@ -383,7 +370,7 @@ export function UserHomePage() {
                   <div 
                     key={pkg.id} 
                     className="snap-center shrink-0 w-[85vw] max-w-[340px]"
-                    onClick={() => handleInteraction(() => navigate(`/orders/new?paket_id=${pkg.id}`))}
+                    onClick={() => navigate(`/orders/new?paket_id=${pkg.id}`)}
                   >
                     <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 ring-1 ring-slate-900/5 h-full flex flex-col relative group transition-all duration-300 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)]">
                       <div className="relative h-56 w-full bg-slate-100 transform-gpu">
@@ -761,11 +748,6 @@ export function UserHomePage() {
           </div>
       </section>
 
-      {/* Login Required Modal */}
-      <LoginRequiredModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-      />
     </div>
   );
 }

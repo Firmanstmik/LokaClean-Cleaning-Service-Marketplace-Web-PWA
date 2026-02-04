@@ -8,12 +8,15 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CheckCircle2, MapPin, Camera, Star, Zap, Shield, Heart, ArrowRight, Handshake, Leaf, Globe, User, Calendar, Clock, Home as HomeIcon, Quote, Check, X, Construction } from "lucide-react";
+import { Sparkles, CheckCircle2, MapPin, Camera, Star, Zap, Shield, Heart, ArrowRight, Handshake, Leaf, Globe, User, Calendar, Clock, Home as HomeIcon, Quote, Check, X, Construction, Package, Download, LogIn } from "lucide-react";
 
 import { useAuth } from "../lib/auth";
 import { Footer } from "../components/Footer";
 import { getLanguage, setLanguage, t, useCurrentLanguage } from "../lib/i18n";
 import { LanguageSwitcherPill } from "../components/LanguageSwitcher";
+import { api } from "../lib/api";
+import type { PaketCleaning } from "../types/api";
+import { getPackageImage } from "../utils/packageImage";
 
 export function Home() {
   const { token, actor } = useAuth();
@@ -21,6 +24,25 @@ export function Home() {
 
   // Welcome Alert State
   const [showWelcome, setShowWelcome] = useState(false);
+  const [packages, setPackages] = useState<PaketCleaning[]>([]);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  useEffect(() => {
+    api.get("/packages").then((res) => {
+      if (res.data?.data?.items) {
+        setPackages((res.data.data.items as PaketCleaning[]).slice(0, 4));
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     // Show alert after a short delay for better effect
@@ -176,7 +198,7 @@ export function Home() {
       >
         <div className="w-full flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 lg:px-8 py-2 sm:py-3.5">
           <Link
-             to="/home"
+             to="/packages"
              className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0 group"
            >
             <motion.div
@@ -204,18 +226,36 @@ export function Home() {
                 </motion.div>
             </motion.div>
             
-            {/* Lihat Aplikasi Button (Replaces Brand Text) */}
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="block"
-            >
-              <div className="flex items-center gap-2 text-slate-700 font-bold text-sm sm:text-base hover:text-tropical-600 transition-colors">
-                <span>Lihat Aplikasi</span>
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            </motion.div>
+            {/* Premium Brand Typography */}
+            <div className="min-w-0 flex flex-col">
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                <motion.span
+                  className="block text-lg sm:text-2xl font-black leading-tight bg-gradient-to-r from-tropical-600 via-ocean-600 to-tropical-600 bg-clip-text text-transparent truncate"
+                >
+                  LokaClean
+                </motion.span>
+                {/* Subtle underline accent */}
+                <motion.div
+                  className="absolute -bottom-0.5 left-0 h-0.5 bg-gradient-to-r from-tropical-500 via-ocean-500 to-tropical-500 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+                />
+              </motion.div>
+              <motion.div
+                className="text-[9px] sm:text-[11px] font-semibold leading-tight bg-gradient-to-r from-slate-600 via-slate-500 to-slate-600 bg-clip-text text-transparent mt-0.5"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+              >
+                ✨ {t("home.footer.tagline")}
+              </motion.div>
+            </div>
            </Link>
            <div className="flex items-center gap-2 sm:gap-3">
              {/* Language Switcher */}
@@ -578,7 +618,145 @@ export function Home() {
           </div>
         </motion.div>
 
+        {/* Popular Packages List */}
+        <section className="mb-12 sm:mb-24 relative z-10">
+          <div className="text-center mb-10 sm:mb-16">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="inline-block mb-3 will-change-transform"
+            >
+              <span className="px-3 py-1 rounded-full bg-teal-100 text-teal-600 text-xs font-bold uppercase tracking-wider">
+                {t("home.packages.subtitle") || "Best Value"}
+              </span>
+            </motion.div>
+            
+            <motion.h2 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+              className="text-3xl sm:text-4xl font-black text-slate-900 mb-4 tracking-tight will-change-transform"
+            >
+              {t("home.packages.title") || "Layanan Favorit"}
+            </motion.h2>
+            <motion.div 
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+              className="w-24 h-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 mx-auto rounded-full mb-6 origin-center will-change-transform" 
+            />
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {packages.map((pkg, index) => (
+              <motion.div
+                key={pkg.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-lg border border-slate-100 hover:shadow-xl transition-all duration-300"
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={getPackageImage(pkg.name, pkg.image)} 
+                    alt={pkg.name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <h3 className="text-lg font-bold leading-tight">{pkg.name}</h3>
+                    <p className="text-sm font-medium text-teal-200">
+                       Rp {pkg.price.toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col p-4">
+                  <p className="mb-4 text-sm text-slate-600 line-clamp-2">
+                    {pkg.description}
+                  </p>
+                  <Link
+                    to="/packages/all"
+                    className="mt-auto block w-full rounded-xl bg-slate-50 py-2.5 text-center text-sm font-bold text-slate-700 hover:bg-slate-100 transition-colors"
+                  >
+                    Lihat Detail
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="mt-10 flex justify-center">
+             <Link 
+               to="/packages/all"
+               className="group flex items-center gap-2 text-teal-600 font-bold hover:text-teal-700 transition-colors"
+             >
+               Lihat Semua Paket <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+             </Link>
+          </div>
+        </section>
+
+        {/* Login & Install App CTA */}
+        <motion.section
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mb-12 sm:mb-24 relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 p-8 sm:p-12 text-center text-white shadow-2xl mx-4 sm:mx-0"
+        >
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shadow-inner ring-1 ring-white/30">
+              <Zap className="h-8 w-8 text-yellow-300 fill-yellow-300" />
+            </div>
+            
+            <h2 className="mb-4 text-2xl sm:text-3xl font-black tracking-tight">
+              Lebih Mudah dengan Aplikasi!
+            </h2>
+            <p className="mb-8 text-indigo-100 text-sm sm:text-lg leading-relaxed">
+              Login untuk melakukan pemesanan dengan cepat, lacak status order, dan dapatkan promo eksklusif. Atau install aplikasi kami untuk pengalaman terbaik.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/login"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-bold text-indigo-600 shadow-lg transition-all hover:bg-indigo-50 hover:scale-105 active:scale-95"
+              >
+                <LogIn className="h-5 w-5" />
+                <span>Login Sekarang</span>
+              </Link>
+              
+              <button
+                onClick={() => {
+                   if (deferredPrompt) {
+                     deferredPrompt.prompt();
+                     deferredPrompt.userChoice.then((choiceResult: any) => {
+                       if (choiceResult.outcome === "accepted") {
+                         setDeferredPrompt(null);
+                       }
+                     });
+                   } else {
+                     alert("Silakan buka menu browser Anda dan pilih 'Add to Home Screen' atau 'Install App' untuk menginstall LokaClean.");
+                   }
+                }}
+                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border-2 border-white/30 bg-white/10 px-6 py-3.5 font-bold text-white backdrop-blur-md transition-all hover:bg-white/20 hover:border-white/50 active:scale-95"
+              >
+                <Download className="h-5 w-5" />
+                <span>Install Aplikasi</span>
+              </button>
+            </div>
+            
+            <p className="mt-6 text-xs text-indigo-200/80">
+              *Klik "Install Aplikasi" atau gunakan menu browser untuk menambahkan ke layar utama.
+            </p>
+          </div>
+        </motion.section>
 
         {/* Testimonials - Aligned with How It Works Design */}
         <section className="mb-6 sm:mb-24 relative z-10">

@@ -10,10 +10,9 @@ interface PackageDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   pkg: PaketCleaning;
-  onBook?: () => void;
 }
 
-export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDetailModalProps) {
+export function PackageDetailModal({ isOpen, onClose, pkg }: PackageDetailModalProps) {
   const navigate = useNavigate();
   const currentLanguage = getLanguage();
   const isEnglish = currentLanguage === "en";
@@ -221,13 +220,7 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
             {/* Bottom Action Bar (Sticky on Mobile) */}
             <div className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-white px-6 py-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] md:relative md:shadow-none md:border-t-0">
               <button
-                onClick={() => {
-                  if (onBook) {
-                    onBook();
-                  } else {
-                    navigate(`/orders/new?paket_id=${pkg.id}`);
-                  }
-                }}
+                onClick={() => navigate(`/orders/new?paket_id=${pkg.id}`)}
                 className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-tropical-500 to-ocean-500 py-4 text-base font-bold text-white shadow-xl shadow-tropical-500/30 transition-all hover:scale-[1.02] hover:shadow-tropical-500/50 active:scale-[0.98]"
               >
                 <span>{isEnglish ? "Book Now" : "Pesan Sekarang"}</span>

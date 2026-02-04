@@ -10,23 +10,10 @@ import { getPackageGradient } from "../../utils/packageIcon";
 import { PackageRatingDisplay } from "../../components/PackageRatingDisplay";
 import { t, getLanguage } from "../../lib/i18n";
 import { PackageDetailModal } from "../../components/PackageDetailModal";
-import { LoginRequiredModal } from "../../components/LoginRequiredModal";
-import { useAuth } from "../../lib/auth";
 import type { PaketCleaning } from "../../types/api";
 
 export function AllPackagesPage() {
   const navigate = useNavigate();
-  const { token } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
-
-  const handleInteraction = (action: () => void) => {
-    if (!token) {
-      setShowLoginModal(true);
-    } else {
-      action();
-    }
-  };
-
   const [language, setLanguage] = useState(getLanguage());
   useEffect(() => {
     const handleLanguageChange = () => setLanguage(getLanguage());
@@ -273,13 +260,13 @@ export function AllPackagesPage() {
                             <span className="relative z-10">{isEnglish ? "Details" : "Detail"}</span>
                           </button>
                           
-                          <button
-                            onClick={() => handleInteraction(() => navigate(`/orders/new?paket_id=${pkg.id}`))}
+                          <Link
+                            to={`/orders/new?paket_id=${pkg.id}`}
                             className="relative overflow-hidden rounded-xl bg-gradient-to-r from-tropical-500 to-ocean-500 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-tropical-500/20 hover:shadow-tropical-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-center flex items-center justify-center gap-2 group/book"
                           >
                             <span>{isEnglish ? "Book Now" : "Pesan"}</span>
                             <ArrowRight className="h-3.5 w-3.5 group-hover/book:translate-x-1 transition-transform" />
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </motion.div>
@@ -296,14 +283,8 @@ export function AllPackagesPage() {
           isOpen={!!selectedPackage}
           onClose={() => setSelectedPackage(null)}
           pkg={selectedPackage}
-          onBook={() => handleInteraction(() => navigate(`/orders/new?paket_id=${selectedPackage.id}`))}
         />
       )}
-      
-      <LoginRequiredModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-      />
     </div>
   );
 }
