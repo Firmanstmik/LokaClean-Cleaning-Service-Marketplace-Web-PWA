@@ -49,7 +49,13 @@ export function AppRoutes() {
       <Route path="/login" element={<UserLogin />} />
       <Route path="/register" element={<UserRegister />} />
 
-      {/* USER app */}
+      {/* USER app - Publicly Accessible (Guest Mode) */}
+      <Route element={<UserLayout />}>
+         <Route path="/home" element={<UserHomePage />} />
+         <Route path="/packages/all" element={<AllPackagesPage />} />
+      </Route>
+
+      {/* USER app - Protected Routes */}
       <Route
         element={
           <RequireActor actor="USER">
@@ -65,8 +71,6 @@ export function AppRoutes() {
 
         {/* Marketplace requires completed profile */}
         <Route element={<RequireUserProfileComplete />}>
-          <Route path="/home" element={<UserHomePage />} />
-          <Route path="/packages/all" element={<AllPackagesPage />} />
           <Route path="/orders/new" element={<NewOrderPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />

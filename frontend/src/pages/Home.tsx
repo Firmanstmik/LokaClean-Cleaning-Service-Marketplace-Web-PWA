@@ -176,7 +176,7 @@ export function Home() {
       >
         <div className="w-full flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 lg:px-8 py-2 sm:py-3.5">
           <Link
-             to="/packages"
+             to="/home"
              className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0 group"
            >
             <motion.div
@@ -204,36 +204,18 @@ export function Home() {
                 </motion.div>
             </motion.div>
             
-            {/* Premium Brand Typography */}
-            <div className="min-w-0 flex flex-col">
-              <motion.div
-                className="relative"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              >
-                <motion.span
-                  className="block text-lg sm:text-2xl font-black leading-tight bg-gradient-to-r from-tropical-600 via-ocean-600 to-tropical-600 bg-clip-text text-transparent truncate"
-                >
-                  LokaClean
-                </motion.span>
-                {/* Subtle underline accent */}
-                <motion.div
-                  className="absolute -bottom-0.5 left-0 h-0.5 bg-gradient-to-r from-tropical-500 via-ocean-500 to-tropical-500 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: "100%" }}
-                  transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-                />
-              </motion.div>
-              <motion.div
-                className="text-[9px] sm:text-[11px] font-semibold leading-tight bg-gradient-to-r from-slate-600 via-slate-500 to-slate-600 bg-clip-text text-transparent mt-0.5"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-              >
-                ✨ {t("home.footer.tagline")}
-              </motion.div>
-            </div>
+            {/* Lihat Aplikasi Button (Replaces Brand Text) */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="block"
+            >
+              <div className="flex items-center gap-2 text-slate-700 font-bold text-sm sm:text-base hover:text-tropical-600 transition-colors">
+                <span>Lihat Aplikasi</span>
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </motion.div>
            </Link>
            <div className="flex items-center gap-2 sm:gap-3">
              {/* Language Switcher */}
