@@ -135,6 +135,18 @@ export function UserLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
+  
+  // Clear app badge when user opens the app (UserLayout mounts)
+  useEffect(() => {
+    if ('clearAppBadge' in navigator) {
+      try {
+        (navigator as any).clearAppBadge();
+      } catch (e) {
+        console.error('Failed to clear app badge', e);
+      }
+    }
+  }, []);
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);

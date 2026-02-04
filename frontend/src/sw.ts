@@ -7,6 +7,21 @@ declare let self: ServiceWorkerGlobalScope;
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
+// Helper to set app badge (if supported)
+function setAppBadge(count?: number) {
+  if ('setAppBadge' in self.navigator) {
+    try {
+      if (count !== undefined) {
+        (self.navigator as any).setAppBadge(count);
+      } else {
+        (self.navigator as any).setAppBadge(); // Shows a dot or default
+      }
+    } catch (e) {
+      console.error('Failed to set app badge', e);
+    }
+  }
+}
+
 // Handle push notifications
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
@@ -28,6 +43,10 @@ self.addEventListener('push', (event) => {
       }
     ] : []
   };
+
+  // Try to set app badge (count or dot)
+  // Since we don't track total unread count in SW, we just set a "flag" (dot/1)
+  setAppBadge(1);
 
   event.waitUntil(
     self.registration.showNotification(title, options)
