@@ -778,7 +778,7 @@ export function Home() {
                      </h2>
                      
                      {/* Mobile Only Mini 3D Phone - Smaller & Next to Text */}
-                     <div className="lg:hidden block relative w-10 h-16 sm:w-12 sm:h-20 flex-shrink-0" style={{ perspective: "600px" }}>
+                     <div className="lg:hidden block relative w-14 h-20 sm:w-16 sm:h-24 flex-shrink-0" style={{ perspective: "600px" }}>
                        <motion.div 
                           initial={{ rotateY: 12, rotateZ: 6 }}
                           animate={{ rotateY: [12, -12, 12], rotateZ: [6, -6, 6] }}
