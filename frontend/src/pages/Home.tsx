@@ -599,7 +599,7 @@ export function Home() {
 
 
         {/* Testimonials - Aligned with How It Works Design */}
-        <section className="mb-12 sm:mb-24 relative z-10">
+        <section className="mb-6 sm:mb-24 relative z-10">
           <div className="text-center mb-10 sm:mb-16">
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
@@ -641,7 +641,7 @@ export function Home() {
           </div>
              
           <div className="block sm:hidden px-2">
-            <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-2 px-2 pb-1">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-2 px-2 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {[
                 { name: t("home.testimonials.item1.name"), role: t("home.testimonials.item1.role"), text: t("home.testimonials.item1.text"), rating: 5, initial: "J" },
                 { name: t("home.testimonials.item2.name"), role: t("home.testimonials.item2.role"), text: t("home.testimonials.item2.text"), rating: 5, initial: "S" },
@@ -654,7 +654,7 @@ export function Home() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: "-5%" }}
                   transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
-                  className="snap-center min-w-[85%] relative p-4 rounded-2xl bg-white border border-slate-100 shadow-md flex flex-col will-change-transform"
+                  className="snap-center min-w-[85%] relative p-6 rounded-[2rem] bg-white border border-slate-100 ring-1 ring-slate-900/5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] flex flex-col will-change-transform"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center relative">
@@ -725,7 +725,7 @@ export function Home() {
                 transition={{ delay: i * 0.15, duration: 0.6, ease: "easeOut" }}
                 className="relative flex flex-col items-center text-center group h-full"
               >
-                <div className="relative p-6 rounded-3xl bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 w-full h-full flex flex-col items-center">
+                <div className="relative p-8 rounded-[2.5rem] bg-white border border-slate-100 ring-1 ring-slate-900/5 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-300 w-full h-full flex flex-col items-center">
                   <div className="w-20 h-20 mx-auto rounded-2xl bg-white border border-slate-100 shadow-md flex items-center justify-center mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300">
                     <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${
                       i === 0 ? "from-blue-500/20 to-cyan-500/20" :

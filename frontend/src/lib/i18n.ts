@@ -21,6 +21,38 @@ const translations = {
         feature3: { title: "Terpercaya", desc: "Lokal & Wisatawan" },
         ctaRegister: "Daftar Sekarang",
         ctaLogin: "Masuk"
+        },
+        header: {
+          subtitle: "Layanan Kebersihan Premium"
+        },
+        userHero: {
+          titlePart1: "Kebersihan",
+          titleHighlight: "Profesional",
+          titlePart2: "di Kuta Mandalika.",
+          description: "Menggabungkan sentuhan lokal dengan standar modern. LokaClean hadir di Lombok untuk pertama kali sebagai inovasi baru untuk kenyamanan maksimal hunian Anda.",
+          feature1: "Datang ke Lokasi",
+          feature2: "Standar Pro",
+          feature3: "Terpercaya"
+        },
+        userPackages: {
+          eyebrow: "Koleksi Kami",
+          title: "Pilihan Paket Spesial",
+          viewAll: "Lihat Semua"
+        },
+        steps: {
+          step1: { title: "Pilih Paket", desc: "Pilih layanan kebersihan sesuai kebutuhan Anda." },
+          step2: { title: "Atur Jadwal", desc: "Tentukan waktu dan lokasi pembersihan." },
+          step3: { title: "Bayar Aman", desc: "Lakukan pembayaran dengan metode aman." },
+          step4: { title: "Terima Beres", desc: "Petugas kami datang, rumah Anda bersih!" }
+        },
+        userFeatures: {
+        eyebrow: "Kenapa Pilih Kami",
+        titleLine1: "Standar Hotel Bintang 5",
+        titleLine2: "di Rumah Anda",
+        guarantee: { title: "100% Garansi", desc: "Puas atau uang kembali" },
+        trusted: { title: "Terpercaya", desc: "Lokal & Wisatawan" },
+        equipment: { title: "Alat Lengkap", desc: "Chemical aman & premium" },
+        location: { title: "Langsung ke Lokasi", desc: "Fleksibel & dekat" }
       },
       navbar: {
         login: "Masuk",
@@ -40,7 +72,7 @@ const translations = {
       },
       howItWorks: {
         title: "Cara Kerja",
-        subtitle: "Langkah mudah untuk ruangan bersih.",
+        subtitle: "Pesan layanan profesional dalam hitungan menit.",
         step1: { title: "Daftar", desc: "Daftar & lengkapi profilmu." },
         step2: { title: "Pesan", desc: "Pilih paket & jadwal." },
         step3: { title: "Verifikasi", desc: "Upload foto & pin lokasi." },
@@ -347,7 +379,15 @@ const translations = {
       guaranteed: "100% Dijamin",
       topRated: "Rating Tertinggi",
       description: "Deskripsi Paket",
-      serviceFeatures: "Fitur Layanan"
+      serviceFeatures: "Fitur Layanan",
+      badges: {
+        bestSeller: "TERLARIS",
+        deepClean: "BERSIH TUNTAS",
+        save: "HEMAT",
+        premium: "PREMIUM",
+        recommended: "REKOMENDASI",
+        new: "TERBARU"
+      }
     },
     // Orders
     orders: {
@@ -544,6 +584,38 @@ const translations = {
         ctaRegister: "Register Now",
         ctaLogin: "Login"
       },
+      header: {
+        subtitle: "Premium Cleaning Service"
+      },
+      userHero: {
+        titlePart1: "Professional",
+        titleHighlight: "Cleaning",
+        titlePart2: "in Kuta Mandalika.",
+        description: "Combining local touch with modern standards. LokaClean arrives in Lombok as a new innovation for your home's maximum comfort.",
+        feature1: "We Come to You",
+        feature2: "Pro Standards",
+        feature3: "Trusted"
+      },
+      userPackages: {
+        eyebrow: "Our Collection",
+        title: "Premium Packages",
+        viewAll: "View All"
+      },
+      steps: {
+        step1: { title: "Select Package", desc: "Choose the service that fits your needs." },
+        step2: { title: "Set Schedule", desc: "Pick a date and time that works for you." },
+        step3: { title: "Secure Payment", desc: "Secure payment with various methods." },
+        step4: { title: "Sit Back & Relax", desc: "Our team will handle the rest!" }
+      },
+      userFeatures: {
+        eyebrow: "Why Choose Us",
+        titleLine1: "5-Star Hotel Standard",
+        titleLine2: "at Your Home",
+        guarantee: { title: "100% Guarantee", desc: "Satisfaction or money back" },
+        trusted: { title: "Trusted", desc: "Locals & Tourists" },
+        equipment: { title: "Full Equipment", desc: "Safe & premium chemicals" },
+        location: { title: "Straight to Location", desc: "Flexible & Close" }
+      },
       navbar: {
         login: "Login",
         register: "Register",
@@ -561,7 +633,7 @@ const translations = {
       },
       howItWorks: {
         title: "How It Works",
-        subtitle: "Easy steps for a clean room.",
+        subtitle: "Book professional services in minutes.",
         step1: { title: "Register", desc: "Sign up & complete profile." },
         step2: { title: "Order", desc: "Choose package & schedule." },
         step3: { title: "Verify", desc: "Upload photo & pin location." },
@@ -869,7 +941,15 @@ const translations = {
       guaranteed: "100% Guaranteed",
       topRated: "Top Rated",
       description: "Package Description",
-      serviceFeatures: "Service Features"
+      serviceFeatures: "Service Features",
+      badges: {
+        bestSeller: "BEST SELLER",
+        deepClean: "DEEP CLEAN",
+        save: "SAVER",
+        premium: "PREMIUM",
+        recommended: "RECOMMENDED",
+        new: "NEW"
+      }
     },
     // Orders
     orders: {

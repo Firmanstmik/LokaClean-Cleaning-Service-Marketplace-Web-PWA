@@ -44,23 +44,23 @@ export function UserHomePage() {
 
   const steps = [
     {
-      title: isEnglish ? "Select Package" : "Pilih Paket",
-      desc: isEnglish ? "Choose the service that fits your needs." : "Pilih layanan kebersihan sesuai kebutuhan Anda.",
+      title: t("home.steps.step1.title"),
+      desc: t("home.steps.step1.desc"),
       icon: Package
     },
     {
-      title: isEnglish ? "Set Schedule" : "Atur Jadwal",
-      desc: isEnglish ? "Pick a date and time that works for you." : "Tentukan waktu dan lokasi pembersihan.",
+      title: t("home.steps.step2.title"),
+      desc: t("home.steps.step2.desc"),
       icon: CalendarCheck
     },
     {
-      title: isEnglish ? "Secure Payment" : "Bayar Aman",
-      desc: isEnglish ? "Secure payment with various methods." : "Lakukan pembayaran dengan metode aman.",
+      title: t("home.steps.step3.title"),
+      desc: t("home.steps.step3.desc"),
       icon: Banknote
     },
     {
-      title: isEnglish ? "Relax" : "Terima Beres",
-      desc: isEnglish ? "Our team will handle the rest." : "Petugas kami datang, rumah Anda bersih!",
+      title: t("home.steps.step4.title"),
+      desc: t("home.steps.step4.desc"),
       icon: Sparkles
     }
   ];
@@ -196,8 +196,8 @@ export function UserHomePage() {
     }
     if (features.length === 0) {
       features.push(
-        { text: "Professional", icon: CheckCircle2, color: "text-blue-700", bgColor: "bg-blue-50" },
-        { text: "Fast", icon: Zap, color: "text-indigo-700", bgColor: "bg-indigo-50" }
+        { text: t("packages.professional"), icon: CheckCircle2, color: "text-blue-700", bgColor: "bg-blue-50" },
+        { text: t("packages.fast"), icon: Zap, color: "text-indigo-700", bgColor: "bg-indigo-50" }
       );
     }
     return features.slice(0, 4);
@@ -205,20 +205,20 @@ export function UserHomePage() {
 
   // Helper for Badges
   const getBadgeConfig = (pkg: PaketCleaning) => {
-    if ((pkg.totalReviews || 0) > 20 && (pkg.averageRating || 0) >= 4.5) return { label: "BEST SELLER", icon: <Flame className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-orange-500 to-red-600", textColor: "text-white" };
+    if ((pkg.totalReviews || 0) > 20 && (pkg.averageRating || 0) >= 4.5) return { label: t("packages.badges.bestSeller"), icon: <Flame className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-orange-500 to-red-600", textColor: "text-white" };
     const lowerName = pkg.name.toLowerCase();
-    if (lowerName.includes("deep") || lowerName.includes("total") || lowerName.includes("komplit")) return { label: "DEEP CLEAN", icon: <Sparkles className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-violet-600 to-indigo-600", textColor: "text-white" };
-    if (pkg.price < 150000) return { label: "HEMAT", icon: <Tag className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-emerald-500 to-teal-600", textColor: "text-white" };
-    if (pkg.price > 400000) return { label: "PREMIUM", icon: <Crown className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-slate-900 to-black", textColor: "text-white" };
-    if ((pkg.averageRating || 0) >= 4.7) return { label: "RECOMMENDED", icon: <Trophy className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-blue-500 to-cyan-600", textColor: "text-white" };
-    return { label: "TERBARU", icon: <Sparkles className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-pink-500 to-rose-600", textColor: "text-white" };
+    if (lowerName.includes("deep") || lowerName.includes("total") || lowerName.includes("komplit")) return { label: t("packages.badges.deepClean"), icon: <Sparkles className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-violet-600 to-indigo-600", textColor: "text-white" };
+    if (pkg.price < 150000) return { label: t("packages.badges.save"), icon: <Tag className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-emerald-500 to-teal-600", textColor: "text-white" };
+    if (pkg.price > 400000) return { label: t("packages.badges.premium"), icon: <Crown className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-slate-900 to-black", textColor: "text-white" };
+    if ((pkg.averageRating || 0) >= 4.7) return { label: t("packages.badges.recommended"), icon: <Trophy className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-blue-500 to-cyan-600", textColor: "text-white" };
+    return { label: t("packages.badges.new"), icon: <Sparkles className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-pink-500 to-rose-600", textColor: "text-white" };
   };
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-slate-900 font-sans pb-24 sm:pb-32 overflow-x-hidden selection:bg-teal-100 selection:text-teal-900">
       
       {/* 1. Header & Hero Section - Clean & Modern */}
-      <div className="relative bg-white pb-8 sm:pb-12 rounded-b-[40px] sm:rounded-b-[60px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.05)] z-10 overflow-hidden">
+      <div className="relative bg-white pb-8 sm:pb-12 rounded-b-[40px] sm:rounded-b-[60px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.05)] ring-1 ring-slate-900/10 z-10 overflow-hidden">
         {/* Abstract Background Shapes - Optimized for Android */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none transform-gpu">
            <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-teal-50/50 blur-3xl translate-z-0 will-change-transform" />
@@ -228,23 +228,38 @@ export function UserHomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8 relative z-10">
           {/* Header Row */}
           <div className="flex items-center justify-between mb-8 sm:mb-12">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
-                <Home className="w-6 h-6 text-white" />
-              </div>
+            <div className="flex items-center gap-4">
+              <motion.div 
+                initial={{ scale: 0, rotate: -10 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                whileHover={{ scale: 1.05 }}
+                className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center"
+              >
+                <img 
+                  src="/img/maskot.jpg" 
+                  alt="LokaClean Mascot" 
+                  className="w-full h-full object-contain rounded-2xl drop-shadow-[0_10px_35px_rgba(20,184,166,0.4)] hover:drop-shadow-[0_15px_45px_rgba(20,184,166,0.5)] transition-all duration-500 ease-out hover:-translate-y-1"
+                />
+              </motion.div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">LokaClean</h1>
-                <p className="text-[10px] sm:text-xs font-medium text-slate-500 tracking-wider uppercase">Premium Cleaning Service</p>
+                <p className="text-xs sm:text-sm font-medium text-slate-500 tracking-wider uppercase">{t("home.header.subtitle")}</p>
               </div>
             </div>
             
-            <button 
+            <motion.button 
               onClick={() => navigate("/orders/new")}
-              className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl transition-all active:scale-95"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="group relative flex items-center gap-3 bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-5 py-3 rounded-full text-xs sm:text-sm font-bold shadow-[0_10px_20px_-5px_rgba(13,148,136,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(13,148,136,0.5)] transition-all duration-300 overflow-hidden"
             >
-              <Plus className="w-4 h-4" />
-              <span>{t("packages.newOrder")}</span>
-            </button>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+              <div className="bg-white/20 rounded-full p-1 group-hover:rotate-180 transition-transform duration-500 backdrop-blur-sm">
+                <Plus className="w-4 h-4 text-white" />
+              </div>
+              <span className="tracking-wide relative z-10">{t("packages.newOrder")}</span>
+            </motion.button>
           </div>
 
           {/* Hero Content */}
@@ -256,12 +271,12 @@ export function UserHomePage() {
                 transition={{ duration: 0.6 }}
               >
                 <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-4">
-                  Kebersihan <br/>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-blue-600">Profesional</span> <br/>
-                  di Lokasi Anda.
+                  {t("home.userHero.titlePart1")} <br/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-blue-600">{t("home.userHero.titleHighlight")}</span> <br/>
+                  {t("home.userHero.titlePart2")}
                 </h2>
                 <p className="text-slate-500 text-base sm:text-lg max-w-md leading-relaxed">
-                  Menggabungkan sentuhan lokal dengan standar modern. LokaClean hadir untuk kenyamanan maksimal hunian Anda.
+                  {t("home.userHero.description")}
                 </p>
               </motion.div>
 
@@ -272,13 +287,13 @@ export function UserHomePage() {
                 className="flex flex-wrap gap-4"
               >
                 {[
-                  { icon: MapPin, text: "Datang ke Lokasi" },
-                  { icon: ShieldCheck, text: "Standar Pro" },
-                  { icon: Handshake, text: "Terpercaya" }
+                  { icon: MapPin, text: t("home.userHero.feature1") },
+                  { icon: ShieldCheck, text: t("home.userHero.feature2") },
+                  { icon: Handshake, text: t("home.userHero.feature3") }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 bg-white border border-slate-100 px-3 py-2 rounded-lg shadow-sm">
                     <item.icon className="w-4 h-4 text-teal-600" />
-                    <span className="text-xs sm:text-sm font-semibold text-slate-700">{item.text}</span>
+                    <span className="text-sm font-semibold text-slate-700">{item.text}</span>
                   </div>
                 ))}
               </motion.div>
@@ -306,15 +321,20 @@ export function UserHomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-20">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-slate-900">{t("packages.title")}</h3>
-            <p className="text-slate-500 mt-1">{t("packages.subtitle")}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-6 h-[2px] bg-teal-500 rounded-full"></span>
+              <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-teal-600 uppercase">{t("home.userPackages.eyebrow")}</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {t("home.userPackages.title")}
+            </h3>
           </div>
           <button 
             onClick={() => navigate('/packages/all')}
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-teal-600 hover:text-teal-700 transition-colors active:opacity-70"
+            className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-50 text-xs sm:text-sm font-bold text-teal-600 hover:bg-teal-100 transition-all active:scale-95"
           >
-            <span>Lihat Semua</span>
-            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>{t("home.userPackages.viewAll")}</span>
+            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
 
@@ -352,7 +372,7 @@ export function UserHomePage() {
                     className="snap-center shrink-0 w-[85vw] max-w-[340px]"
                     onClick={() => navigate(`/orders/new?paket_id=${pkg.id}`)}
                   >
-                    <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] h-full flex flex-col relative group">
+                    <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 ring-1 ring-slate-900/5 h-full flex flex-col relative group transition-all duration-300 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)]">
                       <div className="relative h-56 w-full bg-slate-100 transform-gpu">
                         <img 
                           src={getPackageImage(pkg.name, pkg.image)} 
@@ -364,7 +384,7 @@ export function UserHomePage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
                         
                         <div className="absolute top-4 left-4">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase ${badge.className} ${badge.textColor} shadow-lg`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${badge.className} ${badge.textColor} shadow-lg`}>
                             {badge.label}
                           </span>
                         </div>
@@ -383,7 +403,7 @@ export function UserHomePage() {
                       <div className="p-5 flex flex-col flex-1">
                         <div className="flex flex-wrap gap-2 mb-4">
                            {extractFeatures(pkg.description).slice(0, 3).map((feat, idx) => (
-                             <span key={idx} className={`text-[10px] px-2 py-1 rounded-md font-medium bg-slate-50 text-slate-600 border border-slate-100`}>
+                             <span key={idx} className={`text-xs px-2 py-1 rounded-md font-medium bg-slate-50 text-slate-600 border border-slate-100`}>
                                {feat.text}
                              </span>
                            ))}
@@ -391,7 +411,7 @@ export function UserHomePage() {
                         
                         <div className="mt-auto flex items-end justify-between">
                           <div>
-                            <p className="text-xs text-slate-400 font-medium">Mulai dari</p>
+                            <p className="text-sm text-slate-400 font-medium">{t("packages.startingFrom")}</p>
                             <p className="text-2xl font-black text-slate-900">
                               <span className="text-sm font-bold align-top mr-0.5">Rp</span>
                               {(pkg.price / 1000).toLocaleString("id-ID")}
@@ -517,23 +537,23 @@ export function UserHomePage() {
       {/* 3. Trust Section (Premium Grid) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-24">
         <div className="text-center mb-10 sm:mb-16">
-          <span className="text-teal-600 font-bold tracking-wider uppercase text-xs sm:text-sm">Why Choose Us</span>
-          <h3 className="text-2xl sm:text-4xl font-black text-slate-900 mt-2">Standar Hotel Bintang 5<br/>di Rumah Anda</h3>
+          <span className="text-teal-600 font-bold tracking-wider uppercase text-xs sm:text-sm">{t("home.userFeatures.eyebrow")}</span>
+          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{t("home.userFeatures.titleLine1")}<br/>{t("home.userFeatures.titleLine2")}</h3>
         </div>
         
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
            {[
-             { title: "100% Garansi", desc: "Puas atau uang kembali", icon: BadgeCheck, color: "text-blue-600", bg: "bg-blue-50" },
-             { title: "Terpercaya", desc: "Staff background checked", icon: UserCheck, color: "text-purple-600", bg: "bg-purple-50" },
-             { title: "Alat Lengkap", desc: "Chemical aman & premium", icon: Sparkles, color: "text-amber-600", bg: "bg-amber-50" },
-             { title: "Tepat Waktu", desc: "Diskon jika terlambat", icon: Clock, color: "text-teal-600", bg: "bg-teal-50" }
+             { title: t("home.userFeatures.guarantee.title"), desc: t("home.userFeatures.guarantee.desc"), icon: BadgeCheck, color: "text-blue-600", bg: "bg-blue-50" },
+             { title: t("home.userFeatures.trusted.title"), desc: t("home.userFeatures.trusted.desc"), icon: UserCheck, color: "text-purple-600", bg: "bg-purple-50" },
+             { title: t("home.userFeatures.equipment.title"), desc: t("home.userFeatures.equipment.desc"), icon: Sparkles, color: "text-amber-600", bg: "bg-amber-50" },
+             { title: t("home.userFeatures.location.title"), desc: t("home.userFeatures.location.desc"), icon: MapPin, color: "text-teal-600", bg: "bg-teal-50" }
            ].map((item, i) => (
-             <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 duration-300">
+             <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 ring-1 ring-slate-900/5 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-2">
                <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center mb-4`}>
                  <item.icon className={`w-6 h-6 ${item.color}`} />
                </div>
                <h4 className="font-bold text-slate-900 mb-1">{item.title}</h4>
-               <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">{item.desc}</p>
+               <p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
              </div>
            ))}
         </div>
@@ -541,13 +561,13 @@ export function UserHomePage() {
 
       {/* 4. How it Works (Dark Premium Card) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-24">
-        <div className="bg-slate-900 rounded-[40px] p-8 sm:p-12 relative overflow-hidden shadow-2xl">
+        <div className="bg-slate-900 rounded-[40px] p-8 sm:p-12 relative overflow-hidden border border-slate-800 ring-1 ring-white/10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] transition-all duration-500 hover:shadow-[0_30px_70px_-12px_rgba(20,184,166,0.2)] hover:border-teal-500/30 hover:ring-teal-500/30 group">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-teal-900/20 rounded-full blur-3xl -mr-20 -mt-20" />
           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-900/20 rounded-full blur-3xl -ml-10 -mb-10" />
           
           <div className="relative z-10 text-center sm:text-left mb-10">
-            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Cara Kerja Simpel</h3>
-            <p className="text-slate-400">Pesan layanan profesional dalam hitungan menit.</p>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{t("home.howItWorks.title")}</h3>
+            <p className="text-slate-400">{t("home.howItWorks.subtitle")}</p>
           </div>
 
           <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
@@ -559,7 +579,7 @@ export function UserHomePage() {
                    {i + 1}
                  </div>
                  <h4 className="text-white font-bold mb-1">{step.title}</h4>
-                 <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
+                 <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -567,7 +587,7 @@ export function UserHomePage() {
       </div>
 
       {/* 5. Testimonials (Clean Grid) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-24 mb-12 relative z-10">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-24 mb-6 relative z-10">
           <div className="text-center mb-10 sm:mb-16">
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
@@ -609,7 +629,7 @@ export function UserHomePage() {
           </div>
              
           <div className="block sm:hidden px-2">
-            <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-2 px-2 pb-1">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-2 px-2 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {[
                 { name: t("home.testimonials.item1.name"), role: t("home.testimonials.item1.role"), text: t("home.testimonials.item1.text"), rating: 5, initial: "J" },
                 { name: t("home.testimonials.item2.name"), role: t("home.testimonials.item2.role"), text: t("home.testimonials.item2.text"), rating: 5, initial: "S" },
@@ -622,7 +642,7 @@ export function UserHomePage() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, margin: "-5%" }}
                   transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
-                  className="snap-center min-w-[85%] relative p-4 rounded-2xl bg-white border border-slate-100 shadow-md flex flex-col will-change-transform"
+                  className="snap-center min-w-[85%] relative p-6 rounded-[2rem] bg-white border border-slate-100 ring-1 ring-slate-900/5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] flex flex-col will-change-transform"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center relative">
@@ -647,7 +667,7 @@ export function UserHomePage() {
                       </div>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-600 leading-snug">
+                  <p className="text-sm text-slate-600 leading-snug">
                     "{testi.text}"
                   </p>
                 </motion.div>
@@ -693,7 +713,7 @@ export function UserHomePage() {
                 transition={{ delay: i * 0.15, duration: 0.6, ease: "easeOut" }}
                 className="relative flex flex-col items-center text-center group h-full"
               >
-                <div className="relative p-6 rounded-3xl bg-white/50 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 w-full h-full flex flex-col items-center">
+                <div className="relative p-8 rounded-[2.5rem] bg-white border border-slate-100 ring-1 ring-slate-900/5 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:shadow-[0_30px_60px_-12px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-300 w-full h-full flex flex-col items-center">
                   <div className="w-20 h-20 mx-auto rounded-2xl bg-white border border-slate-100 shadow-md flex items-center justify-center mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300">
                     <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${
                       i === 0 ? "from-blue-500/20 to-cyan-500/20" :
