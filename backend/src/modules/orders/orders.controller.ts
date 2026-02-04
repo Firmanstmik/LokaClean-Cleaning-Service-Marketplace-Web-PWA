@@ -8,7 +8,7 @@
 
 import type { Request, Response } from "express";
 import type { Pesanan } from "@prisma/client";
-import { OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
+import { OrderStatus, PaymentMethod, PaymentStatus, Role } from "@prisma/client";
 
 import { prisma } from "../../db/prisma";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -586,13 +586,64 @@ export const getOrderAdminHandler = asyncHandler(async (req: Request, res: Respo
 });
 
 /**
+ * Helper to resolve the correct Admin ID.
+ * If the logged-in user is a USER with role=ADMIN (origin="USER"),
+ * we must find or create a corresponding record in the Admin table
+ * to satisfy foreign key constraints on Pesanan.admin_id.
+ */
+async function resolveAdminId(auth: { id: number; origin?: "USER" | "ADMIN"; actor: string }) {
+  // If already logged in as a "real" Admin, return ID directly
+  if (auth.origin !== "USER") {
+    return auth.id;
+  }
+
+  // Logged in as User-Admin
+  const userAdmin = await prisma.user.findUnique({ where: { id: auth.id } });
+  if (!userAdmin) throw new HttpError(404, "User admin not found");
+
+  // Try to find matching Admin by email
+  const existingAdmin = await prisma.admin.findUnique({ where: { email: userAdmin.email } });
+  if (existingAdmin) {
+    return existingAdmin.id;
+  }
+
+  // If not found, create a "Shadow Admin" record
+  // Check phone number uniqueness first
+  if (userAdmin.phone_number) {
+    const phoneConflict = await prisma.admin.findUnique({ where: { phone_number: userAdmin.phone_number } });
+    if (phoneConflict) {
+      // If phone exists but email doesn't match, we can't create a new admin easily.
+      throw new HttpError(409, "Admin account conflict: Phone number exists but email mismatch.");
+    }
+  }
+
+  // Create new Admin record
+  // Use a placeholder hash since login is handled via User table
+  const placeholderHash = userAdmin.password_hash || "$2a$12$PlaceholderHashForShadowAdminAccount................"; 
+
+  const newAdmin = await prisma.admin.create({
+    data: {
+      full_name: userAdmin.full_name,
+      email: userAdmin.email,
+      phone_number: userAdmin.phone_number,
+      password: placeholderHash,
+      role: Role.ADMIN
+    }
+  });
+
+  return newAdmin.id;
+}
+
+/**
  * ADMIN: Assign order to the current admin (sets admin_id and status to IN_PROGRESS).
  * Creates notification for the user.
  */
 export const assignOrderAdminHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.auth) throw new HttpError(401, "Unauthenticated");
   const id = parseId(req.params.id);
-  const adminId = req.auth!.id;
+  
+  // Resolve effective Admin ID (handling User-Admin case)
+  const adminId = await resolveAdminId(req.auth);
 
   const order = await getOrderOrThrow(id);
   if (order.status === OrderStatus.COMPLETED) throw new HttpError(400, "Cannot assign a COMPLETED order");
@@ -634,7 +685,7 @@ export const assignOrderAdminHandler = asyncHandler(async (req: Request, res: Re
 export const updateOrderStatusAdminHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.auth) throw new HttpError(401, "Unauthenticated");
   const id = parseId(req.params.id);
-  const adminId = req.auth!.id;
+  const adminId = await resolveAdminId(req.auth);
 
   const { status } = adminUpdateStatusSchema.parse(req.body);
 
