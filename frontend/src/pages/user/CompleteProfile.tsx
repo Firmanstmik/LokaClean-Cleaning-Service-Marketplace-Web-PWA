@@ -254,6 +254,7 @@ export function CompleteProfilePage() {
     subtitle: t("completeProfile.subtitle"),
     icon: Fingerprint,
     isValid: isInfoValid,
+    isOptional: false,
     content: (
       <div className="space-y-4 sm:space-y-5">
         <div className="group">
@@ -299,6 +300,7 @@ export function CompleteProfilePage() {
     subtitle: t("completeProfile.locationSubtitle"),
     icon: Compass,
     isValid: isLocationValid,
+    isOptional: false,
     content: (
       <div className="space-y-4">
         <div className="relative mb-6">
