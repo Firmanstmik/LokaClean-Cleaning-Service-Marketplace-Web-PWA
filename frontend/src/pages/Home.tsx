@@ -758,27 +758,27 @@ export function Home() {
             <div className="hidden sm:block absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
             <div className="hidden sm:block absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_70%)] pointer-events-none" />
 
-            <div className="relative z-10 grid lg:grid-cols-12 gap-8 items-center p-8 sm:p-12 lg:p-16">
+            <div className="relative z-10 grid lg:grid-cols-12 gap-8 items-center p-6 sm:p-12 lg:p-16">
               
               {/* Left Content */}
-              <div className="lg:col-span-7 text-left space-y-8">
+              <div className="lg:col-span-7 text-left space-y-5 sm:space-y-8">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-md">
                    <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
                     </span>
-                   <span className="text-xs font-bold tracking-widest text-teal-400 uppercase">{t("home.premiumCTA.badge")}</span>
+                   <span className="text-[10px] sm:text-xs font-bold tracking-widest text-teal-400 uppercase">{t("home.premiumCTA.badge")}</span>
                 </div>
 
-                <div className="space-y-4 relative">
-                  <div className="flex items-center justify-between gap-4">
-                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight relative z-10">
+                <div className="space-y-3 sm:space-y-4 relative">
+                  <div className="flex items-center justify-between gap-2 sm:gap-4">
+                     <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight relative z-10">
                        {t("home.premiumCTA.title.part1")} <br/>
                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-400">{t("home.premiumCTA.title.part2")}</span>
                      </h2>
                      
                      {/* Mobile Only Mini 3D Phone - Smaller & Next to Text */}
-                     <div className="lg:hidden block relative w-12 h-20 flex-shrink-0" style={{ perspective: "600px" }}>
+                     <div className="lg:hidden block relative w-10 h-16 sm:w-12 sm:h-20 flex-shrink-0" style={{ perspective: "600px" }}>
                        <motion.div 
                           initial={{ rotateY: 12, rotateZ: 6 }}
                           animate={{ rotateY: [12, -12, 12], rotateZ: [6, -6, 6] }}
@@ -817,19 +817,19 @@ export function Home() {
                      </div>
                   </div>
 
-                  <p className="text-slate-400 text-base sm:text-lg leading-relaxed max-w-lg">
+                  <p className="text-slate-400 text-sm sm:text-lg leading-relaxed max-w-lg">
                     {t("home.premiumCTA.description")}
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-1 sm:pt-2">
                   <Link
                     to="/login"
-                    className="group/btn relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] overflow-hidden"
+                    className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white text-slate-900 font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-white opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                    <LogIn className="w-5 h-5 text-slate-900 relative z-10" />
-                    <span className="relative z-10">{t("home.premiumCTA.buttons.login")}</span>
+                    <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 relative z-10" />
+                    <span className="relative z-10 text-sm sm:text-base">{t("home.premiumCTA.buttons.login")}</span>
                   </Link>
                   
                   <button
@@ -845,10 +845,10 @@ export function Home() {
                          alert("Silakan buka menu browser Anda dan pilih 'Add to Home Screen' atau 'Install App' untuk menginstall LokaClean.");
                        }
                     }}
-                    className="group/btn relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white/5 text-white font-bold backdrop-blur-md border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
+                    className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/5 text-white font-bold backdrop-blur-md border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
                   >
-                    <Download className="w-5 h-5 text-teal-400 group-hover/btn:text-teal-300 transition-colors" />
-                    <span>{t("home.premiumCTA.buttons.install")}</span>
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5 text-teal-400 group-hover/btn:text-teal-300 transition-colors" />
+                    <span className="text-sm sm:text-base">{t("home.premiumCTA.buttons.install")}</span>
                   </button>
                 </div>
                 
