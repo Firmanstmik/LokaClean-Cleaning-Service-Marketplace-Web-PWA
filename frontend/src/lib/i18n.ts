@@ -592,6 +592,22 @@ const translations = {
       confirmAssign: "Konfirmasi/Tugaskan Petugas/Karyawan",
       deleteOrder: "Hapus Pesanan",
       deleteConfirm: "Apakah Anda yakin ingin menghapus pesanan ini? Tindakan ini tidak dapat dibatalkan."
+    },
+    mobileWelcome: {
+      premiumBadge: "PREMIUM",
+      subtitle: "Gabungan sentuhan lokal Lombok dengan standar kebersihan modern.",
+      ctaRegister: "Buat Akun Baru",
+      ctaLogin: "Masuk ke Akun",
+      features: {
+        tracking: "Pelacakan Real-time",
+        easy: "Pemesanan Mudah",
+        promo: "Promo Eksklusif"
+      },
+      terms: {
+        prefix: "Dengan masuk, Anda menyetujui",
+        link: "Syarat & Ketentuan",
+        suffix: "LokaClean."
+      }
     }
   },
   en: {
@@ -1152,6 +1168,22 @@ const translations = {
       confirmAssign: "Confirm/Assign Staff/Employee",
       deleteOrder: "Delete Order",
       deleteConfirm: "Are you sure you want to delete this order? This action cannot be undone."
+    },
+    mobileWelcome: {
+      premiumBadge: "PREMIUM",
+      subtitle: "Combining Lombok's local touch with modern cleaning standards.",
+      ctaRegister: "Create New Account",
+      ctaLogin: "Login to Account",
+      features: {
+        tracking: "Real-time Tracking",
+        easy: "Easy Booking",
+        promo: "Exclusive Promos"
+      },
+      terms: {
+        prefix: "By logging in, you agree to LokaClean's",
+        link: "Terms & Conditions",
+        suffix: "."
+      }
     }
   }
 };
