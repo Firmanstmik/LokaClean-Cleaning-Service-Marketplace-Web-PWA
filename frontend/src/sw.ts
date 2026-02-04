@@ -8,18 +8,20 @@ cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Helper to set app badge (if supported)
-function setAppBadge(count?: number) {
+function setAppBadge(count?: number): Promise<void> {
   if ('setAppBadge' in self.navigator) {
     try {
       if (count !== undefined) {
-        (self.navigator as any).setAppBadge(count);
+        return (self.navigator as any).setAppBadge(count);
       } else {
-        (self.navigator as any).setAppBadge(); // Shows a dot or default
+        return (self.navigator as any).setAppBadge(); // Shows a dot or default
       }
     } catch (e) {
       console.error('Failed to set app badge', e);
+      return Promise.resolve();
     }
   }
+  return Promise.resolve();
 }
 
 // Handle push notifications
@@ -45,12 +47,13 @@ self.addEventListener('push', (event) => {
   };
 
   // Try to set app badge (count or dot)
-  // Since we don't track total unread count in SW, we just set a "flag" (dot/1)
-  setAppBadge(1);
+  // We include it in waitUntil to ensure the SW stays alive until the badge is set
+  const promiseChain = Promise.all([
+    self.registration.showNotification(title, options),
+    setAppBadge(1)
+  ]);
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+  event.waitUntil(promiseChain);
 });
 
 // Handle notification click
