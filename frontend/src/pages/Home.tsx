@@ -19,12 +19,15 @@ import type { PaketCleaning } from "../types/api";
 import { getPackageImage } from "../utils/packageImage";
 import { PackageDetailModal } from "../components/PackageDetailModal";
 import { LoginRequiredModal } from "../components/LoginRequiredModal";
+import { MobileWelcome } from "./MobileWelcome";
 
 export function Home() {
   const { token, actor } = useAuth();
   useCurrentLanguage(); // Force re-render on language change
 
-  // Welcome Alert State
+  // PWA Standalone Mode Check
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+
   const [showWelcome, setShowWelcome] = useState(false);
   const [packages, setPackages] = useState<PaketCleaning[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -64,6 +67,11 @@ export function Home() {
   // Logged-in users should not see the marketing landing page again.
   if (actor === "ADMIN") return <Navigate to="/admin/orders" replace />;
   if (token) return <Navigate to="/home" replace />;
+
+  // If PWA and NOT logged in, show MobileWelcome instead of standard Home
+  if (isStandalone) {
+    return <MobileWelcome />;
+  }
 
   const features = [
     {
