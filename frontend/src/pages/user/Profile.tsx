@@ -13,7 +13,7 @@ import {
   User as UserIcon, Phone, MapPin, Camera, Save, CheckCircle2, 
   AlertCircle, Lightbulb, Eye, EyeOff, Lock, Mail, Sparkles, 
   Globe, Trash2, LogOut, ChevronRight, History, Users, Gift, 
-  Bell, QrCode, Edit2, ArrowLeft, Ticket, Package, Gamepad2
+  Bell, Smartphone, Edit2, ArrowLeft, Ticket, Package, Gamepad2, X, Download
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -30,6 +30,11 @@ import { toAbsoluteUrl } from "../../lib/urls";
 import { getLanguage, setLanguage, t } from "../../lib/i18n";
 import type { User } from "../../types/api";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 export function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +50,18 @@ export function ProfilePage() {
   const [deleting, setDeleting] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<"id" | "en">(getLanguage());
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showAndroidPromo, setShowAndroidPromo] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  // PWA Install Prompt Listener
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
 
   // Form State
   const [fullName, setFullName] = useState("");
@@ -68,6 +85,20 @@ export function ProfilePage() {
     window.addEventListener("languagechange", handleLanguageChange);
     return () => window.removeEventListener("languagechange", handleLanguageChange);
   }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setDeferredPrompt(null);
+        setShowAndroidPromo(false);
+      }
+    } else {
+      // Fallback if PWA prompt is not available (e.g. already installed or iOS)
+      alert(t("profile.androidPromo.manualInstallTip"));
+    }
+  };
 
   // Load User Data
   useEffect(() => {
@@ -208,8 +239,52 @@ export function ProfilePage() {
 
         {/* Header */}
         <div className="relative z-10 flex items-center justify-between px-6 py-6">
-           <div className="p-2 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-white/50">
-             <QrCode className="h-6 w-6 text-slate-700" /> 
+           <div className="relative">
+             <button
+               className="p-2 bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-white/50 relative group"
+               onClick={() => setShowAndroidPromo(true)}
+               aria-label="Android App"
+             >
+               <Smartphone className="h-6 w-6 text-slate-700 group-hover:text-teal-600 transition-colors" />
+               {!showAndroidPromo && (
+                 <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-teal-500 border border-white animate-pulse" />
+               )}
+             </button>
+             <AnimatePresence>
+               {showAndroidPromo && (
+                 <motion.div
+                   initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                   animate={{ opacity: 1, x: 0, scale: 1 }}
+                   exit={{ opacity: 0, scale: 0.95 }}
+                   className="absolute top-0 left-14 z-50 w-max max-w-[200px]"
+                 >
+                   {/* Arrow */}
+                   <div className="absolute -left-1.5 top-3.5 w-0 h-0 border-t-[6px] border-t-transparent border-r-[8px] border-r-white border-b-[6px] border-b-transparent drop-shadow-sm" />
+                   
+                   <div 
+                      className="relative bg-white rounded-xl p-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex items-center gap-3 cursor-pointer active:scale-95 transition-transform"
+                      onClick={handleInstallClick}
+                    >
+                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-md shadow-emerald-200 shrink-0">
+                        <Download className="h-4 w-4" />
+                      </div>
+                     <div className="flex-1 min-w-0">
+                       <h3 className="text-[11px] font-bold text-slate-800 mb-0.5 leading-tight">{t("profile.androidPromo.title")}</h3>
+                       <p className="text-[9px] text-slate-500 leading-tight">{t("profile.androidPromo.desc")}</p>
+                     </div>
+                     <button 
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         setShowAndroidPromo(false);
+                       }}
+                       className="absolute -top-1.5 -right-1.5 bg-white rounded-full p-0.5 shadow-sm border border-slate-100 text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                     >
+                       <X className="h-3 w-3" />
+                     </button>
+                   </div>
+                 </motion.div>
+               )}
+             </AnimatePresence>
            </div>
            <h1 className="text-lg font-extrabold text-slate-800 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-cyan-600">
              LokaClean
@@ -602,7 +677,7 @@ export function ProfilePage() {
 }
 
 function MenuItem({ icon: Icon, label, onClick, value, color = "text-slate-400", bgColor = "bg-slate-50" }: { 
-  icon: any, label: string, onClick: () => void, value?: string, color?: string, bgColor?: string 
+  icon: typeof UserIcon, label: string, onClick: () => void, value?: string, color?: string, bgColor?: string 
 }) {
   return (
     <button onClick={onClick} className="w-full flex items-center justify-between group p-3 rounded-xl hover:bg-slate-50 transition-colors">

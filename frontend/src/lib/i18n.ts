@@ -282,6 +282,14 @@ const translations = {
       save: "Simpan",
       saved: "Tersimpan!",
       settings: "Pengaturan"
+      ,
+      androidPromo: {
+        title: "Install Aplikasi LokaClean",
+        desc: "Lebih cepat, ringan, dan notifikasi real‑time.",
+        cta: "Install Sekarang",
+        dismiss: "Nanti saja",
+        manualInstallTip: "Untuk Android: Buka menu browser (titik tiga) > 'Install App'.\n\nUntuk iPhone (iOS): Tekan tombol Share (kotak panah) > 'Tambahkan ke Layar Utama' (Add to Home Screen)."
+      }
     },
     // Map
     map: {
@@ -844,6 +852,14 @@ const translations = {
       save: "Save",
       saved: "Saved!",
       settings: "Settings"
+      ,
+      androidPromo: {
+        title: "Install LokaClean App",
+        desc: "Faster, lighter, with real‑time notifications.",
+        cta: "Install Now",
+        dismiss: "Maybe later",
+        manualInstallTip: "For Android: Open browser menu (three dots) > 'Install App'.\n\nFor iPhone (iOS): Tap Share button > 'Add to Home Screen'."
+      }
     },
     // Map
     map: {
