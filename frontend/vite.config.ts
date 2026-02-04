@@ -14,6 +14,9 @@ export default defineConfig({
     // "PWA-ready" foundation: installable web app + offline caching can be enabled gradually.
     VitePWA({
       registerType: "autoUpdate",
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       manifest: {
         name: "LokaClean",
         short_name: "LokaClean",

@@ -58,6 +58,14 @@ const envSchema = z.object({
     .enum(["true", "false"])
     .transform((val) => val === "true")
     .default("false")
+,
+
+  // =====================
+  // Web Push (VAPID)
+  // =====================
+  VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+  VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+  VAPID_SUBJECT: z.string().min(1).optional()
 });
 
 const parsed = envSchema.safeParse(process.env);

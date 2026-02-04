@@ -15,6 +15,7 @@ import { adminRouter } from "./modules/admin/admin.routes";
 import { geoRouter } from "./modules/geo/geo.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { paymentsRouter } from "./modules/payments/payments.routes";
+import { pushRouter } from "./modules/push/push.routes";
 
 export const apiRouter = Router();
 
@@ -47,10 +48,10 @@ apiRouter.use("/orders", ordersRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/geo", geoRouter);
 apiRouter.use("/notifications", notificationsRouter);
+apiRouter.use("/push", pushRouter);
 
 if (validateMidtransConfig()) {
   apiRouter.use("/payments", paymentsRouter);
   console.info("[Routes] Payments router registered at /api/payments");
 }
-
 

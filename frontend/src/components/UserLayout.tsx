@@ -516,10 +516,47 @@ export function UserLayout() {
 
   // Register Service Worker and request notification permission
   useEffect(() => {
+    const urlBase64ToUint8Array = (base64String: string) => {
+      const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+      const rawData = atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    };
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then((registration) => {
           console.log('Service Worker registered:', registration);
+          // Try to set up push subscription (if VAPID is configured)
+          api.get("/push/public-key")
+            .then(async (resp) => {
+              const publicKey = resp.data?.data?.publicKey ?? import.meta.env.VITE_VAPID_PUBLIC_KEY;
+              if (!publicKey) {
+                console.log("[Push] VAPID public key not configured; skipping push subscription");
+                return;
+              }
+              try {
+                let subscription = await registration.pushManager.getSubscription();
+                if (!subscription) {
+                  subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(publicKey)
+                  });
+                }
+                // Send subscription to backend
+                await api.post("/push/subscribe", subscription);
+                console.log("[Push] Subscription active");
+              } catch (err) {
+                console.warn("[Push] Failed to subscribe:", err);
+              }
+            })
+            .catch((err) => {
+              console.warn("[Push] Failed to fetch public key:", err);
+            });
         })
         .catch((error) => {
           console.error('Service Worker registration failed:', error);
@@ -533,6 +570,18 @@ export function UserLayout() {
       });
     }
   }, []);
+
+  // Set app icon badge (installed PWA) when unread count changes
+  useEffect(() => {
+    const navAny = navigator as any;
+    if (navAny.setAppBadge) {
+      if (unreadCount > 0) {
+        navAny.setAppBadge(unreadCount).catch(() => {});
+      } else {
+        navAny.clearAppBadge?.().catch(() => {});
+      }
+    }
+  }, [unreadCount]);
 
 
   // Check for orders that need after photo upload reminder

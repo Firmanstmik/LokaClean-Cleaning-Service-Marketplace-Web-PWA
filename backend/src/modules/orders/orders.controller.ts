@@ -16,6 +16,7 @@ import { created, ok } from "../../utils/respond";
 import { HttpError } from "../../utils/httpError";
 import { parseId } from "../../utils/parseId";
 import { fileToPublicPath } from "../../middleware/upload";
+import { sendPushToUser } from "../push/push.controller";
 import {
   adminUpdateStatusSchema,
   createOrderInputSchema,
@@ -668,6 +669,13 @@ export const assignOrderAdminHandler = asyncHandler(async (req: Request, res: Re
     });
 
     return updatedOrder;
+  });
+
+  await sendPushToUser(order.user_id, {
+    title: "Pesanan Dikonfirmasi",
+    message: `Petugas OTW bro! Pesanan #${order.id} (${order.paket.name}) sedang diproses.`,
+    url: `/orders/${order.id}`,
+    tag: `order-${order.id}`
   });
 
   return ok(res, { order: updated });
