@@ -27,15 +27,15 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "/img/logo_full.png",
+            src: "/img/Logo_LokaClean.jpg",
             sizes: "192x192",
-            type: "image/png",
+            type: "image/jpeg",
             purpose: "any"
           },
           {
-            src: "/img/logo_full.png",
+            src: "/img/Logo_LokaClean.jpg",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/jpeg",
             purpose: "any"
           }
         ]
