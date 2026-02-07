@@ -197,13 +197,13 @@ export const MapPicker = memo(function MapPicker({
       setLocating(false);
     };
 
-    // Fail-safe timeout (15s total)
+    // Fail-safe timeout (30s total)
     const timeoutId = setTimeout(() => {
       stopLocating();
       if (!hasUpdated) {
         setGeoError(t("map.locationTimeout"));
       }
-    }, 15000);
+    }, 30000);
 
     const onPos = (pos: GeolocationPosition) => {
       const { latitude, longitude, accuracy } = pos.coords;
@@ -211,19 +211,28 @@ export const MapPicker = memo(function MapPicker({
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
 
       // Update map if:
-      // 1. It's the first reading we got
+      // 1. It's the first reading
       // 2. OR this reading is more accurate than the best one we have so far
-      // 3. OR the new reading is decently accurate (< 25m) - allows following the user slightly
-      if (!hasUpdated || accuracy < bestAccuracy || (accuracy < 25 && accuracy < bestAccuracy + 5)) {
+      // 3. OR the new reading is decent (< 50m) - allows following the user / refining
+      // 4. OR we haven't updated in a while (forced refresh logic could go here, but keep simple)
+      
+      const isImprovement = accuracy < bestAccuracy;
+      const isGoodEnough = accuracy < 50; // 50m is decent for general pickup
+      
+      // Update UI with current accuracy status
+      setAccuracyMeters(accuracy);
+
+      if (!hasUpdated || isImprovement || (isGoodEnough && Math.abs(accuracy - bestAccuracy) < 20)) {
         hasUpdated = true;
-        bestAccuracy = accuracy;
+        if (isImprovement) bestAccuracy = accuracy;
         
-        setAccuracyMeters(accuracy);
         onChange({ lat: latitude, lng: longitude });
         setGeoError(null);
 
         // If we hit "High Precision" (< 10m), we can stop early to save battery/time
-        if (accuracy <= 10) {
+        // But let's wait a bit to ensure it's stable, or just let it run for the full timeout/user stop
+        // User complained about accuracy, so let's NOT stop early unless it's perfect (<5m)
+        if (accuracy <= 5) {
           clearTimeout(timeoutId);
           stopLocating();
         }
@@ -320,7 +329,13 @@ export const MapPicker = memo(function MapPicker({
           ) : (
             <LocateFixed className="h-3.5 w-3.5 text-indigo-500" />
           )}
-          <span>{locating ? t("map.locating") : t("map.useMyLocation")}</span>
+          <span>
+            {locating 
+              ? accuracyMeters 
+                ? `GPS: ±${Math.round(accuracyMeters)}m` 
+                : t("map.locating") 
+              : t("map.useMyLocation")}
+          </span>
         </button>
       </div>
 
