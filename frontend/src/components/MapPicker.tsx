@@ -189,7 +189,7 @@ export const MapPicker = memo(function MapPicker({
     let bestAccuracy = Infinity;
     let hasUpdated = false;
 
-    // Enhanced strategy: Watch position for up to 15s to get the best accuracy ("Zeroing in")
+    // Enhanced strategy: Watch position for up to 60s to get the best accuracy ("Zeroing in")
     // This is better than getCurrentPosition for "alley" or low-signal areas as it allows GPS to warm up.
     
     const stopLocating = () => {
@@ -197,13 +197,14 @@ export const MapPicker = memo(function MapPicker({
       setLocating(false);
     };
 
-    // Fail-safe timeout (30s total)
+    // Fail-safe timeout (60s total - generous time for GPS lock)
     const timeoutId = setTimeout(() => {
       stopLocating();
+      // Only show error if we NEVER got a location
       if (!hasUpdated) {
         setGeoError(t("map.locationTimeout"));
       }
-    }, 30000);
+    }, 60000);
 
     const onPos = (pos: GeolocationPosition) => {
       const { latitude, longitude, accuracy } = pos.coords;
@@ -214,15 +215,15 @@ export const MapPicker = memo(function MapPicker({
       // 1. It's the first reading
       // 2. OR this reading is more accurate than the best one we have so far
       // 3. OR the new reading is decent (< 50m) - allows following the user / refining
-      // 4. OR we haven't updated in a while (forced refresh logic could go here, but keep simple)
       
       const isImprovement = accuracy < bestAccuracy;
-      const isGoodEnough = accuracy < 50; // 50m is decent for general pickup
       
       // Update UI with current accuracy status
       setAccuracyMeters(accuracy);
 
-      if (!hasUpdated || isImprovement || (isGoodEnough && Math.abs(accuracy - bestAccuracy) < 20)) {
+      // Always update if it's the first one or an improvement
+      // Also update if accuracy is decent (< 100m) to show progress, even if it jitters slightly
+      if (!hasUpdated || isImprovement || accuracy < 100) {
         hasUpdated = true;
         if (isImprovement) bestAccuracy = accuracy;
         
@@ -230,8 +231,8 @@ export const MapPicker = memo(function MapPicker({
         setGeoError(null);
 
         // If we hit "High Precision" (< 10m), we can stop early to save battery/time
-        // But let's wait a bit to ensure it's stable, or just let it run for the full timeout/user stop
-        // User complained about accuracy, so let's NOT stop early unless it's perfect (<5m)
+        // But let's wait a bit to ensure it's stable.
+        // Let's set the bar at 5 meters for "Perfect" auto-stop.
         if (accuracy <= 5) {
           clearTimeout(timeoutId);
           stopLocating();
@@ -306,7 +307,20 @@ export const MapPicker = memo(function MapPicker({
           <RecenterOnChange center={center} />
           <MapResizer />
           <ClickToPick onPick={handleManualPick} />
-          {value ? <Marker key={`marker-${value.lat}-${value.lng}`} position={value} /> : null}
+          {value ? (
+            <Marker 
+              key={`marker-${value.lat}-${value.lng}`} 
+              position={value}
+              draggable={true}
+              eventHandlers={{
+                dragend: (e) => {
+                  const marker = e.target;
+                  const position = marker.getLatLng();
+                  handleManualPick({ lat: position.lat, lng: position.lng });
+                }
+              }}
+            />
+          ) : null}
           {value && accuracyMeters ? (
             <Circle
               key={`circle-${value.lat}-${value.lng}-${accuracyMeters}`}
@@ -337,6 +351,13 @@ export const MapPicker = memo(function MapPicker({
               : t("map.useMyLocation")}
           </span>
         </button>
+
+        {/* Draggable Marker Hint (Only show when marker exists) */}
+        {value && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md border border-slate-100 text-[10px] font-medium text-slate-500 pointer-events-none animate-in fade-in slide-in-from-bottom-2">
+             📍 {t("map.dragMarkerToAdjust") || "Geser pin untuk akurasi"}
+          </div>
+        )}
       </div>
 
       {geoError ? (
