@@ -167,122 +167,79 @@ export const MapPicker = memo(function MapPicker({
       }
     }
 
-    // Check geolocation support
     if (!navigator.geolocation) {
       setGeoError(t("map.geolocationNotSupported"));
       return;
     }
 
-    // Check permission status for better UX, but don't block - let getCurrentPosition try anyway
-    // (sometimes browser will show prompt even if permission API says "denied")
+    // Check permission status
     if ("permissions" in navigator) {
       try {
         const permission = await navigator.permissions.query({ name: "geolocation" as PermissionName });
-        // Listen for permission changes (e.g., user enables it)
         permission.onchange = () => {
-          if (permission.state === "granted") {
-            setGeoError(null);
-          }
+          if (permission.state === "granted") setGeoError(null);
         };
       } catch (err) {
-        // Permission API not fully supported (e.g., Safari, some Firefox versions), continue anyway
-        // This is fine - we'll get the error from getCurrentPosition itself
+        // Ignore
       }
     }
 
-    const getPos = (opts: PositionOptions): Promise<GeolocationPosition> =>
-      new Promise((resolve, reject) => {
-        const watchId = navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            resolve(pos);
-          },
-          (err) => {
-            reject(err);
-          },
-          opts
-        );
-        // Cleanup: if promise is rejected/resolved elsewhere, we can't cancel watchId
-        // But browser will handle it automatically
-      });
-
     setLocating(true);
+    let watchId: number | null = null;
+    let bestAccuracy = Infinity;
+    let hasUpdated = false;
 
-    try {
-      let pos: GeolocationPosition;
-      let usedFallback = false;
+    // Enhanced strategy: Watch position for up to 15s to get the best accuracy ("Zeroing in")
+    // This is better than getCurrentPosition for "alley" or low-signal areas as it allows GPS to warm up.
+    
+    const stopLocating = () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      setLocating(false);
+    };
 
-      // Strategy 1: Try high accuracy GPS first (best accuracy, may take longer)
-      try {
-        pos = await Promise.race([
-          getPos({
-            enableHighAccuracy: true,
-            timeout: 5_000, // 5 seconds (was 25s)
-            maximumAge: 10_000 // Allow 10s old cached position
-          }),
-          // Fallback timeout wrapper (in case browser doesn't respect timeout)
-          new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error("TIMEOUT")), 7_000);
-          })
-        ]);
-      } catch (err) {
-        const code = typeof err === "object" && err && "code" in err ? (err as { code?: unknown }).code : null;
-        const isTimeout = code === 3 || (typeof err === "object" && err && "message" in err && err.message === "TIMEOUT");
+    // Fail-safe timeout (15s total)
+    const timeoutId = setTimeout(() => {
+      stopLocating();
+      if (!hasUpdated) {
+        setGeoError(t("map.locationTimeout"));
+      }
+    }, 15000);
 
-        // Strategy 2: Fallback to network-based location (faster but less accurate)
-        if (isTimeout || code === 2) {
-          try {
-            usedFallback = true;
-            pos = await Promise.race([
-              getPos({
-                enableHighAccuracy: false, // Use network/cell towers
-                timeout: 5_000,
-                maximumAge: 60_000 // Accept cached position up to 1 minute old
-              }),
-              new Promise<never>((_, reject) => {
-                setTimeout(() => reject(new Error("TIMEOUT")), 7_000);
-              })
-            ]);
-          } catch (fallbackErr) {
-            // If fallback also fails, throw original error
-            throw err;
-          }
-        } else {
-          throw err;
+    const onPos = (pos: GeolocationPosition) => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+
+      // Update map if:
+      // 1. It's the first reading we got
+      // 2. OR this reading is more accurate than the best one we have so far
+      // 3. OR the new reading is decently accurate (< 25m) - allows following the user slightly
+      if (!hasUpdated || accuracy < bestAccuracy || (accuracy < 25 && accuracy < bestAccuracy + 5)) {
+        hasUpdated = true;
+        bestAccuracy = accuracy;
+        
+        setAccuracyMeters(accuracy);
+        onChange({ lat: latitude, lng: longitude });
+        setGeoError(null);
+
+        // If we hit "High Precision" (< 10m), we can stop early to save battery/time
+        if (accuracy <= 10) {
+          clearTimeout(timeoutId);
+          stopLocating();
         }
       }
+    };
 
-      // Success: Update map position
-      const accuracy = typeof pos.coords.accuracy === "number" ? pos.coords.accuracy : null;
-      const latitude = pos.coords.latitude;
-      const longitude = pos.coords.longitude;
+    const onErr = (err: GeolocationPositionError) => {
+      // If we already have a position, ignore temporary errors (like GPS signal loss)
+      if (hasUpdated) return;
 
-      // Validate coordinates
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-        throw new Error("Invalid coordinates received");
-      }
-
-      setAccuracyMeters(accuracy);
-      onChange({ lat: latitude, lng: longitude });
-
-      // Clear error on success
-      setGeoError(null);
-
-      // Log for debugging (in dev mode)
-      if (import.meta.env.DEV) {
-        console.log("📍 Location obtained:", {
-          lat: latitude,
-          lng: longitude,
-          accuracy: accuracy ? `${accuracy}m` : "unknown",
-          source: usedFallback ? "network-based" : "high-accuracy"
-        });
-      }
-    } catch (err) {
-      // Extract error code for better messaging
-      const code = typeof err === "object" && err && "code" in err ? (err as GeolocationPositionError).code : null;
-      const message = typeof err === "object" && err && "message" in err ? String(err.message) : "";
-
-      if (code === 1) {
-        // PERMISSION_DENIED
+      // If Permission Denied, stop immediately
+      if (err.code === 1) {
+        clearTimeout(timeoutId);
+        stopLocating();
+        
+        // Error handling logic
         const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
         const isEdge = /Edg/.test(navigator.userAgent);
         const isFirefox = /Firefox/.test(navigator.userAgent);
@@ -301,26 +258,16 @@ export const MapPicker = memo(function MapPicker({
         }
         
         instructions += "\n\n💡 " + t("map.tipClickMap");
-        
         setGeoError(instructions);
-      } else if (code === 2) {
-        // POSITION_UNAVAILABLE
-        setGeoError(t("map.positionUnavailable"));
-      } else if (code === 3 || message.includes("TIMEOUT")) {
-        // TIMEOUT
-        setGeoError(t("map.locationTimeout"));
-      } else {
-        // Unknown error
-        const errMsg = typeof err === "object" && err && "message" in err ? String(err.message) : String(err);
-        setGeoError(t("map.couldNotGetLocation").replace("{error}", errMsg));
-      }
+      } 
+      // For Timeout/PositionUnavailable, we keep waiting until our own 15s timeout fires
+    };
 
-      if (import.meta.env.DEV) {
-        console.error("Geolocation error:", err);
-      }
-    } finally {
-      setLocating(false);
-    }
+    watchId = navigator.geolocation.watchPosition(onPos, onErr, {
+      enableHighAccuracy: true,
+      timeout: 10000, // Wait up to 10s for a high-accuracy reading per cycle
+      maximumAge: 0   // Force fresh readings, no cache
+    });
   };
 
   return (
