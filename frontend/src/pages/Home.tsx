@@ -21,6 +21,7 @@ import { PackageDetailModal } from "../components/PackageDetailModal";
 import { LoginRequiredModal } from "../components/LoginRequiredModal";
 import { MobileWelcome } from "./MobileWelcome";
 import { OptimizedImage } from "../components/ui/OptimizedImage";
+import { IOSInstallPrompt } from "../components/IOSInstallPrompt";
 
 export function Home() {
   const { token, actor } = useAuth();
