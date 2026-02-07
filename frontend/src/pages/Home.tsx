@@ -1000,8 +1000,14 @@ export function Home() {
                   className="snap-center min-w-[85%] relative p-6 rounded-[2rem] bg-white border border-slate-100 ring-1 ring-slate-900/5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] flex flex-col will-change-transform"
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center relative">
-                      <span className={`text-base font-bold bg-clip-text text-transparent bg-gradient-to-br ${
+                    <div className="w-12 h-12 rounded-xl border border-slate-100 shadow-sm flex items-center justify-center relative">
+                      <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${
+                        i === 0 ? "from-blue-500/20 to-cyan-500/20" :
+                        i === 1 ? "from-purple-500/20 to-pink-500/20" :
+                        i === 2 ? "from-orange-500/20 to-yellow-500/20" :
+                                  "from-green-500/20 to-emerald-500/20"
+                      }`} />
+                      <span className={`text-base font-bold bg-clip-text text-transparent bg-gradient-to-br relative z-10 ${
                         i === 0 ? "from-blue-600 to-cyan-600" :
                         i === 1 ? "from-purple-600 to-pink-600" :
                         i === 2 ? "from-orange-600 to-yellow-600" :
@@ -1009,20 +1015,21 @@ export function Home() {
                       }`}>
                         {testi.initial}
                       </span>
-                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm">
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm z-20">
                         <Quote className="h-2.5 w-2.5 fill-white" />
                       </div>
                     </div>
                     <div className="flex-1">
                       <h3 className="text-sm font-bold text-slate-900 leading-tight">{testi.name}</h3>
+                      <p className="text-[10px] font-bold text-purple-600 mb-1 uppercase tracking-wide">{testi.role}</p>
                       <div className="flex gap-0.5">
-                        {[...Array(Math.min(4, testi.rating))].map((_, j) => (
+                        {[...Array(testi.rating)].map((_, j) => (
                           <Star key={j} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                         ))}
                       </div>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-600 leading-snug">
+                  <p className="text-xs text-slate-500 leading-snug italic">
                     "{testi.text}"
                   </p>
                 </motion.div>

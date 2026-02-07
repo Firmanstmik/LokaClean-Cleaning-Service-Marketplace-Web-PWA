@@ -19,6 +19,7 @@ import { getApiErrorMessage } from "../../lib/apiError";
 import { getPackageImage } from "../../utils/packageImage";
 import { t, getLanguage } from "../../lib/i18n";
 import { CircularLoader } from "../../components/ui/CircularLoader";
+import { OptimizedImage } from "../../components/ui/OptimizedImage";
 import type { PaketCleaning } from "../../types/api";
 
 export function UserHomePage() {
@@ -236,7 +237,7 @@ export function UserHomePage() {
                 whileHover={{ scale: 1.05 }}
                 className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center"
               >
-                <img 
+                <OptimizedImage 
                   src="/img/maskot.jpg" 
                   alt="LokaClean Mascot" 
                   className="w-full h-full object-contain rounded-2xl drop-shadow-[0_10px_35px_rgba(20,184,166,0.4)] hover:drop-shadow-[0_15px_45px_rgba(20,184,166,0.5)] transition-all duration-500 ease-out hover:-translate-y-1"
@@ -374,12 +375,11 @@ export function UserHomePage() {
                   >
                     <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 ring-1 ring-slate-900/5 h-full flex flex-col relative group transition-all duration-300 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)]">
                       <div className="relative h-56 w-full bg-slate-100 transform-gpu">
-                        <img 
+                        <OptimizedImage 
                           src={getPackageImage(pkg.name, pkg.image)} 
                           alt={displayName}
-                          className="w-full h-full object-cover will-change-transform"
+                          className="w-full h-full object-cover will-change-transform transition-transform duration-700 group-hover:scale-110"
                           loading="lazy"
-                          fetchPriority={i < 2 ? "high" : "auto"}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
                         
@@ -483,7 +483,7 @@ export function UserHomePage() {
                     >
                       <div className="bg-white rounded-[40px] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 h-[500px] flex flex-col transform transition-transform hover:-translate-y-2 duration-300">
                         <div className="relative h-64 bg-slate-100 overflow-hidden">
-                           <img src={getPackageImage(pkg.name, pkg.image)} alt={displayName} className="w-full h-full object-cover" />
+                           <OptimizedImage src={getPackageImage(pkg.name, pkg.image)} alt={displayName} className="w-full h-full object-cover" />
                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent" />
                            <div className="absolute top-6 left-6">
                              <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase ${badge.className} ${badge.textColor} shadow-lg`}>
@@ -645,28 +645,35 @@ export function UserHomePage() {
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-12 h-12 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center relative">
+                      <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${
+                        i === 0 ? "from-blue-500/20 to-cyan-500/20" :
+                        i === 1 ? "from-purple-500/20 to-pink-500/20" :
+                        i === 2 ? "from-orange-500/20 to-yellow-500/20" :
+                                  "from-green-500/20 to-emerald-500/20"
+                      } opacity-100`} />
                       <span className={`text-base font-bold bg-clip-text text-transparent bg-gradient-to-br ${
                         i === 0 ? "from-blue-600 to-cyan-600" :
                         i === 1 ? "from-purple-600 to-pink-600" :
                         i === 2 ? "from-orange-600 to-yellow-600" :
                                   "from-green-600 to-emerald-600"
-                      }`}>
+                      } relative z-10`}>
                         {testi.initial}
                       </span>
-                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm">
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm z-20">
                         <Quote className="h-2.5 w-2.5 fill-white" />
                       </div>
                     </div>
                     <div className="flex-1">
                       <h3 className="text-sm font-bold text-slate-900 leading-tight">{testi.name}</h3>
+                      <p className="text-xs font-bold text-purple-600 mb-1 uppercase tracking-wide">{testi.role}</p>
                       <div className="flex gap-0.5">
-                        {[...Array(Math.min(4, testi.rating))].map((_, j) => (
-                          <Star key={j} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        {[...Array(testi.rating)].map((_, j) => (
+                          <Star key={j} className="w-3 h-3 fill-amber-400 text-amber-400" />
                         ))}
                       </div>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-600 leading-snug">
+                  <p className="text-sm text-slate-500 leading-snug italic">
                     "{testi.text}"
                   </p>
                 </motion.div>
