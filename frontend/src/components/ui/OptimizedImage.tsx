@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ImageOff } from 'lucide-react';
 
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -10,6 +10,7 @@ interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> 
   alt: string;
   className?: string;
   fallbackSrc?: string;
+  priority?: boolean;
 }
 
 export const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -17,36 +18,20 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   alt,
   className,
   fallbackSrc = '/img/packages/clean.png', // Default fallback
+  priority = false,
   ...props
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!priority); // If priority, don't show loading state initially to prevent flash
   const [error, setError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(src);
 
-  useEffect(() => {
-    // Reset state when src changes
-    setIsLoading(true);
-    setError(false);
-    setCurrentSrc(src);
-    
-    // Preload image
-    const img = new Image();
-    img.src = src;
-    
-    img.onload = () => {
-      setIsLoading(false);
-    };
-    
-    img.onerror = () => {
-      setError(true);
-      setIsLoading(false);
-    };
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
 
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, [src]);
+  const handleError = () => {
+    setError(true);
+    setIsLoading(false);
+  };
 
   if (error) {
     return (
@@ -65,20 +50,25 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }
 
   return (
-    <div className={cn("relative overflow-hidden bg-gray-200", className)}>
-      {/* Blur Placeholder / Loading State */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 animate-pulse z-10">
-           {/* Optional: Add a small spinner or just keep the pulse effect */}
-        </div>
+    <div className={cn("relative overflow-hidden bg-gray-100", className)}>
+      {/* Loading Skeleton */}
+      {isLoading && !priority && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse z-10" />
       )}
 
       <img
-        src={currentSrc}
+        src={src}
         alt={alt}
+        loading={priority ? "eager" : "lazy"}
+        // @ts-ignore - fetchPriority is standard but missing in React types currently
+        fetchPriority={priority ? "high" : "auto"}
+        onLoad={handleLoad}
+        onError={handleError}
         className={cn(
-          "w-full h-full object-cover transition-opacity duration-500",
-          isLoading ? "opacity-0" : "opacity-100"
+          "w-full h-full object-cover",
+          // Only fade in if not priority. Priority images should show immediately.
+          !priority && "transition-opacity duration-300",
+          isLoading && !priority ? "opacity-0" : "opacity-100"
         )}
         {...props}
       />

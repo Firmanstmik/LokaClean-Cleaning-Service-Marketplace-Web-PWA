@@ -7,10 +7,26 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
 export default defineConfig({
   plugins: [
     react(),
+    ViteImageOptimizer({
+      /* pass your config */
+      png: {
+        quality: 80,
+      },
+      jpeg: {
+        quality: 75,
+      },
+      jpg: {
+        quality: 75,
+      },
+      webp: {
+        lossless: true,
+      },
+    }),
     // "PWA-ready" foundation: installable web app + offline caching can be enabled gradually.
     VitePWA({
       registerType: "autoUpdate",

@@ -20,7 +20,7 @@ import { getPackageImage } from "../utils/packageImage";
 import { PackageDetailModal } from "../components/PackageDetailModal";
 import { LoginRequiredModal } from "../components/LoginRequiredModal";
 import { MobileWelcome } from "./MobileWelcome";
-import { IOSInstallPrompt } from "../components/IOSInstallPrompt";
+import { OptimizedImage } from "../components/ui/OptimizedImage";
 
 export function Home() {
   const { token, actor } = useAuth();
@@ -679,9 +679,10 @@ export function Home() {
                   className="relative aspect-[4/3] sm:aspect-video overflow-hidden cursor-pointer bg-slate-100"
                   onClick={() => setSelectedPackage(pkg)}
                 >
-                  <img 
+                  <OptimizedImage 
                     src={getPackageImage(pkg.name, pkg.image)} 
                     alt={pkg.name}
+                    priority={index < 2} // Preload first 2 packages
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
