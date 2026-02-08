@@ -235,12 +235,12 @@ export function UserHomePage() {
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 260, damping: 20 }}
                 whileHover={{ scale: 1.05 }}
-                className="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center"
+                className="h-28 sm:h-32 w-auto flex items-center justify-center"
               >
-                <OptimizedImage 
+                <img 
                   src="/img/maskot.jpg" 
                   alt="LokaClean Mascot" 
-                  className="w-full h-full object-contain rounded-2xl drop-shadow-[0_10px_35px_rgba(20,184,166,0.4)] hover:drop-shadow-[0_15px_45px_rgba(20,184,166,0.5)] transition-all duration-500 ease-out hover:-translate-y-1"
+                  className="h-full w-auto object-contain mix-blend-multiply transition-all duration-500 ease-out hover:-translate-y-1"
                 />
               </motion.div>
               <div>

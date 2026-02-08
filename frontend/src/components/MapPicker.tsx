@@ -996,7 +996,7 @@ export const MapPicker = memo(function MapPicker({
                   <div className="flex items-center flex-wrap gap-2 mb-0.5">
                      <span className="font-bold text-slate-800 text-sm tracking-tight">{mainLocation.label}</span>
                      <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded-md shadow-sm tracking-wide">
-                       UTAMA
+                       {t("map.saveAddress.primaryBadge")}
                      </span>
                      {mainLocation.notes && (
                        <span className="text-[10px] text-slate-500 italic truncate max-w-[150px] border-l border-slate-200 pl-2">
@@ -1011,14 +1011,14 @@ export const MapPicker = memo(function MapPicker({
                <button 
                   onClick={async (e) => {
                      e.stopPropagation();
-                     if(confirm("Hapus lokasi utama?")) {
+                     if(confirm(t("map.deleteMainConfirm"))) {
                         try {
                           await api.delete(`/address/${mainLocation.id}`);
                           setMainLocation(null);
                           loadFavorites();
                           if (onRefresh) onRefresh();
                         } catch(e) {
-                          alert("Gagal menghapus lokasi");
+                          alert(t("map.deleteMainFailed"));
                         }
                      }
                   }}
