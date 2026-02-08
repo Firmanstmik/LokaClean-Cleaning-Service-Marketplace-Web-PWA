@@ -15,7 +15,7 @@
     "@types/nprogress": "^0.2.3",
     "axios": "^1.7.9",
     "canvas-confetti": "^1.9.4",
-    "framer-motion": "^12.23.26",
+    "framer-motion": "^11.11.17",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.562.0",
     "nprogress": "^0.2.0",
