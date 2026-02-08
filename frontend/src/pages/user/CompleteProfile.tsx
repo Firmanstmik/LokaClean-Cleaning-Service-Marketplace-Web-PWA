@@ -338,9 +338,6 @@ export function CompleteProfilePage() {
               </div>
             )}
           </div>
-          <div className="mt-2 text-[10px] text-slate-400 leading-normal border-t border-slate-100 pt-2 group-focus-within:text-slate-500">
-            {t("completeProfile.addressHelp")}
-          </div>
         </div>
       </div>
     )

@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, memo } from "react";
-import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents, GeoJSON, Popup } from "react-leaflet";
+import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents, GeoJSON, Popup, LayersControl } from "react-leaflet";
 import { LocateFixed, Loader2, MapPin, Navigation, Search, CheckCircle2, Home, Briefcase, Star, Clock, Trash2, Plus, Save, AlertCircle, X, Check } from "lucide-react";
 import L from "leaflet";
 
@@ -22,12 +22,20 @@ export type LatLng = { lat: number; lng: number };
 const NTB_CENTER: [number, number] = [-8.652933, 117.361647];
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY || "";
-const TILE_URL = MAPTILER_KEY 
+const IS_KEY_VALID = MAPTILER_KEY && MAPTILER_KEY !== "YOUR_API_KEY_HERE";
+
+// Fallback to OSM Standard (showing POIs) if MapTiler key is missing
+const TILE_URL = IS_KEY_VALID 
   ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`
-  : "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png";
-const TILE_ATTR = MAPTILER_KEY 
+  : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+const TILE_ATTR = IS_KEY_VALID 
   ? '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
-  : '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+  : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+if (!IS_KEY_VALID) {
+  console.warn("MapPicker: Using OpenStreetMap fallback because VITE_MAPTILER_KEY is missing or invalid.");
+}
 
 // Simplified NTB Boundary (Lombok + Sumbawa boxes) for visual context
 const NTB_GEOJSON: any = {
@@ -60,6 +68,7 @@ type SavedAddress = {
   village?: string;
   district?: string;
   city?: string;
+  notes?: string;
 };
 
 const NTB_CITIES = [
@@ -193,7 +202,7 @@ function WelcomeOverlay({ visible }: { visible: boolean }) {
       <div className="absolute bottom-8 left-0 right-0 z-[2000] pointer-events-none w-full px-4 flex justify-center">
         <div className="bg-white/90 backdrop-blur-md px-3 py-2 sm:px-5 sm:py-3 rounded-full shadow-xl border border-white/50 animate-in slide-in-from-bottom-4 fade-in duration-500 max-w-xs sm:max-w-sm text-center">
           <p className="text-xs sm:text-sm font-medium text-slate-700 leading-tight">
-            Welcome to West Nusa Tenggara 🌴 Tap anywhere to choose your cleaning location.
+            {t("map.welcomeOverlay")}
           </p>
         </div>
       </div>
@@ -256,26 +265,95 @@ function MapResizer({ isOpen }: { isOpen?: boolean }) {
   return null;
 }
 
+// Simple Save Modal Component
+function SimpleSaveModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () => void; onSave: (label: string, notes: string) => Promise<void> }) {
+  const [label, setLabel] = useState("Rumah");
+  const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="p-5">
+          <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">Pilih Label Lokasi</h3>
+          
+          <div className="grid grid-cols-3 gap-3 mb-4">
+             {["Rumah", "Kantor", "Villa"].map(l => (
+               <button 
+                 key={l}
+                 onClick={() => setLabel(l)}
+                 className={`py-3 px-2 rounded-xl text-sm font-bold border-2 transition-all ${label === l ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-500 hover:border-indigo-100'}`}
+               >
+                 {l === "Rumah" && "🏠"}
+                 {l === "Kantor" && "🏢"}
+                 {l === "Villa" && "⭐"}
+                 <div className="mt-1">{l}</div>
+               </button>
+             ))}
+          </div>
+
+          <div className="space-y-2 mb-6">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Catatan Lokasi <span className="font-normal normal-case">(Opsional)</span></label>
+            <textarea 
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Contoh: Pagar hitam, dekat warung..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              rows={2}
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button onClick={onClose} className="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">
+              Batal
+            </button>
+            <button 
+              onClick={async () => {
+                setSaving(true);
+                await onSave(label, notes);
+                setSaving(false);
+              }}
+              disabled={saving}
+              className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              Simpan
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const MapPicker = memo(function MapPicker({
   value,
   onChange,
   onAddressChange,
+  onDetailsChange,
   label,
   helperText,
   hideLabel = false,
   isOpen,
   onSaveRequest,
-  mapHeight = "h-[400px]"
+  onRefresh,
+  mapHeight = "h-[400px]",
+  savedAddresses: externalSavedAddresses
 }: {
   value: LatLng | null;
   onChange: (v: LatLng | null) => void;
   onAddressChange?: (address: string | null) => void;
+  onDetailsChange?: (details: { notes?: string }) => void;
   label?: string;
   helperText?: string;
   hideLabel?: boolean;
   isOpen?: boolean;
   onSaveRequest?: (data: { lat: number; lng: number; address: string }) => void;
+  onRefresh?: () => void;
   mapHeight?: string;
+  savedAddresses?: SavedAddress[];
 }) {
   const defaultLabel = t("common.location");
   const defaultHelperText = t("map.tapToSetLocation");
@@ -298,7 +376,9 @@ export const MapPicker = memo(function MapPicker({
   const [selectedCity, setSelectedCity] = useState("");
 
   // Favorites & Recents
-  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [internalSavedAddresses, setInternalSavedAddresses] = useState<SavedAddress[]>([]);
+  const savedAddresses = externalSavedAddresses || internalSavedAddresses;
+
   const [recentLocations, setRecentLocations] = useState<SavedAddress[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveLabel, setSaveLabel] = useState("Home");
@@ -335,16 +415,74 @@ export const MapPicker = memo(function MapPicker({
     }
   }, [isOpen, value]);
 
+  // Simple Flow State
+  const [showSimpleModal, setShowSimpleModal] = useState(false);
+  const [mainLocation, setMainLocation] = useState<SavedAddress | null>(null);
+
+  useEffect(() => {
+    if (savedAddresses.length > 0) {
+      const primary = savedAddresses.find(a => a.is_primary);
+      if (primary) setMainLocation(primary);
+    } else {
+      setMainLocation(null);
+    }
+  }, [savedAddresses]);
+
+  // Auto-select primary location if value is empty (Validation Fix)
+  useEffect(() => {
+    if (!value && mainLocation) {
+      onChange({ lat: mainLocation.latitude, lng: mainLocation.longitude });
+      if (onAddressChange) onAddressChange(mainLocation.address);
+      setResolvedAddress(mainLocation.address);
+      if (onDetailsChange && mainLocation.notes) {
+         onDetailsChange({ notes: mainLocation.notes });
+      }
+    }
+  }, [mainLocation, value, onChange, onAddressChange, onDetailsChange]);
+
+  const handleSimpleSave = async (label: string, notes: string) => {
+    if (!value) return;
+    try {
+      const payload = {
+        lat: value.lat,
+        lng: value.lng,
+        address: resolvedAddress || "",
+        label,
+        notes,
+        is_primary: !mainLocation // If no main location, this is primary
+      };
+      
+      const res = await api.post("/address/save", payload);
+      if (res.status === 200 || res.status === 201) {
+        if (!mainLocation) {
+           setMainLocation(res.data.data);
+        }
+        setShowSimpleModal(false);
+        alert("Lokasi berhasil disimpan");
+        loadFavorites();
+        if (onRefresh) onRefresh();
+        if (onSaveRequest) {
+           // Optional: Notify parent if needed, but we are doing simple flow
+        }
+      }
+    } catch (e: any) {
+      const msg = e.response?.data?.message || "Gagal menyimpan lokasi. Silakan coba lagi.";
+      alert(msg);
+    }
+  };
+
   // Load favorites & recents
   useEffect(() => {
-    loadFavorites();
+    if (!externalSavedAddresses) {
+      loadFavorites();
+    }
     loadRecents();
-  }, []);
+  }, [externalSavedAddresses]);
 
   const loadFavorites = async () => {
     try {
       const res = await api.get("/address/list");
-      setSavedAddresses(res.data.data);
+      setInternalSavedAddresses(res.data.data);
     } catch (e) {
       // Ignore if unauthenticated or error
     }
@@ -476,7 +614,7 @@ export const MapPicker = memo(function MapPicker({
 
         // 7. EDGE CASE / FAILSAFE
         if (!results || results.length === 0) {
-          setSearchError("Alamat tidak ditemukan. Coba kata kunci lain.");
+          setSearchError(t("map.searchError"));
           setSearchResults([]);
         } else {
           // 5. RANKING
@@ -501,7 +639,7 @@ export const MapPicker = memo(function MapPicker({
 
       } catch (err) {
         console.error(err);
-        setSearchError("Gagal mencari alamat");
+        setSearchError(t("map.searchFailed"));
       } finally {
         setSearching(false);
       }
@@ -512,10 +650,10 @@ export const MapPicker = memo(function MapPicker({
 
   // Default to NTB Province Center
   const center = useMemo(() => {
-    // If we have a favorite "Home" and no value yet, default to Home
+    // If we have a favorite "Home" or Primary and no value yet, default to it
     if (!value) {
-      const home = savedAddresses.find(a => a.label.toLowerCase() === 'home');
-      if (home) return { lat: home.latitude, lng: home.longitude };
+      const primary = savedAddresses.find(a => a.is_primary) || savedAddresses.find(a => a.label.toLowerCase() === 'home');
+      if (primary) return { lat: primary.latitude, lng: primary.longitude };
       return { lat: NTB_CENTER[0], lng: NTB_CENTER[1] };
     }
     return value;
@@ -527,6 +665,16 @@ export const MapPicker = memo(function MapPicker({
     const link = osmLink(value.lat, value.lng);
     return { coords, link };
   }, [value?.lat, value?.lng]);
+
+  const activeSavedAddress = useMemo(() => {
+    if (!value) return null;
+    return savedAddresses.find(a => 
+        Math.abs(a.latitude - value.lat) < 0.0001 && 
+        Math.abs(a.longitude - value.lng) < 0.0001
+    );
+  }, [value?.lat, value?.lng, savedAddresses]);
+
+  const primaryAddress = useMemo(() => savedAddresses.find(a => a.is_primary), [savedAddresses]);
 
   // Reverse geocode whenever the pin changes.
   useEffect(() => {
@@ -569,6 +717,7 @@ export const MapPicker = memo(function MapPicker({
     setAccuracyMeters(null);
     setForcedZoom(undefined); // Reset forced zoom on manual pick
     onChange(v);
+    onDetailsChange?.({ notes: "" });
   };
 
   const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -581,6 +730,7 @@ export const MapPicker = memo(function MapPicker({
       setForcedZoom(13); // Fly to city level
       onChange(newLoc);
       setAccuracyMeters(null);
+      onDetailsChange?.({ notes: "" });
     }
   };
 
@@ -593,6 +743,7 @@ export const MapPicker = memo(function MapPicker({
     setForcedZoom(18); 
     onChange({ lat, lng: lon });
     setAccuracyMeters(null);
+    onDetailsChange?.({ notes: "" });
     
     // Update address text
     const displayName = result.display_name;
@@ -626,13 +777,13 @@ export const MapPicker = memo(function MapPicker({
 
   const handleDeleteAddress = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    if (!confirm("Hapus alamat ini?")) return;
+    if (!confirm(t("map.deleteConfirm"))) return;
 
     try {
       await api.delete(`/address/${id}`);
-      setSavedAddresses(prev => prev.filter(a => a.id !== id));
+      setInternalSavedAddresses(prev => prev.filter(a => a.id !== id));
     } catch (e) {
-      alert("Gagal menghapus alamat");
+      alert(t("map.deleteFailed"));
     }
   };
 
@@ -662,7 +813,7 @@ export const MapPicker = memo(function MapPicker({
     }
 
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      alert(t("map.geolocationNotSupported"));
       return;
     }
 
@@ -690,6 +841,7 @@ export const MapPicker = memo(function MapPicker({
         
         onChange(newLoc);
         setAccuracyMeters(accuracy);
+        onDetailsChange?.({ notes: "" });
         
         if (accuracy < 15) {
            setLocating(false);
@@ -705,7 +857,7 @@ export const MapPicker = memo(function MapPicker({
       console.warn("GPS Error:", err);
       if (bestAccuracy === Infinity) {
         setLocating(false);
-        setGeoError(`Gagal mengambil lokasi: ${err.message}. Pastikan GPS aktif.`);
+        setGeoError(t("map.gpsError").replace("{error}", err.message));
       }
     };
 
@@ -735,23 +887,25 @@ export const MapPicker = memo(function MapPicker({
 
       {/* NTB City Selector & Search Bar */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-[500]">
-        {/* City Selector */}
-        <div className="relative">
-          <select
-            aria-label="Pilih Kota (NTB)"
-            value={selectedCity}
-            onChange={handleCityChange}
-            className="w-full appearance-none bg-white border border-slate-200 text-slate-700 text-sm rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all"
-          >
-            <option value="">Semua Wilayah (NTB)</option>
-            {NTB_CITIES.map((city) => (
-              <option key={city.name} value={city.name}>
-                {city.name}
-              </option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-400">
-            <Navigation className="w-4 h-4" />
+        {/* City Selector & Primary Address */}
+        <div className="flex flex-col gap-2">
+          <div className="relative">
+            <select
+              aria-label={t("map.city")}
+              value={selectedCity}
+              onChange={handleCityChange}
+              className="w-full appearance-none bg-white border border-slate-200 text-slate-700 text-sm rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all"
+            >
+              <option value="">{t("map.allRegions")}</option>
+              {NTB_CITIES.map((city) => (
+                <option key={city.name} value={city.name}>
+                  {city.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-400">
+              <Navigation className="w-4 h-4" />
+            </div>
           </div>
         </div>
 
@@ -764,7 +918,7 @@ export const MapPicker = memo(function MapPicker({
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => { if(searchResults.length > 0) setShowDropdown(true); }}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-              placeholder={selectedCity ? `Cari di ${selectedCity}...` : "Cari alamat, desa, jalan..."}
+              placeholder={selectedCity ? t("map.searchCityPlaceholder").replace("{city}", selectedCity) : t("map.searchPlaceholder")}
               className="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all placeholder:text-slate-400"
             />
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -811,26 +965,77 @@ export const MapPicker = memo(function MapPicker({
         </div>
       </div>
 
-      {/* Location Switcher UI (Radio Style) */}
-      {(savedAddresses.length > 0) && (
+      {/* Main Location Pill (Redesigned) */}
+      {mainLocation && (
+         <div className="animate-in slide-in-from-top-2 fade-in duration-500 mb-2">
+            <div 
+               className="w-full bg-white/95 backdrop-blur-md border border-slate-100/80 rounded-xl p-3 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex items-center gap-3 relative overflow-hidden cursor-pointer hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-100/50 transition-all group"
+               onClick={() => {
+                  setForcedZoom(18);
+                  onChange({ lat: mainLocation.latitude, lng: mainLocation.longitude });
+                  setResolvedAddress(mainLocation.address);
+                  setAddressDetails({
+                     road: mainLocation.street,
+                     village: mainLocation.village,
+                     district: mainLocation.district,
+                     city: mainLocation.city
+                  });
+                  onDetailsChange?.({ notes: mainLocation.notes });
+               }}
+            >
+               {/* Elegant Left Accent */}
+               <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>
+
+               {/* Icon Container */}
+               <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform border border-indigo-100">
+                  <span className="text-lg">{mainLocation.label === 'Rumah' ? '🏠' : mainLocation.label === 'Kantor' ? '🏢' : '📍'}</span>
+               </div>
+
+               {/* Content */}
+               <div className="flex-1 min-w-0">
+                  <div className="flex items-center flex-wrap gap-2 mb-0.5">
+                     <span className="font-bold text-slate-800 text-sm tracking-tight">{mainLocation.label}</span>
+                     <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded-md shadow-sm tracking-wide">
+                       UTAMA
+                     </span>
+                     {mainLocation.notes && (
+                       <span className="text-[10px] text-slate-500 italic truncate max-w-[150px] border-l border-slate-200 pl-2">
+                         "{mainLocation.notes}"
+                       </span>
+                     )}
+                  </div>
+                  <div className="text-[11px] text-slate-500 truncate font-medium opacity-80">{mainLocation.address}</div>
+               </div>
+
+               {/* Delete Action (Subtle) */}
+               <button 
+                  onClick={async (e) => {
+                     e.stopPropagation();
+                     if(confirm("Hapus lokasi utama?")) {
+                        try {
+                          await api.delete(`/address/${mainLocation.id}`);
+                          setMainLocation(null);
+                          loadFavorites();
+                          if (onRefresh) onRefresh();
+                        } catch(e) {
+                          alert("Gagal menghapus lokasi");
+                        }
+                     }
+                  }}
+                  className="w-8 h-8 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+               >
+                  <Trash2 className="w-4 h-4" />
+               </button>
+            </div>
+         </div>
+      )}
+
+      {/* Location Switcher UI (Radio Style) - Only show others if needed or keep hidden if Simple Flow is strict */}
+      {(savedAddresses.length > 0 && !mainLocation) && (
         <div className="space-y-3 mb-4">
            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Saved Locations</span>
-              {/* Add Backup Button */}
-              {savedAddresses.some(a => a.is_primary) && (
-                <button
-                  onClick={() => {
-                     // Reset map to NTB View
-                     onChange(null);
-                     setForcedZoom(9);
-                     setResolvedAddress(null);
-                  }}
-                  className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" />
-                  Add Backup
-                </button>
-              )}
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t("map.savedLocations")}</span>
+              {/* Add Backup Button - Removed per user request */}
            </div>
 
            <div className="grid gap-2">
@@ -849,6 +1054,7 @@ export const MapPicker = memo(function MapPicker({
                        district: addr.district,
                        city: addr.city
                      });
+                     onDetailsChange?.({ notes: addr.notes });
                    }}
                    className={`
                      group relative flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer
@@ -881,21 +1087,31 @@ export const MapPicker = memo(function MapPicker({
                        </span>
                        {addr.is_primary && (
                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded flex items-center gap-0.5">
-                           <Star className="w-2.5 h-2.5 fill-amber-700" />
-                           Main
-                         </span>
+                         <Star className="w-2.5 h-2.5 fill-amber-700" />
+                         {t("map.saveAddress.primaryBadge")}
+                       </span>
                        )}
                      </div>
                      <div className="text-[11px] text-slate-500 truncate leading-tight">
-                       {addr.address}
-                     </div>
-                   </div>
+                      {addr.address}
+                    </div>
+                    {addr.notes && (
+                      <div className="mt-1.5 flex items-start gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                         <div className="text-[10px] font-semibold text-indigo-600 shrink-0">
+                            {t("map.saveAddress.notes")}:
+                         </div>
+                         <div className="text-[10px] text-slate-600 leading-tight line-clamp-2 italic">
+                            {addr.notes}
+                         </div>
+                      </div>
+                    )}
+                  </div>
                    
                    {/* Delete Action */}
                    <button 
                       onClick={(e) => handleDeleteAddress(e, addr.id)}
                       className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      title="Hapus lokasi"
+                      title={t("common.delete")}
                    >
                      <Trash2 className="w-3.5 h-3.5" />
                    </button>
@@ -915,6 +1131,7 @@ export const MapPicker = memo(function MapPicker({
 
       {/* Main Map Card */}
       <div className="relative group rounded-3xl overflow-hidden border-4 border-white shadow-2xl ring-1 ring-slate-900/5 transition-all hover:shadow-indigo-500/10">
+        
         <MapContainer
           key={mapKeyRef.current}
           center={center}
@@ -923,12 +1140,31 @@ export const MapPicker = memo(function MapPicker({
           className={`${mapHeight} w-full bg-slate-50`}
           style={{ zIndex: 0 }}
         >
-          {/* Tropical Clean Map Style (Stadia Alidade Smooth) */}
-          <TileLayer
-             attribution={TILE_ATTR}
-             url={TILE_URL}
-             maxZoom={20}
-           />
+          <LayersControl position="topright">
+             <LayersControl.BaseLayer checked name="Google Maps">
+               <TileLayer
+                 url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                 attribution="&copy; Google Maps"
+                 maxZoom={20}
+               />
+             </LayersControl.BaseLayer>
+
+             <LayersControl.BaseLayer name="Satellite Hybrid">
+                <TileLayer
+                  url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                  attribution="&copy; Google Maps"
+                  maxZoom={20}
+                />
+             </LayersControl.BaseLayer>
+
+             <LayersControl.BaseLayer name="OpenStreetMap">
+               <TileLayer
+                  attribution={TILE_ATTR}
+                  url={TILE_URL}
+                  maxZoom={20}
+                />
+             </LayersControl.BaseLayer>
+          </LayersControl>
 
           {/* NTB Boundary Highlight */}
           <GeoJSON 
@@ -966,10 +1202,10 @@ export const MapPicker = memo(function MapPicker({
                  <div className="p-3 font-sans">
                     <div className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider flex items-center gap-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
-                      Selected Point
+                      {t("map.selectedPoint")}
                     </div>
-                    <div className="text-sm font-semibold text-slate-900 leading-snug mb-2">
-                      {resolvedAddress || "Loading address..."}
+                    <div className="text-xs font-semibold text-slate-900 leading-tight mb-2">
+                      {resolvedAddress || t("map.loadingAddress")}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono bg-slate-50 p-1.5 rounded border border-slate-100">
                        <span>{value.lat.toFixed(6)}, {value.lng.toFixed(6)}</span>
@@ -977,16 +1213,26 @@ export const MapPicker = memo(function MapPicker({
                     {addressDetails && (
                       <div className="mt-2 pt-2 border-t border-slate-100 grid grid-cols-2 gap-y-1 gap-x-2 text-[10px]">
                          <div className="col-span-2">
-                            <span className="text-slate-400 block text-[9px]">Street</span>
+                            <span className="text-slate-400 block text-[9px]">{t("map.street")}</span>
                             <span className="font-medium text-slate-700 truncate block" title={addressDetails.road}>{addressDetails.road || "-"}</span>
                          </div>
                          <div>
-                            <span className="text-slate-400 block text-[9px]">District</span>
+                            <span className="text-slate-400 block text-[9px]">{t("map.district")}</span>
                             <span className="font-medium text-slate-700 truncate block" title={addressDetails.district || addressDetails.city_district}>{addressDetails.district || addressDetails.city_district || "-"}</span>
                          </div>
                          <div>
-                            <span className="text-slate-400 block text-[9px]">City</span>
+                            <span className="text-slate-400 block text-[9px]">{t("map.city")}</span>
                             <span className="font-medium text-slate-700 truncate block" title={addressDetails.city || addressDetails.town}>{addressDetails.city || addressDetails.town || "-"}</span>
+                         </div>
+                      </div>
+                    )}
+                    {activeSavedAddress?.notes && (
+                      <div className="mt-2 pt-2 border-t border-slate-100">
+                         <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                             {t("map.saveAddress.notes")}
+                         </div>
+                         <div className="text-[10px] text-slate-600 italic bg-indigo-50/50 p-1.5 rounded border border-indigo-100/50">
+                             {activeSavedAddress.notes}
                          </div>
                       </div>
                     )}
@@ -1009,6 +1255,11 @@ export const MapPicker = memo(function MapPicker({
         <WelcomeOverlay visible={showWelcome} />
 
         {/* Floating Controls Overlay */}
+        <SimpleSaveModal 
+          isOpen={showSimpleModal} 
+          onClose={() => setShowSimpleModal(false)} 
+          onSave={handleSimpleSave} 
+        />
         <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between z-[1100]">
           
           {/* Center Hint: "Ketuk peta" */}
@@ -1041,19 +1292,15 @@ export const MapPicker = memo(function MapPicker({
                           <button 
                             disabled={resolving || !resolvedAddress}
                             onClick={() => {
-                              if (onSaveRequest && value && resolvedAddress) {
-                                onSaveRequest({ lat: value.lat, lng: value.lng, address: resolvedAddress });
-                              } else {
-                                setShowSaveModal(true);
-                              }
+                                setShowSimpleModal(true);
                             }}
                             className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Save className="w-3 h-3" />
-                            Simpan
+                            {t("map.saveAddress.save")}
                           </button>
                         </div>
-                        <div className="text-sm font-semibold text-slate-800 leading-snug line-clamp-2">
+                        <div className="text-xs font-semibold text-slate-800 leading-tight line-clamp-2 mt-0.5">
                           {resolving ? (
                             <span className="flex items-center gap-2 text-slate-500 font-normal">
                               <Loader2 className="w-3 h-3 animate-spin" />
@@ -1063,6 +1310,12 @@ export const MapPicker = memo(function MapPicker({
                             resolvedAddress ?? "—"
                           )}
                         </div>
+                        {activeSavedAddress?.notes && (
+                           <div className="mt-1.5 flex items-start gap-1 bg-slate-50 p-1.5 rounded border border-slate-100/50">
+                              <span className="text-[9px] font-bold text-indigo-500 uppercase shrink-0 mt-0.5">Detail Catatan untuk Petugas:</span>
+                              <span className="text-[10px] text-slate-600 italic line-clamp-2">{activeSavedAddress.notes}</span>
+                           </div>
+                        )}
                         <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-medium border-t border-slate-100 pt-2">
                           <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
                             {details.coords}
@@ -1085,7 +1338,7 @@ export const MapPicker = memo(function MapPicker({
                {!value && !locating && (
                  <div className="absolute right-14 top-6 -translate-y-1/2 w-max pointer-events-none animate-in slide-in-from-right-4 fade-in duration-700 delay-500 z-[500]">
                     <div className="bg-indigo-600 text-white text-[10px] font-bold px-3 py-2 rounded-xl shadow-xl relative flex items-center gap-1.5">
-                       <span>Gunakan lokasi saya</span>
+                       <span>{t("map.useMyLocation")}</span>
                        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-indigo-600 rotate-45"></div>
                     </div>
                  </div>

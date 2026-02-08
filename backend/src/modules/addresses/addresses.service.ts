@@ -24,6 +24,11 @@ export async function saveAddress(userId: number, data: AddressData) {
       where: { user_id: userId }
     });
 
+    // Enforce Max 3 Addresses (1 Primary + 2 Backup)
+    if (count >= 3) {
+      throw new HttpError(400, "Maksimal 3 alamat tersimpan (1 Utama + 2 Cadangan). Harap hapus salah satu alamat terlebih dahulu.");
+    }
+
     // Auto-set as primary if it's the first address
     let isPrimary = data.is_primary || false;
     if (count === 0) {

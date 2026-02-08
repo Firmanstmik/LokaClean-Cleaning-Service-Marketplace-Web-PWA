@@ -39,14 +39,9 @@ export function SaveAddressModal({
   const [district, setDistrict] = useState(details.district || "");
   const [city, setCity] = useState(details.city || "");
 
-  // Update local state when props change
+  // Reset form when opened
   useEffect(() => {
     if (isOpen) {
-      setStreet(details.street || "");
-      setVillage(details.village || "");
-      setDistrict(details.district || "");
-      setCity(details.city || "");
-      
       // Logic: If no addresses, force Primary. If addresses exist, default to Backup (Primary = false).
       if (existingAddresses.length === 0) {
         setIsPrimary(true);
@@ -60,13 +55,28 @@ export function SaveAddressModal({
       setNotes("");
       setPhotoUrl("");
     }
-  }, [isOpen, details, existingAddresses.length]);
+  }, [isOpen]);
+
+  // Update address fields from props
+  useEffect(() => {
+    if (isOpen) {
+      setStreet(details.street || "");
+      setVillage(details.village || "");
+      setDistrict(details.district || "");
+      setCity(details.city || "");
+    }
+  }, [isOpen, details]);
 
   if (!isOpen) return null;
 
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
+      if (!address) {
+        alert(t("map.saveAddress.failed"));
+        setIsSubmitting(false);
+        return;
+      }
       const finalLabel = label === "Custom" ? customLabel : label;
       await onSave({
         label: finalLabel,
@@ -78,13 +88,15 @@ export function SaveAddressModal({
         notes,
         gate_photo_url: photoUrl,
         is_primary: isPrimary,
-        latitude: coordinates.lat,
-        longitude: coordinates.lng
+        lat: coordinates.lat,
+        lng: coordinates.lng
       });
       onClose();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Failed to save address");
+      // Show specific error from backend if available, otherwise generic
+      const msg = e.response?.data?.message || e.message || t("map.saveAddress.failed");
+      alert(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -106,8 +118,8 @@ export function SaveAddressModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
           <div>
-            <h3 className="text-lg font-bold text-slate-800">Save Location</h3>
-            <p className="text-xs text-slate-500">Add details for your drivers</p>
+            <h3 className="text-lg font-bold text-slate-800">{t("map.saveAddress.title")}</h3>
+            <p className="text-xs text-slate-500">{t("map.saveAddress.addressDetails")}</p>
           </div>
           <button 
             onClick={onClose}
@@ -124,7 +136,7 @@ export function SaveAddressModal({
           <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3 items-start">
             <MapPin className="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-xs font-bold text-indigo-800 uppercase tracking-wide mb-1">Selected Address</p>
+              <p className="text-xs font-bold text-indigo-800 uppercase tracking-wide mb-1">{t("map.approxAddress")}</p>
               <p className="text-sm text-slate-700 leading-snug">{address}</p>
               <p className="text-[10px] text-slate-500 mt-1 font-mono">
                 {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
@@ -134,7 +146,7 @@ export function SaveAddressModal({
 
           {/* Label Selection */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-3">Label</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-3">{t("map.saveAddress.label")}</label>
             <div className="flex flex-wrap gap-2">
               {LABELS.map(l => (
                 <button
@@ -150,7 +162,7 @@ export function SaveAddressModal({
                   {l === "Home" && <Home className="w-4 h-4" />}
                   {l === "Office" && <Briefcase className="w-4 h-4" />}
                   {l === "Villa" && <Star className="w-4 h-4" />}
-                  {l}
+                  {l === "Custom" ? t("map.saveAddress.customLabel") : t(`map.saveAddress.labels.${l.toLowerCase()}`)}
                 </button>
               ))}
             </div>
@@ -159,7 +171,7 @@ export function SaveAddressModal({
                 type="text"
                 value={customLabel}
                 onChange={(e) => setCustomLabel(e.target.value)}
-                placeholder="E.g. Mom's House, Gym..."
+                placeholder={t("map.saveAddress.customLabel")}
                 className="mt-3 w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-800 focus:outline-none text-sm"
                 autoFocus
               />
@@ -168,31 +180,20 @@ export function SaveAddressModal({
 
           {/* Detailed Address Fields */}
           <div className="space-y-3">
-             <label className="block text-sm font-semibold text-slate-700">Address Details</label>
              <div className="grid grid-cols-1 gap-3">
-                <div className="relative">
-                   <input
-                     type="text"
-                     value={street}
-                     onChange={(e) => setStreet(e.target.value)}
-                     placeholder="Street Name / Building"
-                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white"
-                   />
-                   <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
-                </div>
                 <div className="grid grid-cols-2 gap-3">
                    <input
                      type="text"
                      value={village}
                      onChange={(e) => setVillage(e.target.value)}
-                     placeholder="Village"
+                     placeholder={t("map.saveAddress.villagePlaceholder")}
                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white"
                    />
                    <input
                      type="text"
                      value={district}
                      onChange={(e) => setDistrict(e.target.value)}
-                     placeholder="District"
+                     placeholder={t("map.saveAddress.districtPlaceholder")}
                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white"
                    />
                 </div>
@@ -203,13 +204,13 @@ export function SaveAddressModal({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Notes for Driver <span className="text-slate-400 font-normal">(Optional)</span>
+                {t("map.saveAddress.notes")} <span className="text-slate-400 font-normal">(Optional)</span>
               </label>
               <div className="relative">
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="E.g. Gate code is 1234, 2nd floor, white fence..."
+                  placeholder={t("map.saveAddress.notesPlaceholder")}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm min-h-[80px] bg-white resize-none"
                 />
                 <FileText className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
@@ -218,14 +219,14 @@ export function SaveAddressModal({
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Photo URL <span className="text-slate-400 font-normal">(Optional)</span>
+                {t("map.saveAddress.photo")} <span className="text-slate-400 font-normal">(Optional)</span>
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={photoUrl}
                   onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://..."
+                  placeholder={t("map.saveAddress.photoPlaceholder")}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white"
                 />
                 <Camera className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
@@ -241,10 +242,10 @@ export function SaveAddressModal({
                 </div>
                 <div>
                    <p className="text-sm font-bold text-slate-800">
-                     {isPrimary ? "Main Location" : "Backup Location"}
+                     {isPrimary ? t("map.saveAddress.primary") : t("map.saveAddress.backup")}
                    </p>
                    <p className="text-xs text-slate-500">
-                     {isPrimary ? "This will be your default address" : "Save as an alternative address"}
+                     {isPrimary ? t("map.saveAddress.primaryDesc") : t("map.saveAddress.backupDesc")}
                    </p>
                 </div>
              </div>
@@ -275,7 +276,7 @@ export function SaveAddressModal({
             onClick={onClose}
             className="flex-1 px-4 py-3 rounded-xl text-slate-700 font-bold hover:bg-slate-50 transition-colors"
           >
-            Cancel
+            {t("map.saveAddress.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -283,11 +284,11 @@ export function SaveAddressModal({
             className="flex-[2] px-4 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
-               <>Saving...</>
+               <>{t("common.loading")}</>
             ) : (
                <>
                  <Star className="w-4 h-4 fill-white/20" />
-                 Save Location
+                 {t("map.saveAddress.save")}
                </>
             )}
           </button>

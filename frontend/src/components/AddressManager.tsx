@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { 
   MapPin, Plus, Home, Briefcase, Star, MoreVertical, 
   Trash2, Edit2, CheckCircle2, Navigation, Building2, 
-  ArrowLeft, Loader2, Check, Save
+  ArrowLeft, Loader2, Check, Save, AlertCircle
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../lib/api";
 import { MapPicker, LatLng } from "./MapPicker";
 import { SavedAddress } from "../types/address";
@@ -30,6 +31,8 @@ export function AddressManager() {
 
   // Map Picker State
   const [pickerValue, setPickerValue] = useState<LatLng | null>(null);
+  const [tempNotes, setTempNotes] = useState("");
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
   useEffect(() => {
     loadAddresses();
@@ -46,9 +49,15 @@ export function AddressManager() {
     }
   };
 
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const handleAddNew = () => {
     setEditingId(null);
     setPickerValue(null); // Start fresh
+    setTempNotes("");
     setFormData({
       label: "Home",
       address: "",
@@ -109,7 +118,7 @@ export function AddressManager() {
 
   const handleMapSave = (data: { lat: number; lng: number; address: string }) => {
     setTempLocation(data);
-    setFormData(prev => ({ ...prev, address: data.address }));
+    setFormData(prev => ({ ...prev, address: data.address, notes: tempNotes }));
     setView("form");
   };
 
@@ -131,15 +140,32 @@ export function AddressManager() {
     };
 
     try {
+      let savedAddress: SavedAddress;
       if (editingId) {
-        await api.put(`/address/${editingId}`, payload);
+        const res = await api.put(`/address/${editingId}`, payload);
+        savedAddress = res.data.data;
       } else {
-        await api.post("/address/save", payload);
+        const res = await api.post("/address/save", payload);
+        savedAddress = res.data.data;
       }
-      await loadAddresses();
+
+      // Immediate State Update (Optimistic)
+      setAddresses(prev => {
+        let newList = editingId 
+          ? prev.map(a => a.id === editingId ? savedAddress : a)
+          : [...prev, savedAddress];
+          
+        if (savedAddress.is_primary) {
+            newList = newList.map(a => a.id === savedAddress.id ? a : { ...a, is_primary: false });
+        }
+        return newList.sort((a, b) => (a.is_primary === b.is_primary ? 0 : a.is_primary ? -1 : 1));
+      });
+
       setView("list");
+      showToast("Alamat berhasil disimpan", "success");
+      loadAddresses(); // Background sync
     } catch (e) {
-      alert("Gagal menyimpan alamat");
+      showToast("Gagal menyimpan alamat", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -168,11 +194,14 @@ export function AddressManager() {
              <MapPicker 
                value={pickerValue}
                onChange={setPickerValue}
+               onDetailsChange={(d) => setTempNotes(d.notes || "")}
                isOpen={true}
                onSaveRequest={handleMapSave}
+               onRefresh={loadAddresses}
                label="Geser pin ke lokasi tepat"
                helperText="Pastikan pin berada tepat di depan lokasi Anda"
                mapHeight="h-[calc(100vh-180px)]"
+               savedAddresses={addresses}
              />
            </div>
         </div>
@@ -270,13 +299,13 @@ export function AddressManager() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-600">Catatan untuk Driver <span className="text-slate-400 font-normal">(Opsional)</span></label>
+            <label className="text-sm font-medium text-slate-600">{t("map.saveAddress.notes")} <span className="text-slate-400 font-normal">({t("common.optional")})</span></label>
             <input 
               type="text"
               value={formData.notes}
               onChange={e => setFormData({...formData, notes: e.target.value})}
               className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-500 transition-colors"
-              placeholder="Pagar hitam, bel rumah rusak..."
+              placeholder={t("map.saveAddress.notesPlaceholder")}
             />
           </div>
 
@@ -351,8 +380,8 @@ export function AddressManager() {
                        <h4 className="font-bold text-slate-900 text-lg mb-1">{primaryAddress.label}</h4>
                        <p className="text-sm text-slate-600 leading-relaxed line-clamp-2">{primaryAddress.address}</p>
                        {primaryAddress.notes && (
-                         <div className="mt-2 text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-lg inline-block">
-                           Catatan: {primaryAddress.notes}
+                         <div className="mt-1 text-xs text-slate-500 font-medium">
+                            Catatan: {primaryAddress.notes}
                          </div>
                        )}
                     </div>
@@ -398,6 +427,12 @@ export function AddressManager() {
                             </div>
                          </div>
                          <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{addr.address}</p>
+                         {addr.notes && (
+                           <div className="mt-1.5 flex items-start gap-1 bg-slate-50 p-1.5 rounded border border-slate-100/50">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase shrink-0">{t("map.saveAddress.notes")}:</span>
+                              <span className="text-[10px] text-slate-600 italic line-clamp-1">{addr.notes}</span>
+                           </div>
+                         )}
                          <button 
                            onClick={() => handleSetPrimary(addr.id)}
                            className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
@@ -408,18 +443,35 @@ export function AddressManager() {
                    </div>
                  ))}
                  
-                 <button 
-                   onClick={handleAddNew}
-                   className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-slate-500 font-bold hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all"
-                 >
-                    <Plus className="w-5 h-5" />
-                    Tambah Alamat Baru
-                 </button>
+                 {primaryAddress && (
+                   <button 
+                     onClick={handleAddNew}
+                     className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-2 text-slate-500 font-bold hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/30 transition-all"
+                   >
+                      <Plus className="w-5 h-5" />
+                      Tambah Alamat Cadangan
+                   </button>
+                 )}
                </div>
             </section>
           </>
         )}
       </div>
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-xl font-bold text-sm flex items-center gap-2 z-[150] ${
+              toast.type === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+            }`}
+          >
+            {toast.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
