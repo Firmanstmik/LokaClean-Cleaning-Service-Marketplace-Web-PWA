@@ -9,10 +9,10 @@
 CREATE EXTENSION IF NOT EXISTS "postgis";
 
 -- AlterEnum
-ALTER TYPE "OrderStatus" ADD VALUE 'CANCELLED';
+-- ALTER TYPE "OrderStatus" ADD VALUE 'CANCELLED';
 
 -- AlterEnum
-ALTER TYPE "Role" ADD VALUE 'CLEANER';
+-- ALTER TYPE "Role" ADD VALUE 'CLEANER';
 
 -- AlterTable
 ALTER TABLE "Admin" ADD COLUMN     "phone_number" TEXT;
