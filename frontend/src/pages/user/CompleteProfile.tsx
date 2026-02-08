@@ -309,14 +309,8 @@ export function CompleteProfilePage() {
             onChange={setDefaultLoc}
             onAddressChange={handleAddressChange}
             hideLabel
+            isOpen={activeSection === "location"}
           />
-          {!defaultLoc && (
-            <div className="absolute top-32 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[400]">
-              <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-lg border border-white/50 text-xs font-bold text-slate-600 whitespace-nowrap animate-bounce">
-                {t("completeProfile.mapHintOverlay")}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="group bg-slate-50/50 rounded-2xl p-4 border border-slate-100 focus-within:bg-white focus-within:border-rose-200 focus-within:shadow-lg focus-within:shadow-rose-100/50 transition-all duration-300">
@@ -350,7 +344,7 @@ export function CompleteProfilePage() {
         </div>
       </div>
     )
-  }), [isLocationValid, defaultLoc, address, geocodingAddress, handleAddressChange]);
+  }), [isLocationValid, defaultLoc, address, geocodingAddress, handleAddressChange, activeSection]);
 
   const sections = useMemo(() => [photoSection, infoSection, locationSection], [photoSection, infoSection, locationSection]);
 

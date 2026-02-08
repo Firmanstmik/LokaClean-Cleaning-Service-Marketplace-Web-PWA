@@ -9,12 +9,14 @@
 import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
+import http from "node:http";
 
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
 
 import { createApp } from "./app";
 import { env } from "./config/env";
 import { prisma } from "./db/prisma";
+import { initSocket } from "./socket";
 
 // Ensure upload directory exists for local disk storage.
 // In production you can swap this for S3/GCS by replacing the storage module,
@@ -52,7 +54,7 @@ async function runAutoCancelUnpaidOrdersJob() {
       if (!order) continue;
 
       await prisma.$transaction(async (tx) => {
-        // Mark order as cancelled (string literal to avoid enum drift before migrations run)
+        // Mark order as cancelled
         await tx.pesanan.update({
           where: { id: order.id },
           data: { status: "CANCELLED" as never }
@@ -75,9 +77,14 @@ async function runAutoCancelUnpaidOrdersJob() {
   }
 }
 
-const app = createApp();
 
-app.listen(env.PORT, () => {
+const app = createApp();
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+export const io = initSocket(server);
+
+server.listen(env.PORT, () => {
   console.log(`[lokaclean-api] listening on :${env.PORT} (${env.NODE_ENV})`);
 
   // Start background job to auto-cancel unpaid transfer orders every 5 minutes.

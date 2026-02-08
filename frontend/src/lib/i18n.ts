@@ -318,7 +318,7 @@ const translations = {
       approxAddress: "Alamat perkiraan:",
       lookingUp: "Mencari...",
       openInOpenStreetMap: "Buka di OpenStreetMap",
-      tapToSetLocation: "Ketuk/klik peta untuk mengatur lokasi.",
+      tapToSetLocation: "Ketuk peta untuk pilih lokasi",
       tipClickMap: "Tip: Anda dapat mengklik di mana saja pada peta untuk mengatur lokasi secara manual.",
       locationAccessIssue: "⚠️ Masalah akses lokasi:",
       quickSolution: "💡 Solusi Cepat:",
@@ -333,7 +333,8 @@ const translations = {
       permissionDenied: "Izin ditolak.",
       positionUnavailable: "Posisi tidak tersedia. Pastikan GPS diaktifkan (mobile) atau Wi‑Fi terhubung. Pindah ke area dengan sinyal lebih baik, atau klik pada peta untuk mengatur lokasi secara manual.",
       locationTimeout: "Permintaan lokasi habis waktu. Sinyal GPS mungkin lemah (coba pindah dekat jendela), jaringan mungkin lambat, atau Anda berada di dalam ruangan. Tip: Klik pada peta untuk mengatur lokasi secara manual untuk hasil yang lebih cepat.",
-      couldNotGetLocation: "Tidak dapat mendapatkan lokasi Anda: {error}. Tip: Klik pada peta untuk mengatur lokasi secara manual."
+      couldNotGetLocation: "Tidak dapat mendapatkan lokasi Anda: {error}. Tip: Klik pada peta untuk mengatur lokasi secara manual.",
+      dragMarkerToAdjust: "Geser pin untuk sesuaikan lokasi"
     },
     // Common
     common: {
@@ -937,7 +938,8 @@ const translations = {
       permissionDenied: "Permission denied.",
       positionUnavailable: "Position unavailable. Ensure GPS is enabled (mobile) or Wi‑Fi is connected. Move to an area with better signal, or click on the map to set location manually.",
       locationTimeout: "Location request timed out. GPS signal may be weak (try moving near a window), network may be slow, or you're indoors. Tip: Click on the map to set your location manually for faster results.",
-      couldNotGetLocation: "Could not get your location: {error}. Tip: Click on the map to set your location manually."
+      couldNotGetLocation: "Could not get your location: {error}. Tip: Click on the map to set your location manually.",
+      dragMarkerToAdjust: "Drag marker to adjust location"
     },
     // Common
     common: {

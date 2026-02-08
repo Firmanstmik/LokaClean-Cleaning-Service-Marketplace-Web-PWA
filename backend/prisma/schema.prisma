@@ -1,21 +1,24 @@
+
 // Prisma schema for LokaClean.
 // IMPORTANT: This schema is designed to match the provided ERD strictly.
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+  output   = "../node_modules/@prisma/client"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  extensions = [postgis]
 }
 
 // Roles used for JWT/RBAC.
-// NOTE: The ERD specifies User.role = USER and Admin.role = ADMIN.
-// We keep a single enum for simplicity, and enforce defaults at the model level.
 enum Role {
   USER
   ADMIN
+  CLEANER
 }
 
 enum OrderStatus {
@@ -46,8 +49,11 @@ model User {
   // Stored bcrypt hash for user login.
   password_hash     String?
   profile_photo     String?
+  
+  // Basic location for users (optional default)
   default_latitude  Float?
   default_longitude Float?
+  
   role              Role     @default(USER)
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
@@ -56,6 +62,34 @@ model User {
   pesanan       Pesanan[]
   notifications Notification[]
   pushSubscriptions PushSubscription[]
+  savedAddresses SavedAddress[]
+  
+  // If user is a cleaner, this profile exists
+  cleanerProfile CleanerProfile?
+}
+
+model SavedAddress {
+  id        Int      @id @default(autoincrement())
+  user_id   Int
+  label     String   // home, office, other, custom...
+  is_primary Boolean @default(false)
+  address   String
+  notes     String?
+  floor_number String?
+  building_name String?
+  gate_photo_url String?
+  latitude  Float
+  longitude Float
+  
+  // PostGIS Geography Point
+  location  Unsupported("geography(Point, 4326)")?
+  
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+  
+  @@index([user_id])
 }
 
 model Admin {
@@ -69,6 +103,42 @@ model Admin {
 
   // Relationships
   pesanan Pesanan[]
+}
+
+model CleanerProfile {
+  id            Int     @id @default(autoincrement())
+  user_id       Int     @unique
+  rating        Float   @default(5.0)
+  active_orders Int     @default(0)
+  is_active     Boolean @default(true)
+  
+  // PostGIS Geography Point (Long, Lat)
+  // We use Unsupported for raw PostGIS types if strict typing isn't available yet,
+  // or we can handle it via raw SQL.
+  // For simplicity in Prisma, we often keep lat/lng as floats for application use,
+  // and use a separate raw SQL migration to add the geography column 'location'.
+  // However, since we need to use it in queries, we'll rely on the 'location' column 
+  // existing in the DB via migration.
+  
+  // location    Unsupported("geography(Point, 4326)")? 
+  
+  location    Unsupported("geography(Point, 4326)")? 
+
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model ServiceArea {
+  id   Int    @id @default(autoincrement())
+  name String
+  
+  // PostGIS Geography Polygon
+  // area Unsupported("geography(Polygon, 4326)")
+  
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model PaketCleaning {
@@ -98,10 +168,24 @@ model Pesanan {
   status             OrderStatus @default(PENDING)
   room_photo_before  String
   room_photo_after   String?
+  
+  // Snapshot of location at time of order
   location_latitude  Float
   location_longitude Float
   address            String
+  
+  // location Unsupported("geography(Point, 4326)")?
+  location Unsupported("geography(Point, 4326)")?
+
   scheduled_date     DateTime
+  
+  // Price details
+  base_price         Int      @default(50000)
+  distance_price     Int      @default(0)
+  surge_multiplier   Float    @default(1.0)
+  total_price        Int      
+  estimated_eta      Int?     // In minutes
+
   created_at         DateTime    @default(now())
   updated_at         DateTime    @updatedAt
 

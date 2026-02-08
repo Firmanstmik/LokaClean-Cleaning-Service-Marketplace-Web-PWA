@@ -19,8 +19,10 @@ import { NewOrderPage } from "./pages/user/NewOrder";
 import { OrdersPage } from "./pages/user/Orders";
 import { OrderDetailPage } from "./pages/user/OrderDetail";
 import { ProfilePage } from "./pages/user/Profile";
+import { AddressesPage } from "./pages/user/Addresses";
 
 import { AdminLogin } from "./pages/admin/AdminLogin";
+import { AdminDashboardPage } from "./pages/admin/AdminDashboard";
 import { AdminOrdersPage } from "./pages/admin/AdminOrders";
 import { AdminOrderDetailPage } from "./pages/admin/AdminOrderDetail";
 import { AdminPackagesPage } from "./pages/admin/AdminPackages";
@@ -41,8 +43,11 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      {/* Security: Redirect /admin to Home to hide admin login URL */}
-      <Route path="/admin" element={<Navigate to="/" replace />} />
+      {/* Security: Redirect /admin to Home to hide admin login URL. 
+          If authenticated, RequireActor will handle access to nested /admin/* routes 
+          but we need to ensure /admin root is handled if typed manually by logged in admin 
+      */}
+      {/* <Route path="/admin" element={<Navigate to="/" replace />} />  <-- REMOVED to allow authenticated /admin redirect */}
       <Route path="/admin/login" element={<Navigate to="/" replace />} />
 
       {/* USER auth */}
@@ -62,6 +67,7 @@ export function AppRoutes() {
 
         {/* Settings/edit page always accessible */}
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/addresses" element={<AddressesPage />} />
 
         {/* Marketplace requires completed profile */}
         <Route element={<RequireUserProfileComplete />}>
@@ -84,6 +90,8 @@ export function AppRoutes() {
           </RequireActor>
         }
       >
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
         <Route path="/admin/packages" element={<AdminPackagesPage />} />

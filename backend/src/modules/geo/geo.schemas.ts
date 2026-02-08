@@ -15,4 +15,13 @@ export const forwardGeocodeQuerySchema = z.object({
   lang: z.string().min(1).optional()
 });
 
+export const findNearestCleanersSchema = z.object({
+  lat: z.coerce.number(),
+  lng: z.coerce.number(),
+  limit: z.coerce.number().int().min(1).max(20).default(5)
+});
 
+export const updateLocationSchema = z.object({
+  lat: z.coerce.number(),
+  lng: z.coerce.number()
+});

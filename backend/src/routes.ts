@@ -16,6 +16,7 @@ import { geoRouter } from "./modules/geo/geo.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { paymentsRouter } from "./modules/payments/payments.routes";
 import { pushRouter } from "./modules/push/push.routes";
+import addressesRouter from "./modules/addresses/addresses.routes";
 
 export const apiRouter = Router();
 
@@ -49,6 +50,7 @@ apiRouter.use("/admin", adminRouter);
 apiRouter.use("/geo", geoRouter);
 apiRouter.use("/notifications", notificationsRouter);
 apiRouter.use("/push", pushRouter);
+apiRouter.use("/address", addressesRouter);
 
 if (validateMidtransConfig()) {
   apiRouter.use("/payments", paymentsRouter);

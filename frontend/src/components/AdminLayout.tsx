@@ -5,7 +5,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, LogOut, Shield, Sparkles, Users, TrendingUp, Bell, Star, User } from "lucide-react";
+import { LayoutDashboard, Package, LogOut, Shield, Sparkles, Users, TrendingUp, Bell, Star, User, ClipboardList } from "lucide-react";
 
 import { useAuth } from "../lib/auth";
 import { ScrollToTop } from "./ScrollToTop";
@@ -264,7 +264,7 @@ export function AdminLayout() {
           <motion.div
             whileHover={{ scale: 1.02 }}
             className="flex items-center gap-2 sm:gap-3 cursor-pointer"
-            onClick={() => navigate("/admin/orders")}
+            onClick={() => navigate("/admin/dashboard")}
           >
             <motion.div
               className="relative flex h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-lg overflow-hidden bg-white shadow-sm"
@@ -289,7 +289,8 @@ export function AdminLayout() {
 
           {/* Navigation items - Desktop only */}
           <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-            <NavHeaderItem to="/admin/orders" label="Orders" icon={LayoutDashboard} />
+            <NavHeaderItem to="/admin/dashboard" label="Dashboard" icon={LayoutDashboard} />
+            <NavHeaderItem to="/admin/orders" label="Orders" icon={ClipboardList} />
             <NavHeaderItem to="/admin/packages" label="Packages" icon={Package} />
             <NavHeaderItem to="/admin/users" label="Users" icon={Users} />
             <NavHeaderItem to="/admin/revenue" label="Revenue" icon={TrendingUp} />
@@ -421,11 +422,11 @@ export function AdminLayout() {
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/80 bg-white/90 backdrop-blur-2xl backdrop-saturate-200 shadow-2xl shadow-slate-900/10 lg:hidden"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-around gap-0.5 sm:gap-1 px-1 sm:px-2 py-2.5 sm:py-3">
-          <BottomNavItem to="/admin/orders" label="Orders" icon={LayoutDashboard} />
+          <BottomNavItem to="/admin/dashboard" label="Home" icon={LayoutDashboard} />
+          <BottomNavItem to="/admin/orders" label="Orders" icon={ClipboardList} />
           <BottomNavItem to="/admin/packages" label="Packages" icon={Package} />
           <BottomNavItem to="/admin/users" label="Users" icon={Users} />
-          <BottomNavItem to="/admin/revenue" label="Revenue" icon={TrendingUp} />
-          <BottomNavItem to="/admin/ratings" label="Ratings" icon={Star} />
+          <BottomNavItem to="/admin/revenue" label="Rev" icon={TrendingUp} />
         </div>
       </motion.footer>
 

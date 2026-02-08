@@ -7,6 +7,7 @@
 
 import { env } from "../../config/env";
 import { HttpError } from "../../utils/httpError";
+import { prisma } from "../../db/prisma";
 
 export type ReverseGeocodeResult = {
   display_name: string | null;
@@ -181,6 +182,89 @@ export async function forwardGeocode(input: { query: string; lang?: string | und
 
   forwardCache.set(key, { expiresAt: now + CACHE_TTL_MS, value: out });
   return out;
+}
+
+/**
+ * Check if a point is inside any ServiceArea polygon.
+ * Returns the ServiceArea object if found, null otherwise.
+ */
+export async function checkServiceArea(lat: number, lng: number) {
+  // Check if point is inside any ServiceArea polygon
+  // ST_Contains(area, ST_SetSRID(ST_MakePoint(lng, lat), 4326))
+  const result = await prisma.$queryRaw`
+    SELECT id, name 
+    FROM "ServiceArea" 
+    WHERE ST_Contains(area::geometry, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326))
+    LIMIT 1
+  `;
+  return (result as any[])[0] || null;
+}
+
+/**
+ * Find nearest active cleaners ordered by:
+ * 1. Active orders (ASC) - Prioritize cleaners with fewer jobs
+ * 2. Rating (DESC) - Prioritize higher rated cleaners
+ * 3. Distance (ASC) - Closest cleaners
+ */
+export async function findNearestCleaners(lat: number, lng: number, limit = 5) {
+  // ST_Distance returns meters for geography type
+  const cleaners = await prisma.$queryRaw`
+    SELECT 
+      c.id,
+      c.user_id,
+      c.rating,
+      c.active_orders,
+      c.is_active,
+      u.full_name,
+      u.phone_number,
+      u.profile_photo,
+      ST_Distance(c.location, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)) as distance_meters
+    FROM "CleanerProfile" c
+    JOIN "User" u ON c.user_id = u.id
+    WHERE c.is_active = true
+    ORDER BY 
+      c.active_orders ASC,
+      c.rating DESC,
+      distance_meters ASC
+    LIMIT ${limit}
+  `;
+
+  return cleaners as Array<{
+    id: number;
+    user_id: number;
+    rating: number;
+    active_orders: number;
+    is_active: boolean;
+    full_name: string;
+    phone_number: string | null;
+    profile_photo: string | null;
+    distance_meters: number;
+  }>;
+}
+
+export async function getAllCleanerLocations() {
+  const cleaners = await prisma.$queryRaw`
+    SELECT 
+      c.id,
+      c.user_id,
+      c.is_active,
+      u.full_name,
+      u.profile_photo,
+      ST_X(c.location::geometry) as lng,
+      ST_Y(c.location::geometry) as lat
+    FROM "CleanerProfile" c
+    JOIN "User" u ON c.user_id = u.id
+    WHERE c.location IS NOT NULL
+  `;
+  return cleaners as Array<{
+    id: number;
+    user_id: number;
+    is_active: boolean;
+    full_name: string;
+    profile_photo: string | null;
+    lng: number;
+    lat: number;
+  }>;
 }
 
 

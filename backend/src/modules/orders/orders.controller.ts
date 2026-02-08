@@ -17,6 +17,8 @@ import { HttpError } from "../../utils/httpError";
 import { parseId } from "../../utils/parseId";
 import { fileToPublicPath } from "../../middleware/upload";
 import { sendPushToUser } from "../push/push.controller";
+import { checkServiceArea, findNearestCleaners } from "../geo/geo.service";
+import { getIO } from "../../socket";
 import {
   adminUpdateStatusSchema,
   createOrderInputSchema,
@@ -82,6 +84,39 @@ async function getOrderOrThrow(orderId: number) {
   return order;
 }
 
+/**
+ * Resolve Shadow Admin ID for a User (Cleaner or Admin).
+ * If not exists, create a shadow admin record for FK linkage.
+ */
+async function resolveAdminId(input: { id: number; origin?: "USER" | "ADMIN"; actor?: string }) {
+  // If origin is ADMIN or undefined (assuming non-USER context), return ID directly
+  if (input.origin !== "USER") return input.id;
+  
+  // Find the User
+  const user = await prisma.user.findUnique({ where: { id: input.id } });
+  if (!user) throw new HttpError(404, "User not found");
+
+  // Find corresponding Admin by email
+  let admin = await prisma.admin.findUnique({ where: { email: user.email } });
+  
+  if (!admin) {
+    // Determine role based on User's role
+    const adminRole = user.role === Role.ADMIN ? Role.ADMIN : Role.CLEANER;
+
+    // Create Shadow Admin
+    admin = await prisma.admin.create({
+      data: {
+        full_name: user.full_name,
+        email: user.email,
+        phone_number: user.phone_number, 
+        password: user.password_hash || "$2b$10$placeholderhashforcleanershadowadmin", 
+        role: adminRole
+      }
+    });
+  }
+  return admin.id;
+}
+
 
 /**
  * USER: Create a new order (with room photo BEFORE + selected package + payment method).
@@ -102,6 +137,13 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
   if (!files || files.length === 0) throw new HttpError(400, "room_photo_before is required (at least 1 photo)");
 
   const input = createOrderInputSchema.parse(req.body);
+
+  // 1. Check Service Area (Lombok)
+  const serviceArea = await checkServiceArea(input.location_latitude, input.location_longitude);
+  if (!serviceArea) {
+    throw new HttpError(400, "Maaf, lokasi ini belum terjangkau layanan LokaClean (Hanya area Lombok).");
+  }
+
   // Convert all files to public paths and store as JSON array
   const beforePhotos = files.map(file => fileToPublicPath(file));
   const beforePhotosJson = JSON.stringify(beforePhotos);
@@ -111,6 +153,35 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
     select: { id: true, price: true }
   });
   if (!paket) throw new HttpError(404, "PaketCleaning not found");
+
+  // 2. Smart Dispatch: Find nearest cleaner
+  // We prioritize cleaners who are active, nearby, and have good ratings.
+  const cleaners = await findNearestCleaners(input.location_latitude, input.location_longitude, 1);
+  
+  let assignedAdminId: number | null = null;
+  let distanceMeters = 0;
+  
+  if (cleaners.length > 0) {
+    const bestCleaner = cleaners[0];
+    // Resolve Shadow Admin ID for the cleaner (User -> Admin)
+    assignedAdminId = await resolveAdminId({ 
+      id: bestCleaner.user_id, 
+      origin: "USER", 
+      actor: "SYSTEM_DISPATCH" 
+    });
+    distanceMeters = bestCleaner.distance_meters;
+  }
+
+  // 3. Pricing Engine
+  const DISTANCE_RATE_PER_KM = 2000; // Rp 2.000 per km
+  const distancePrice = Math.ceil(distanceMeters / 1000) * DISTANCE_RATE_PER_KM;
+  const surgeMultiplier = 1.0; // Placeholder for future logic
+  const basePrice = paket.price;
+  
+  const totalPrice = Math.ceil((basePrice + distancePrice) * surgeMultiplier);
+  
+  // ETA: Assume 30km/h average speed in city = 500 meters/minute
+  const estimatedEta = distanceMeters > 0 ? Math.ceil(distanceMeters / 500) : 30; // Default 30 mins if unknown
 
   // Generate sequential order_number (1, 2, 3, ...) that stays consistent even if orders are deleted
   // Get the maximum order_number and add 1, or start at 1 if no orders exist
@@ -124,6 +195,7 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
     data: {
       order_number: nextOrderNumber,
       user_id: req.auth.id,
+      admin_id: assignedAdminId, // Assigned Cleaner (Shadow Admin)
       paket_id: input.paket_id,
       status: OrderStatus.PENDING,
       room_photo_before: beforePhotosJson,
@@ -132,10 +204,18 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
       location_longitude: input.location_longitude,
       address: input.address,
       scheduled_date: input.scheduled_date,
+      
+      // Pricing fields
+      base_price: basePrice,
+      distance_price: distancePrice,
+      surge_multiplier: surgeMultiplier,
+      total_price: totalPrice,
+      estimated_eta: estimatedEta,
+
       pembayaran: {
         create: {
           method: input.payment_method as PaymentMethod,
-          amount: paket.price,
+          amount: totalPrice,
           status: PaymentStatus.PENDING
           // midtrans_order_id will be set when frontend requests Snap token (NON-CASH only)
         }
@@ -143,6 +223,32 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
     },
     include: orderInclude
   });
+
+  // 4. Update PostGIS Location
+  await prisma.$executeRaw`
+    UPDATE "Pesanan"
+    SET location = ST_SetSRID(ST_MakePoint(${input.location_longitude}, ${input.location_latitude}), 4326)
+    WHERE id = ${order.id}
+  `;
+
+  // 5. Realtime Notification
+  try {
+    const io = getIO();
+    
+    // Notify the assigned cleaner (Shadow Admin)
+    if (assignedAdminId) {
+      io.to(`admin_${assignedAdminId}`).emit("admin_new_order", { order });
+    }
+    
+    // Notify global admin dashboard (for monitoring)
+    io.to("admin_dashboard").emit("admin_new_order", { order });
+
+    // Notify user
+    io.to(`user_${req.auth.id}`).emit("order_created", { order });
+  } catch (err) {
+    console.warn("[createOrder] Failed to emit socket event:", err);
+    // Don't fail the request just because socket failed
+  }
 
   // For NON-CASH payments, create a notification reminding user to pay.
   if (order.pembayaran?.method && order.pembayaran.method !== PaymentMethod.CASH) {
@@ -155,6 +261,30 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
           "Kamu memilih metode pembayaran non-tunai. Segera selesaikan pembayaran dalam 1 jam agar pesanan bisa diproses. Pesanan akan dibatalkan otomatis jika belum dibayar."
       }
     });
+  }
+
+  // Notify Cleaner if assigned
+  if (assignedAdminId && cleaners.length > 0) {
+    const cleanerUserId = cleaners[0].user_id;
+    await prisma.notification.create({
+      data: {
+        user_id: cleanerUserId,
+        pesanan_id: order.id,
+        title: "Pesanan Baru Masuk!",
+        message: `Order #${order.order_number} baru saja masuk di dekatmu (${(cleaners[0].distance_meters/1000).toFixed(1)} km).`
+      }
+    });
+
+    // Emit Socket Event
+    try {
+      getIO().to(`user_${cleanerUserId}`).emit("new_order", {
+        order_id: order.id,
+        order_number: order.order_number,
+        distance_km: (cleaners[0].distance_meters/1000).toFixed(1)
+      });
+    } catch (err) {
+      console.error("[Socket] Failed to emit new_order:", err);
+    }
   }
 
   return created(res, { order });
@@ -586,54 +716,7 @@ export const getOrderAdminHandler = asyncHandler(async (req: Request, res: Respo
   return ok(res, { order });
 });
 
-/**
- * Helper to resolve the correct Admin ID.
- * If the logged-in user is a USER with role=ADMIN (origin="USER"),
- * we must find or create a corresponding record in the Admin table
- * to satisfy foreign key constraints on Pesanan.admin_id.
- */
-async function resolveAdminId(auth: { id: number; origin?: "USER" | "ADMIN"; actor: string }) {
-  // If already logged in as a "real" Admin, return ID directly
-  if (auth.origin !== "USER") {
-    return auth.id;
-  }
 
-  // Logged in as User-Admin
-  const userAdmin = await prisma.user.findUnique({ where: { id: auth.id } });
-  if (!userAdmin) throw new HttpError(404, "User admin not found");
-
-  // Try to find matching Admin by email
-  const existingAdmin = await prisma.admin.findUnique({ where: { email: userAdmin.email } });
-  if (existingAdmin) {
-    return existingAdmin.id;
-  }
-
-  // If not found, create a "Shadow Admin" record
-  // Check phone number uniqueness first
-  if (userAdmin.phone_number) {
-    const phoneConflict = await prisma.admin.findUnique({ where: { phone_number: userAdmin.phone_number } });
-    if (phoneConflict) {
-      // If phone exists but email doesn't match, we can't create a new admin easily.
-      throw new HttpError(409, "Admin account conflict: Phone number exists but email mismatch.");
-    }
-  }
-
-  // Create new Admin record
-  // Use a placeholder hash since login is handled via User table
-  const placeholderHash = userAdmin.password_hash || "$2a$12$PlaceholderHashForShadowAdminAccount................"; 
-
-  const newAdmin = await prisma.admin.create({
-    data: {
-      full_name: userAdmin.full_name,
-      email: userAdmin.email,
-      phone_number: userAdmin.phone_number,
-      password: placeholderHash,
-      role: Role.ADMIN
-    }
-  });
-
-  return newAdmin.id;
-}
 
 /**
  * ADMIN: Assign order to the current admin (sets admin_id and status to IN_PROGRESS).
