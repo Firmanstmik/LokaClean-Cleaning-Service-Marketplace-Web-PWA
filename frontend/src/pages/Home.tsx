@@ -22,6 +22,7 @@ import { LoginRequiredModal } from "../components/LoginRequiredModal";
 import { MobileWelcome } from "./MobileWelcome";
 import { OptimizedImage } from "../components/ui/OptimizedImage";
 import { IOSInstallPrompt } from "../components/IOSInstallPrompt";
+import { AndroidInstallPrompt } from "../components/AndroidInstallPrompt";
 
 export function Home() {
   const { token, actor } = useAuth();
@@ -32,6 +33,7 @@ export function Home() {
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [showAndroidPrompt, setShowAndroidPrompt] = useState(false);
   const [packages, setPackages] = useState<PaketCleaning[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [selectedPackage, setSelectedPackage] = useState<PaketCleaning | null>(null);
@@ -854,10 +856,14 @@ export function Home() {
                            }
                          });
                        } else {
-                         // Check if iOS
-                         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+                         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+                         const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+                         const isAndroid = /android/i.test(userAgent);
+
                          if (isIOS) {
                            setShowIOSPrompt(true);
+                         } else if (isAndroid) {
+                           setShowAndroidPrompt(true);
                          } else {
                            alert("Silakan buka menu browser Anda dan pilih 'Add to Home Screen' atau 'Install App' untuk menginstall LokaClean.");
                          }
@@ -1134,6 +1140,10 @@ export function Home() {
       <IOSInstallPrompt 
         isOpen={showIOSPrompt} 
         onClose={() => setShowIOSPrompt(false)} 
+      />
+      <AndroidInstallPrompt 
+        isOpen={showAndroidPrompt} 
+        onClose={() => setShowAndroidPrompt(false)} 
       />
 
       {/* Footer */}
