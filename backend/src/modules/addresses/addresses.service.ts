@@ -6,6 +6,10 @@ interface AddressData {
   address: string;
   lat: number;
   lng: number;
+  street?: string;
+  village?: string;
+  district?: string;
+  city?: string;
   is_primary?: boolean;
   notes?: string;
   floor_number?: string;
@@ -15,8 +19,19 @@ interface AddressData {
 
 export async function saveAddress(userId: number, data: AddressData) {
   return await prisma.$transaction(async (tx) => {
+    // Check if user has any addresses
+    const count = await tx.savedAddress.count({
+      where: { user_id: userId }
+    });
+
+    // Auto-set as primary if it's the first address
+    let isPrimary = data.is_primary || false;
+    if (count === 0) {
+      isPrimary = true;
+    }
+
     // If setting as primary, unset others first
-    if (data.is_primary) {
+    if (isPrimary) {
       await tx.savedAddress.updateMany({
         where: { user_id: userId },
         data: { is_primary: false }
@@ -24,27 +39,21 @@ export async function saveAddress(userId: number, data: AddressData) {
     }
 
     // Use raw query for PostGIS insert
-    // Note: We can't easily mix Prisma $transaction with $queryRaw if we want atomic rollback for everything,
-    // but Prisma Client Extensions or raw SQL is needed for geography.
-    // For now, we'll do the updateMany above (Prisma) and then the raw insert.
-    // If the insert fails, the updateMany committed (if not wrapped properly).
-    // Ideally, we should do everything in raw SQL or use Prisma's unsupported features carefully.
-    
-    // However, since we are inside a transaction, `tx.$queryRaw` works!
-    
     const result = await tx.$queryRaw`
       INSERT INTO "SavedAddress" (
         user_id, label, address, latitude, longitude, 
+        street, village, district, city,
         is_primary, notes, floor_number, building_name, gate_photo_url,
         location, created_at, updated_at
       )
       VALUES (
         ${userId}, ${data.label}, ${data.address}, ${data.lat}, ${data.lng}, 
-        ${data.is_primary || false}, ${data.notes || null}, ${data.floor_number || null}, ${data.building_name || null}, ${data.gate_photo_url || null},
+        ${data.street || null}, ${data.village || null}, ${data.district || null}, ${data.city || null},
+        ${isPrimary}, ${data.notes || null}, ${data.floor_number || null}, ${data.building_name || null}, ${data.gate_photo_url || null},
         ST_SetSRID(ST_MakePoint(${data.lng}, ${data.lat}), 4326), 
         NOW(), NOW()
       )
-      RETURNING id, label, address, latitude, longitude, is_primary, notes, floor_number, building_name, gate_photo_url
+      RETURNING id, label, address, street, village, district, city, latitude, longitude, is_primary, notes, floor_number, building_name, gate_photo_url
     `;
     
     return Array.isArray(result) ? result[0] : result;
@@ -67,9 +76,6 @@ export async function updateAddress(userId: number, addressId: number, data: Par
     }
 
     // Construct update data for Prisma (excluding lat/lng/location if not provided)
-    // For simplicity, if lat/lng changes, we need raw query to update location.
-    // If only metadata changes, we can use Prisma update.
-    
     const hasLocationUpdate = (data.lat !== undefined && data.lng !== undefined);
 
     if (hasLocationUpdate) {
@@ -78,6 +84,10 @@ export async function updateAddress(userId: number, addressId: number, data: Par
         SET 
           label = COALESCE(${data.label}, label),
           address = COALESCE(${data.address}, address),
+          street = COALESCE(${data.street}, street),
+          village = COALESCE(${data.village}, village),
+          district = COALESCE(${data.district}, district),
+          city = COALESCE(${data.city}, city),
           latitude = ${data.lat},
           longitude = ${data.lng},
           is_primary = COALESCE(${data.is_primary}, is_primary),
@@ -88,7 +98,7 @@ export async function updateAddress(userId: number, addressId: number, data: Par
           location = ST_SetSRID(ST_MakePoint(${data.lng}, ${data.lat}), 4326),
           updated_at = NOW()
         WHERE id = ${addressId} AND user_id = ${userId}
-        RETURNING id, label, address, latitude, longitude, is_primary, notes
+        RETURNING id, label, address, street, village, district, city, latitude, longitude, is_primary, notes, floor_number, building_name, gate_photo_url
       `;
       return Array.isArray(result) ? result[0] : result;
     } else {
@@ -98,6 +108,10 @@ export async function updateAddress(userId: number, addressId: number, data: Par
         data: {
           label: data.label,
           address: data.address,
+          street: data.street,
+          village: data.village,
+          district: data.district,
+          city: data.city,
           is_primary: data.is_primary,
           notes: data.notes,
           floor_number: data.floor_number,
@@ -140,6 +154,10 @@ export async function getAddresses(userId: number) {
       id: true,
       label: true,
       address: true,
+      street: true,
+      village: true,
+      district: true,
+      city: true,
       latitude: true,
       longitude: true,
       is_primary: true,

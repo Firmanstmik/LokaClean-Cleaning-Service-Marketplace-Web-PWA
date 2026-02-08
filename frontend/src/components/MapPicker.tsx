@@ -9,14 +9,45 @@
  */
 
 import { useEffect, useMemo, useRef, useState, memo } from "react";
-import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
-import { LocateFixed, Loader2, MapPin, Navigation, Search, CheckCircle2, Home, Briefcase, Star, Clock, Trash2, Plus, Save, AlertCircle, X } from "lucide-react";
+import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents, GeoJSON, Popup } from "react-leaflet";
+import { LocateFixed, Loader2, MapPin, Navigation, Search, CheckCircle2, Home, Briefcase, Star, Clock, Trash2, Plus, Save, AlertCircle, X, Check } from "lucide-react";
 import L from "leaflet";
 
 import { api } from "../lib/api";
 import { t } from "../lib/i18n";
+import { SaveAddressModal } from "./SaveAddressModal";
 
 export type LatLng = { lat: number; lng: number };
+
+const NTB_CENTER: [number, number] = [-8.652933, 117.361647];
+
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY || "";
+const TILE_URL = MAPTILER_KEY 
+  ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`
+  : "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png";
+const TILE_ATTR = MAPTILER_KEY 
+  ? '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+  : '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+
+// Simplified NTB Boundary (Lombok + Sumbawa boxes) for visual context
+const NTB_GEOJSON: any = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "MultiPolygon",
+        coordinates: [
+            // Lombok Approx
+            [[[115.82, -8.96], [116.78, -8.96], [116.78, -8.13], [115.82, -8.13], [115.82, -8.96]]],
+            // Sumbawa Approx
+            [[[116.71, -9.10], [119.16, -9.10], [119.16, -8.08], [116.71, -8.08], [116.71, -9.10]]]
+        ]
+      }
+    }
+  ]
+};
 
 type SavedAddress = {
   id: number;
@@ -24,6 +55,11 @@ type SavedAddress = {
   address: string;
   latitude: number;
   longitude: number;
+  is_primary?: boolean;
+  street?: string;
+  village?: string;
+  district?: string;
+  city?: string;
 };
 
 const NTB_CITIES = [
@@ -107,47 +143,76 @@ function osmLink(lat: number, lng: number, zoom = 18) {
 }
 
 
-const lombokHomeIcon = L.divIcon({
-  className: "lombok-marker",
+// Premium Marker UX
+const premiumMarkerIcon = L.divIcon({
+  className: "premium-marker",
   html: `
-    <div style="position: relative; width: 40px; height: 40px;">
-       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));">
-          <!-- Lumbung Roof -->
-          <path d="M50 5 C20 40 10 55 5 70 H95 C90 55 80 40 50 5Z" fill="#8B4513" stroke="#5D4037" stroke-width="2"/>
-          <!-- Base -->
-          <rect x="25" y="70" width="50" height="25" rx="2" fill="#CD853F" stroke="#8B4513" stroke-width="2"/>
-          <!-- Door -->
-          <rect x="42" y="75" width="16" height="20" rx="1" fill="#5D4037"/>
-          <!-- Stilts -->
-          <rect x="30" y="95" width="8" height="5" fill="#3E2723"/>
-          <rect x="62" y="95" width="8" height="5" fill="#3E2723"/>
-       </svg>
+    <div class="relative w-10 h-10 group">
+       <div class="absolute inset-0 bg-rose-500 rounded-full shadow-lg border-2 border-white flex items-center justify-center transform transition-transform group-hover:scale-110 z-20">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-white">
+            <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+          </svg>
+       </div>
+       <div class="absolute inset-0 bg-rose-500 rounded-full animate-ping opacity-20 z-10"></div>
+       <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-1 bg-black/20 blur-[2px] rounded-full"></div>
     </div>
   `,
   iconSize: [40, 40],
   iconAnchor: [20, 40],
+  popupAnchor: [0, -44],
 });
 
 // CSS for micro-interaction
 const markerStyle = `
-  .lombok-marker {
+  .premium-marker {
     transition: transform 0.2s ease-out;
   }
-  .lombok-marker svg {
-    animation: pop 0.25s ease-out backwards;
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
+  .leaflet-popup-content {
+    margin: 0;
+    width: 260px !important;
+  }
+  .leaflet-popup-tip {
+    background: white;
   }
   @keyframes pop {
     from { transform: scale(0.85); opacity: 0.6; }
     to { transform: scale(1); opacity: 1; }
   }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
 `;
+
+// New Component: Welcome Overlay
+function WelcomeOverlay({ visible }: { visible: boolean }) {
+  if (!visible) return null;
+  return (
+      <div className="absolute bottom-8 left-0 right-0 z-[2000] pointer-events-none w-full px-4 flex justify-center">
+        <div className="bg-white/90 backdrop-blur-md px-3 py-2 sm:px-5 sm:py-3 rounded-full shadow-xl border border-white/50 animate-in slide-in-from-bottom-4 fade-in duration-500 max-w-xs sm:max-w-sm text-center">
+          <p className="text-xs sm:text-sm font-medium text-slate-700 leading-tight">
+            Welcome to West Nusa Tenggara 🌴 Tap anywhere to choose your cleaning location.
+          </p>
+        </div>
+      </div>
+  );
+}
+
+// New Component: Initial FlyTo Logic
+function InitialFlyTo({ trigger, zoom }: { trigger: boolean; zoom: number }) {
+  const map = useMap();
+  const hasFlown = useRef(false);
+
+  useEffect(() => {
+    if (trigger && !hasFlown.current) {
+        map.flyTo(NTB_CENTER, zoom, { duration: 1.2, easeLinearity: 0.25 });
+        hasFlown.current = true;
+    }
+  }, [trigger, map, zoom]);
+  return null;
+}
 
 function MapResizer({ isOpen }: { isOpen?: boolean }) {
   const map = useMap();
@@ -203,7 +268,7 @@ export const MapPicker = memo(function MapPicker({
   mapHeight = "h-[400px]"
 }: {
   value: LatLng | null;
-  onChange: (v: LatLng) => void;
+  onChange: (v: LatLng | null) => void;
   onAddressChange?: (address: string | null) => void;
   label?: string;
   helperText?: string;
@@ -220,6 +285,7 @@ export const MapPicker = memo(function MapPicker({
 
   const [resolving, setResolving] = useState(false);
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
+  const [addressDetails, setAddressDetails] = useState<any>(null); // Store full address details (street, city, etc.)
   const [resolveError, setResolveError] = useState<string | null>(null);
   
   // Search state
@@ -240,14 +306,34 @@ export const MapPicker = memo(function MapPicker({
   
   // Map control
   const [forcedZoom, setForcedZoom] = useState<number | undefined>(undefined);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const welcomeShownRef = useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const requestIdRef = useRef(0);
   const onAddressChangeRef = useRef<typeof onAddressChange>(onAddressChange);
   const mapKeyRef = useRef(`map-${Date.now()}-${Math.random()}`);
 
   useEffect(() => {
+    setIsMobile(window.innerWidth < 640);
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     onAddressChangeRef.current = onAddressChange;
   }, [onAddressChange]);
+
+  // Welcome Overlay Logic
+  useEffect(() => {
+    if (isOpen !== false && !value && !welcomeShownRef.current) {
+      setShowWelcome(true);
+      welcomeShownRef.current = true;
+      const timer = setTimeout(() => setShowWelcome(false), 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, value]);
 
   // Load favorites & recents
   useEffect(() => {
@@ -424,14 +510,13 @@ export const MapPicker = memo(function MapPicker({
     doSearch();
   }, [debouncedSearchQuery, selectedCity]);
 
-  // Default to NTB Province Center (Approx middle of Lombok & Sumbawa)
-  const defaultCenter = { lat: -8.65, lng: 117.3 }; 
+  // Default to NTB Province Center
   const center = useMemo(() => {
     // If we have a favorite "Home" and no value yet, default to Home
     if (!value) {
       const home = savedAddresses.find(a => a.label.toLowerCase() === 'home');
       if (home) return { lat: home.latitude, lng: home.longitude };
-      return defaultCenter;
+      return { lat: NTB_CENTER[0], lng: NTB_CENTER[1] };
     }
     return value;
   }, [value?.lat, value?.lng, savedAddresses]);
@@ -460,9 +545,13 @@ export const MapPicker = memo(function MapPicker({
     (async () => {
       try {
         const resp = await api.get("/geo/reverse", { params: { lat: value.lat, lng: value.lng } });
-        const displayName = (resp.data?.data?.display_name ?? null) as string | null;
+        const json = resp.data?.data;
+        const displayName = (json?.display_name ?? null) as string | null;
+        const addr = json?.address ?? {};
+
         if (requestIdRef.current !== id) return;
         setResolvedAddress(displayName);
+        setAddressDetails(addr);
         onAddressChangeRef.current?.(displayName);
       } catch {
         if (requestIdRef.current !== id) return;
@@ -547,22 +636,14 @@ export const MapPicker = memo(function MapPicker({
     }
   };
 
-  const handleSaveFavorite = async () => {
-    if (!value || !resolvedAddress) return;
-    setIsSaving(true);
+  const handleSaveData = async (data: any) => {
     try {
-      await api.post("/address/save", {
-        label: saveLabel,
-        address: resolvedAddress,
-        lat: value.lat,
-        lng: value.lng
-      });
+      await api.post("/address/save", data);
       setShowSaveModal(false);
-      loadFavorites(); // Reload
+      loadFavorites(); 
     } catch (e) {
-      alert("Gagal menyimpan alamat");
-    } finally {
-      setIsSaving(false);
+      console.error(e);
+      throw e;
     }
   };
 
@@ -646,6 +727,8 @@ export const MapPicker = memo(function MapPicker({
     return <Star className="w-3 h-3" />;
   };
 
+  const initialZoom = isMobile ? 7 : 8;
+
   return (
     <div className="space-y-4">
       <style>{markerStyle}</style>
@@ -728,44 +811,98 @@ export const MapPicker = memo(function MapPicker({
         </div>
       </div>
 
-      {/* Favorites & Recents Quick Access */}
-      {(savedAddresses.length > 0 || recentLocations.length > 0) && (
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {savedAddresses.map((addr) => (
-            <button
-              key={`saved-${addr.id}`}
-              onClick={() => {
-                setForcedZoom(18);
-                onChange({ lat: addr.latitude, lng: addr.longitude });
-                setResolvedAddress(addr.address);
-              }}
-              className="group flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-100 hover:bg-indigo-100 transition-colors whitespace-nowrap"
-            >
-              {getIconForLabel(addr.label)}
-              <span>{addr.label}</span>
-              <div 
-                role="button"
-                onClick={(e) => handleDeleteAddress(e, addr.id)}
-                className="ml-1 p-0.5 rounded-full hover:bg-indigo-200 text-indigo-400 hover:text-indigo-700 transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </div>
-            </button>
-          ))}
-          {recentLocations.map((addr, i) => (
-            <button
-              key={`recent-${i}`}
-              onClick={() => {
-                setForcedZoom(18);
-                onChange({ lat: addr.latitude, lng: addr.longitude });
-                setResolvedAddress(addr.address);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-600 rounded-full text-xs font-medium border border-slate-200 hover:bg-slate-100 transition-colors whitespace-nowrap"
-            >
-              <Clock className="w-3 h-3" />
-              {addr.address.split(",")[0]}
-            </button>
-          ))}
+      {/* Location Switcher UI (Radio Style) */}
+      {(savedAddresses.length > 0) && (
+        <div className="space-y-3 mb-4">
+           <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Saved Locations</span>
+              {/* Add Backup Button */}
+              {savedAddresses.some(a => a.is_primary) && (
+                <button
+                  onClick={() => {
+                     // Reset map to NTB View
+                     onChange(null);
+                     setForcedZoom(9);
+                     setResolvedAddress(null);
+                  }}
+                  className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add Backup
+                </button>
+              )}
+           </div>
+
+           <div className="grid gap-2">
+             {savedAddresses.map((addr) => {
+               const isSelected = value?.lat === addr.latitude && value?.lng === addr.longitude;
+               return (
+                 <div 
+                   key={addr.id}
+                   onClick={() => {
+                     setForcedZoom(18);
+                     onChange({ lat: addr.latitude, lng: addr.longitude });
+                     setResolvedAddress(addr.address);
+                     setAddressDetails({
+                       road: addr.street,
+                       village: addr.village,
+                       district: addr.district,
+                       city: addr.city
+                     });
+                   }}
+                   className={`
+                     group relative flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer
+                     ${isSelected 
+                       ? 'bg-indigo-50/50 border-indigo-200 shadow-sm ring-1 ring-indigo-100' 
+                       : 'bg-white border-slate-100 hover:border-indigo-100 hover:bg-slate-50'}
+                   `}
+                 >
+                   {/* Radio Indicator */}
+                   <div className={`
+                     w-4 h-4 rounded-full border flex items-center justify-center transition-colors flex-shrink-0
+                     ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 bg-white group-hover:border-indigo-400'}
+                   `}>
+                     {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                   </div>
+
+                   {/* Icon */}
+                   <div className={`
+                     w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                     ${isSelected ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'}
+                   `}>
+                     {getIconForLabel(addr.label)}
+                   </div>
+
+                   {/* Content */}
+                   <div className="flex-1 min-w-0">
+                     <div className="flex items-center gap-2 mb-0.5">
+                       <span className={`text-xs font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
+                         {addr.label}
+                       </span>
+                       {addr.is_primary && (
+                         <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded flex items-center gap-0.5">
+                           <Star className="w-2.5 h-2.5 fill-amber-700" />
+                           Main
+                         </span>
+                       )}
+                     </div>
+                     <div className="text-[11px] text-slate-500 truncate leading-tight">
+                       {addr.address}
+                     </div>
+                   </div>
+                   
+                   {/* Delete Action */}
+                   <button 
+                      onClick={(e) => handleDeleteAddress(e, addr.id)}
+                      className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                      title="Hapus lokasi"
+                   >
+                     <Trash2 className="w-3.5 h-3.5" />
+                   </button>
+                 </div>
+               );
+             })}
+           </div>
         </div>
       )}
 
@@ -781,27 +918,42 @@ export const MapPicker = memo(function MapPicker({
         <MapContainer
           key={mapKeyRef.current}
           center={center}
-          zoom={value ? 17 : 8}
+          zoom={value ? 17 : initialZoom}
           scrollWheelZoom
           className={`${mapHeight} w-full bg-slate-50`}
           style={{ zIndex: 0 }}
         >
-          {/* Tropical Clean Map Style (CartoDB Voyager) */}
+          {/* Tropical Clean Map Style (Stadia Alidade Smooth) */}
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            maxZoom={20}
+             attribution={TILE_ATTR}
+             url={TILE_URL}
+             maxZoom={20}
+           />
+
+          {/* NTB Boundary Highlight */}
+          <GeoJSON 
+            data={NTB_GEOJSON} 
+            style={{
+              color: "#2EC4B6",
+              weight: 2,
+              fillOpacity: 0.06,
+              dashArray: "4 4"
+            }} 
           />
+
+          {/* Logic Components */}
           <SmartMapUpdater center={center} accuracy={accuracyMeters} zoom={forcedZoom} />
+          <InitialFlyTo trigger={(isOpen !== false) && !value} zoom={initialZoom} />
           <MapResizer isOpen={isOpen} />
           <ClickToPick onPick={handleManualPick} />
           
-          {value ? (
+          {value && (
             <Marker 
               key={`marker-${value.lat}-${value.lng}`} 
               position={value}
               draggable={true}
-              icon={lombokHomeIcon}
+              icon={premiumMarkerIcon}
+              zIndexOffset={100}
               eventHandlers={{
                 dragend: (e) => {
                   const marker = e.target;
@@ -809,8 +961,39 @@ export const MapPicker = memo(function MapPicker({
                   handleManualPick({ lat: position.lat, lng: position.lng });
                 }
               }}
-            />
-          ) : null}
+            >
+              <Popup className="premium-popup" closeButton={false} offset={[0, -20]}>
+                 <div className="p-3 font-sans">
+                    <div className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+                      Selected Point
+                    </div>
+                    <div className="text-sm font-semibold text-slate-900 leading-snug mb-2">
+                      {resolvedAddress || "Loading address..."}
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono bg-slate-50 p-1.5 rounded border border-slate-100">
+                       <span>{value.lat.toFixed(6)}, {value.lng.toFixed(6)}</span>
+                    </div>
+                    {addressDetails && (
+                      <div className="mt-2 pt-2 border-t border-slate-100 grid grid-cols-2 gap-y-1 gap-x-2 text-[10px]">
+                         <div className="col-span-2">
+                            <span className="text-slate-400 block text-[9px]">Street</span>
+                            <span className="font-medium text-slate-700 truncate block" title={addressDetails.road}>{addressDetails.road || "-"}</span>
+                         </div>
+                         <div>
+                            <span className="text-slate-400 block text-[9px]">District</span>
+                            <span className="font-medium text-slate-700 truncate block" title={addressDetails.district || addressDetails.city_district}>{addressDetails.district || addressDetails.city_district || "-"}</span>
+                         </div>
+                         <div>
+                            <span className="text-slate-400 block text-[9px]">City</span>
+                            <span className="font-medium text-slate-700 truncate block" title={addressDetails.city || addressDetails.town}>{addressDetails.city || addressDetails.town || "-"}</span>
+                         </div>
+                      </div>
+                    )}
+                 </div>
+              </Popup>
+            </Marker>
+          )}
           
           {value && accuracyMeters ? (
             <Circle
@@ -822,15 +1005,18 @@ export const MapPicker = memo(function MapPicker({
           ) : null}
         </MapContainer>
 
+        {/* Welcome Overlay */}
+        <WelcomeOverlay visible={showWelcome} />
+
         {/* Floating Controls Overlay */}
         <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between z-[1100]">
           
           {/* Center Hint: "Ketuk peta" */}
           {!value && (
-            <div className="absolute inset-0 flex items-center justify-center z-[300] pointer-events-none">
-               <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/50 animate-in zoom-in-90 fade-in duration-500 animate-float flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-indigo-500" />
-                  <span className="text-sm font-semibold text-slate-600">
+            <div className="absolute bottom-20 sm:bottom-10 left-0 right-0 flex items-center justify-center z-[300] pointer-events-none">
+               <div className="bg-white/80 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-lg border border-white/50 animate-in slide-in-from-bottom-2 fade-in duration-500 animate-float flex items-center gap-1.5 sm:gap-2">
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500" />
+                  <span className="text-xs sm:text-sm font-semibold text-slate-600">
                     {t("map.tapToSetLocation")}
                   </span>
                </div>
@@ -925,6 +1111,22 @@ export const MapPicker = memo(function MapPicker({
           </div>
         </div>
       </div>
+
+      {/* Save Address Modal */}
+      <SaveAddressModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveData}
+        address={resolvedAddress || ""}
+        details={{
+           street: addressDetails?.road,
+           village: addressDetails?.village || addressDetails?.suburb,
+           district: addressDetails?.district || addressDetails?.city_district,
+           city: addressDetails?.city || addressDetails?.town || addressDetails?.regency
+        }}
+        coordinates={value || { lat: 0, lng: 0 }}
+        existingAddresses={savedAddresses}
+      />
     </div>
   );
 });

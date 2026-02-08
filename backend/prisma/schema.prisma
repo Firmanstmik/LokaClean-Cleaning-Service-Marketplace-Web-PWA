@@ -74,6 +74,10 @@ model SavedAddress {
   label     String   // home, office, other, custom...
   is_primary Boolean @default(false)
   address   String
+  street    String?
+  village   String?
+  district  String?
+  city      String?
   notes     String?
   floor_number String?
   building_name String?
