@@ -1,3 +1,8 @@
+/**
+ * USER Orders page.
+ * Displays active and past orders with status badges.
+ * Updated: Bilingual Support & UI Improvements (v2)
+ */
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
