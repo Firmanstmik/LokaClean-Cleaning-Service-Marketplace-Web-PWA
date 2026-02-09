@@ -242,7 +242,73 @@ const translations = {
       noteAddress: "Alamat yang akurat memudahkan Anda saat melakukan pemesanan tanpa perlu input ulang.",
       notePhoto: "Foto profil membantu petugas kami mengenali Anda saat tiba di lokasi demi keamanan dan kenyamanan."
     },
-    // Notifications
+    // Orders Page
+      orders: {
+        title: "Pesanan Anda",
+        subtitle: "Lacak status, foto, pembayaran & feedback layanan kebersihanmu.",
+        tabs: {
+          all: "Semua",
+          pending: "Belum Bayar",
+          confirmed: "Dikonfirmasi",
+          inProgress: "Diproses",
+          completed: "Selesai",
+          cancelled: "Dibatalkan"
+        },
+        status: {
+          pending: "Menunggu Pembayaran",
+          processing: "Menunggu Konfirmasi",
+          inProgress: "Sedang Diproses",
+          completed: "Selesai",
+          cancelled: "Dibatalkan"
+        },
+        empty: {
+          title: "Belum ada pesanan",
+          subtitle: "Yuk pesan layanan kebersihan sekarang!",
+          action: "Pesan Sekarang"
+        },
+        card: {
+          track: "Lacak",
+          detail: "Detail",
+          pay: "Bayar",
+          rate: "Nilai",
+          orderAgain: "Pesan Lagi"
+        }
+      },
+
+      // Orders Page
+      orders: {
+        title: "Your Orders",
+        subtitle: "Track status, photos, payment & cleaning service feedback.",
+        tabs: {
+          all: "All",
+          pending: "Unpaid",
+          confirmed: "Confirmed",
+          inProgress: "In Progress",
+          completed: "Completed",
+          cancelled: "Cancelled"
+        },
+        status: {
+          pending: "Waiting for Payment",
+          processing: "Waiting for Confirmation",
+          inProgress: "In Progress",
+          completed: "Completed",
+          cancelled: "Cancelled"
+        },
+        empty: {
+          title: "No orders yet",
+          subtitle: "Let's book a cleaning service now!",
+          action: "Book Now"
+        },
+        card: {
+          track: "Track",
+          detail: "Detail",
+          pay: "Pay",
+          rate: "Rate",
+          orderAgain: "Order Again"
+        }
+      },
+
+      // Notifications
     notifications: {
       orderConfirmed: {
         title: "Pesanan Dikonfirmasi! 🎉",

@@ -1,15 +1,17 @@
 /**
  * USER Orders page.
  * Displays active and past orders with status badges.
- * Updated: Bilingual Support & UI Improvements (v2)
+ * Updated: Bilingual Support & Shopee-like Professional UI (v3)
  */
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
-  Package, Calendar, MapPin, ArrowRight, 
-  Search, Filter, ShoppingBag, Clock, CheckCircle2, 
-  AlertCircle, ChevronRight, Truck
+  LayoutGrid, Wallet, PackageCheck, Truck, Star, XCircle,
+  ArrowLeft, ShoppingBag, Calendar, MapPin, CreditCard,
+  ChevronRight, Search, RefreshCcw
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { formatDateOnlyWITA } from "../../utils/date";
@@ -19,49 +21,31 @@ import type { Pesanan } from "../../types/api";
 
 // --- Types & Helpers ---
 
-type FilterTab = 'all' | 'pending' | 'in_progress' | 'completed';
+type FilterTab = 'all' | 'pending' | 'processing' | 'in_progress' | 'completed' | 'cancelled';
 
-function formatOrderNumber(orderNumber: number | null | undefined): string {
-  if (!orderNumber) return "-";
-  return `LC-${orderNumber.toString().padStart(4, "0")}`;
-}
+const TABS = [
+  { id: 'all', labelKey: 'orders.tabs.all', icon: LayoutGrid },
+  { id: 'pending', labelKey: 'orders.tabs.pending', icon: Wallet },
+  { id: 'processing', labelKey: 'orders.tabs.confirmed', icon: PackageCheck },
+  { id: 'in_progress', labelKey: 'orders.tabs.inProgress', icon: Truck },
+  { id: 'completed', labelKey: 'orders.tabs.completed', icon: Star },
+  { id: 'cancelled', labelKey: 'orders.tabs.cancelled', icon: XCircle },
+] as const;
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "PENDING":
-    case "WAITING_PAYMENT":
-      return { 
-        label: "Menunggu Konfirmasi", 
-        color: "bg-amber-100 text-amber-700 border-amber-200",
-        icon: AlertCircle
-      };
-    case "PROCESSING":
-    case "IN_PROGRESS":
-    case "ON_THE_WAY":
-      return { 
-        label: "Sedang Diproses", 
-        color: "bg-blue-100 text-blue-700 border-blue-200",
-        icon: Truck
-      };
-    case "COMPLETED":
-      return { 
-        label: "Selesai", 
-        color: "bg-emerald-100 text-emerald-700 border-emerald-200",
-        icon: CheckCircle2
-      };
-    case "CANCELLED":
-      return { 
-        label: "Dibatalkan", 
-        color: "bg-slate-100 text-slate-500 border-slate-200",
-        icon: AlertCircle
-      };
-    default:
-      return { 
-        label: status, 
-        color: "bg-slate-100 text-slate-700 border-slate-200",
-        icon: Package
-      };
-  }
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: "text-amber-600 bg-amber-50 border-amber-100",
+  PROCESSING: "text-blue-600 bg-blue-50 border-blue-100",
+  IN_PROGRESS: "text-indigo-600 bg-indigo-50 border-indigo-100",
+  COMPLETED: "text-emerald-600 bg-emerald-50 border-emerald-100",
+  CANCELLED: "text-slate-500 bg-slate-100 border-slate-200",
+};
+
+const STATUS_LABELS_KEY: Record<string, string> = {
+  PENDING: "orders.status.pending",
+  PROCESSING: "orders.status.processing",
+  IN_PROGRESS: "orders.status.inProgress",
+  COMPLETED: "orders.status.completed",
+  CANCELLED: "orders.status.cancelled",
 };
 
 export function OrdersPage() {
@@ -81,15 +65,9 @@ export function OrdersPage() {
         params.append('page', '1');
         params.append('limit', '50'); // Fetch more for scrolling list
         
-        // Map UI tabs to API status
-        if (activeTab === 'pending') params.append('status', 'PENDING'); // or WAITING_PAYMENT? Usually PENDING cover it
-        if (activeTab === 'in_progress') params.append('status', 'IN_PROGRESS'); // API usually handles grouping or we send specific
-        if (activeTab === 'completed') params.append('status', 'COMPLETED');
-        
-        // Note: Real API might need comma separated values or multiple calls if 'in_progress' maps to multiple statuses.
-        // For now assuming simple mapping works or backend handles it.
-        // If 'in_progress' needs PROCESSING + IN_PROGRESS, we might need to filter client side or fix API.
-        // Let's rely on standard 'status' param for now.
+        if (activeTab !== 'all') {
+          params.append('status', activeTab);
+        }
         
         const resp = await api.get(`/orders?${params.toString()}`);
         if (alive) {
@@ -104,166 +82,218 @@ export function OrdersPage() {
     return () => { alive = false; };
   }, [activeTab]);
 
-  // Tab Item Component
-  const TabItem = ({ id, label }: { id: FilterTab, label: string }) => {
-    const isActive = activeTab === id;
-    return (
-      <button
-        onClick={() => setActiveTab(id)}
-        className={`
-          flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 whitespace-nowrap
-          ${isActive 
-            ? "bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-md shadow-teal-500/20 border border-transparent" 
-            : "bg-white text-slate-600 border border-slate-200 hover:border-teal-300 hover:bg-teal-50"
-          }
-        `}
-      >
-        {label}
-      </button>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 pb-24 font-sans selection:bg-teal-100 selection:text-teal-900">
-      
-      {/* 1. TOP HEADER (Gradient Hero) */}
-      <div className="bg-gradient-to-br from-teal-600 via-teal-500 to-blue-600 pt-6 pb-16 px-6 shadow-sm">
-        <div className="max-w-md mx-auto w-full">
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            Pesanan Anda
-          </h1>
-          <p className="mt-2 text-teal-100 text-sm font-medium opacity-90 leading-relaxed max-w-[280px]">
-            Lacak status, foto, pembayaran & feedback layanan kebersihanmu.
+    <div className="min-h-screen bg-slate-50 pb-24 font-sans">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 pt-12 pb-20 px-6 rounded-b-[40px] shadow-lg relative overflow-hidden">
+        {/* Background Decorations */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -ml-12 -mb-12" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <Link to="/home" className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-colors">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <h1 className="text-2xl font-bold text-white tracking-wide">{t("orders.title")}</h1>
+          </div>
+          <p className="text-emerald-50 text-sm font-medium leading-relaxed max-w-sm">
+            {t("orders.subtitle")}
           </p>
         </div>
       </div>
 
-      {/* 2. SEGMENT TABS (Scrollable) */}
-      <div className="max-w-md mx-auto w-full px-4 -mt-8 mb-6">
-        <div className="flex gap-3 overflow-x-auto pb-4 pt-1 scrollbar-hide snap-x">
-          <TabItem id="all" label="Semua" />
-          <TabItem id="pending" label="Belum Dikonfirmasi" />
-          <TabItem id="in_progress" label="In Progress" />
-          <TabItem id="completed" label="Selesai" />
+      {/* Tabs - Floating Overlap */}
+      <div className="-mt-12 px-4 relative z-20">
+        <div className="bg-white rounded-2xl shadow-lg p-2 flex overflow-x-auto no-scrollbar gap-2 snap-x">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as FilterTab)}
+                className={`
+                  flex-shrink-0 flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-xl min-w-[80px] snap-start transition-all duration-300
+                  ${isActive 
+                    ? "bg-gradient-to-b from-emerald-50 to-white text-emerald-600 shadow-sm ring-1 ring-emerald-100" 
+                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"}
+                `}
+              >
+                <div className={`p-2 rounded-full ${isActive ? "bg-emerald-100 text-emerald-600" : "bg-slate-50 text-slate-400"}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className={`text-[10px] font-bold whitespace-nowrap ${isActive ? "text-emerald-700" : "text-slate-500"}`}>
+                  {t(tab.labelKey)}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 3. CONTENT AREA */}
-      <div className="max-w-md mx-auto w-full px-4 space-y-4">
-        
-        {/* Loading State */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-teal-100 border-t-teal-500 rounded-full animate-spin mb-4" />
-            <p className="text-slate-400 text-sm animate-pulse">Memuat pesanan...</p>
+      {/* Content List */}
+      <div className="px-4 mt-6 space-y-4">
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 animate-pulse">
+                <div className="h-4 bg-slate-100 rounded w-1/3 mb-4" />
+                <div className="flex gap-4">
+                  <div className="w-20 h-20 bg-slate-100 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-slate-100 rounded w-3/4" />
+                    <div className="h-3 bg-slate-100 rounded w-1/2" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-
-        {/* Error State */}
-        {!loading && error && (
-          <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-start gap-3 text-rose-700">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <div className="text-sm font-medium">{error}</div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && items.length === 0 && (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-100 mt-4">
-            <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShoppingBag className="w-10 h-10 text-teal-500 opacity-80" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-2">
-              Belum ada pesanan
-            </h3>
-            <p className="text-slate-500 text-sm mb-8 leading-relaxed max-w-[200px] mx-auto">
-              Ayo buat pesanan pertamamu dan nikmati kebersihan instan!
-            </p>
-            <Link 
-              to="/packages/all"
-              className="block w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold shadow-lg shadow-teal-500/30 active:scale-[0.98] transition-transform"
+        ) : error ? (
+          <div className="bg-rose-50 border border-rose-100 rounded-2xl p-6 text-center">
+            <p className="text-rose-600 text-sm font-medium mb-2">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-rose-100 text-rose-700 rounded-lg text-xs font-bold"
             >
-              Pesan Sekarang
+              Try Again
+            </button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ShoppingBag className="w-10 h-10 text-emerald-300" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">{t("orders.empty.title")}</h3>
+            <p className="text-slate-500 text-sm mb-6">{t("orders.empty.subtitle")}</p>
+            <Link 
+              to="/packages" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-colors"
+            >
+              {t("orders.empty.action")}
+              <ArrowLeft className="w-4 h-4 rotate-180" />
             </Link>
           </div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {items.map((order) => (
+              <OrderCard key={order.id} order={order} />
+            ))}
+          </AnimatePresence>
         )}
-
-        {/* Order List */}
-        {!loading && !error && items.length > 0 && items.map((order) => {
-          const badge = getStatusBadge(order.status);
-          const BadgeIcon = badge.icon;
-          const isEnglish = false; // Force ID for now based on prompt language
-          const serviceName = isEnglish && order.paket.name_en ? order.paket.name_en : order.paket.name;
-
-          return (
-            <div 
-              key={order.id}
-              className="group bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300"
-            >
-              {/* Card Top: Thumb + Info */}
-              <div className="flex gap-4">
-                {/* Thumbnail */}
-                <div className="w-20 h-20 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-50">
-                   <img 
-                      src={getPackageImage(order.paket.name, order.paket.image)}
-                      alt={getPackageImageAlt(order.paket.name)}
-                      className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                   />
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0 py-0.5">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                      {formatOrderNumber(order.order_number)}
-                    </span>
-                    {/* Status Badge (Mini for mobile) */}
-                    <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 ${badge.color}`}>
-                      <BadgeIcon className="w-3 h-3" />
-                      <span>{badge.label}</span>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-sm font-bold text-slate-800 leading-tight mb-1 truncate">
-                    {serviceName}
-                  </h3>
-                  
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1">
-                    <Calendar className="w-3.5 h-3.5 text-teal-500" />
-                    <span>{formatDateOnlyWITA(order.scheduled_date)}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <MapPin className="w-3.5 h-3.5 text-teal-500" />
-                    <span className="truncate max-w-[140px]">{order.address}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Bottom: Actions */}
-              <div className="mt-4 pt-3 border-t border-slate-50 flex gap-3">
-                <Link 
-                  to={`/orders/${order.id}`}
-                  className="flex-1 py-2.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-bold text-center hover:bg-slate-50 transition-colors"
-                >
-                  Detail
-                </Link>
-                <Link 
-                  to={`/orders/${order.id}`} // Usually track is same as detail or specific tab
-                  className="flex-1 py-2.5 rounded-lg bg-teal-50 text-teal-700 text-xs font-bold text-center hover:bg-teal-100 transition-colors flex items-center justify-center gap-1.5"
-                >
-                  <Search className="w-3.5 h-3.5" />
-                  Lacak
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-        
-        {/* End of list spacer */}
-        <div className="h-8" />
       </div>
     </div>
+  );
+}
+
+function OrderCard({ order }: { order: Pesanan }) {
+  const statusKey = STATUS_LABELS_KEY[order.status] || order.status;
+  const statusColor = STATUS_COLORS[order.status] || "text-slate-600 bg-slate-50 border-slate-100";
+  
+  // Format Price
+  const priceFormatted = new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0
+  }).format(order.pembayaran.amount);
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden"
+    >
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-slate-50 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-1 bg-indigo-50 rounded text-indigo-600">
+            <ShoppingBag className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-xs font-bold text-slate-700">LokaClean Service</span>
+        </div>
+        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusColor}`}>
+          {t(statusKey)}
+        </span>
+      </div>
+
+      {/* Body */}
+      <Link to={`/orders/${order.id}`} className="block p-4 hover:bg-slate-50/50 transition-colors">
+        <div className="flex gap-4">
+          {/* Image */}
+          <div className="w-20 h-20 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-100">
+            <img 
+              src={getPackageImage(order.paket)} 
+              alt={getPackageImageAlt(order.paket)}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/images/packages/default.jpg'; 
+              }}
+            />
+          </div>
+          
+          {/* Details */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-slate-900 text-sm truncate mb-1">
+              {order.paket.name}
+            </h3>
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+              <Calendar className="w-3 h-3" />
+              <span>{formatDateOnlyWITA(order.scheduled_date)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+              <MapPin className="w-3 h-3" />
+              <span className="truncate max-w-[150px]">{order.address}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] px-2 py-0.5 bg-slate-100 rounded text-slate-500 font-medium">
+                x1 Paket
+              </span>
+              <span className="text-sm font-bold text-emerald-600">{priceFormatted}</span>
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      {/* Footer / Actions */}
+      <div className="px-4 py-3 border-t border-slate-50 bg-slate-50/30 flex items-center justify-between gap-3">
+        <div className="text-xs text-slate-500 font-medium">
+          Total: <span className="text-slate-900 font-bold">{priceFormatted}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {order.status === 'COMPLETED' ? (
+            <Link 
+              to={`/orders/${order.id}`}
+              className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg shadow-sm shadow-emerald-200 hover:bg-emerald-700 transition-colors"
+            >
+              {t("orders.card.rate")}
+            </Link>
+          ) : order.status === 'PENDING' ? (
+            <Link 
+              to={`/orders/${order.id}`}
+              className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg shadow-sm shadow-indigo-200 hover:bg-indigo-700 transition-colors"
+            >
+              {t("orders.card.pay")}
+            </Link>
+          ) : (
+            <Link 
+              to={`/orders/${order.id}`}
+              className="px-3 py-1.5 bg-white border border-emerald-200 text-emerald-600 text-xs font-bold rounded-lg hover:bg-emerald-50 transition-colors"
+            >
+              {t("orders.card.track")}
+            </Link>
+          )}
+          
+          <Link 
+            to={`/orders/${order.id}`}
+            className="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            {t("orders.card.detail")}
+          </Link>
+        </div>
+      </div>
+    </motion.div>
   );
 }

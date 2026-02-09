@@ -323,12 +323,18 @@ export const listMyOrdersHandler = asyncHandler(async (req: Request, res: Respon
   if (statusFilter === 'pending') {
     // Belum dikonfirmasi: PENDING
     where.status = OrderStatus.PENDING;
+  } else if (statusFilter === 'processing') {
+    // Dikonfirmasi: PROCESSING
+    where.status = OrderStatus.PROCESSING;
   } else if (statusFilter === 'in_progress') {
     // In Progress: IN_PROGRESS
     where.status = OrderStatus.IN_PROGRESS;
   } else if (statusFilter === 'completed') {
     // Complete: COMPLETED
     where.status = OrderStatus.COMPLETED;
+  } else if (statusFilter === 'cancelled') {
+    // Cancelled: CANCELLED
+    where.status = OrderStatus.CANCELLED;
   }
   // If statusFilter is undefined or 'all', show all orders
 
