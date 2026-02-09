@@ -227,8 +227,8 @@ export function OrderDetailPage() {
 
   const beforePhotoPaths = parsePhotoPaths(order.room_photo_before);
   const afterPhotoPaths = parsePhotoPaths(order.room_photo_after);
-  const beforeUrls = beforePhotoPaths.map(p => toAbsoluteUrl(p));
-  const afterUrls = afterPhotoPaths.map(p => toAbsoluteUrl(p));
+  const beforeUrls = beforePhotoPaths.map(p => toAbsoluteUrl(p)).filter((u): u is string => u !== null);
+  const afterUrls = afterPhotoPaths.map(p => toAbsoluteUrl(p)).filter((u): u is string => u !== null);
   const packageNameDisplay = isEnglish && order.paket.name_en ? order.paket.name_en : order.paket.name;
   
   const scheduledMs = new Date(order.scheduled_date).getTime();
@@ -264,9 +264,11 @@ export function OrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32 relative font-sans">
-      <AnimatePresence>
-        {showThankYou && <ThankYouAnimation onClose={() => setShowThankYou(false)} />}
-      </AnimatePresence>
+      <ThankYouAnimation 
+        isVisible={showThankYou} 
+        hasTip={tipAmount > 0} 
+        onClose={() => setShowThankYou(false)} 
+      />
 
       {/* Hidden Inputs */}
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleAfterFileSelect} className="hidden" multiple />
