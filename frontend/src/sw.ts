@@ -4,6 +4,9 @@ import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 
 declare let self: ServiceWorkerGlobalScope;
 
+self.skipWaiting();
+self.addEventListener('activate', () => self.clients.claim());
+
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 

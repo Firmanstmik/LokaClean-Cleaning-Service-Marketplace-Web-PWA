@@ -13,17 +13,19 @@ import "./styles.css";
 import "./lib/leaflet";
 
 import { App } from "./App";
+import { registerSW } from 'virtual:pwa-register';
 
-// Register Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(registration => {
-      console.log('SW registered: ', registration);
-    }).catch(registrationError => {
-      console.log('SW registration failed: ', registrationError);
-    });
-  });
-}
+// Auto-update Service Worker
+const updateSW = registerSW({
+  onNeedRefresh() {
+    console.log("New content available, auto-updating...");
+    // Force reload immediately when new content is available
+    updateSW(true);
+  },
+  onOfflineReady() {
+    console.log("App ready to work offline");
+  },
+});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
