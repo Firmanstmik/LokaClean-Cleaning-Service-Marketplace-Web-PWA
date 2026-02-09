@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { t } from "../../lib/i18n";
 
 interface OrderTimelineProps {
   status: string;
@@ -6,10 +7,10 @@ interface OrderTimelineProps {
 
 export function OrderTimeline({ status }: OrderTimelineProps) {
   const steps = [
-    { id: 'PENDING', label: 'Pesanan Dibuat' },
-    { id: 'PROCESSING', label: 'Jadwal Dikonfirmasi' }, 
-    { id: 'IN_PROGRESS', label: 'Cleaner Menuju Lokasi' },
-    { id: 'COMPLETED', label: 'Selesai' },
+    { id: 'PENDING', label: t('orderDetail.statusSteps.created') },
+    { id: 'PROCESSING', label: t('orderDetail.statusSteps.confirmed') }, 
+    { id: 'IN_PROGRESS', label: t('orderDetail.statusSteps.cleanerOnWay') },
+    { id: 'COMPLETED', label: t('orderDetail.statusSteps.completed') },
   ];
 
   const getCurrentStepIndex = () => {
@@ -35,7 +36,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
 
   return (
     <div className="px-6 py-6">
-      <h3 className="text-sm font-semibold text-slate-900 mb-4">Status Pesanan</h3>
+      <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('orderDetail.statusTitle')}</h3>
       <div className="relative pl-2">
         {/* Vertical Line */}
         <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-slate-100" />
@@ -61,7 +62,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
                     {step.label}
                   </p>
                   {isCurrent && status !== 'COMPLETED' && (
-                    <p className="text-xs text-emerald-600 animate-pulse font-medium mt-0.5">Sedang berlangsung...</p>
+                    <p className="text-xs text-emerald-600 animate-pulse font-medium mt-0.5">{t('orderDetail.working')}</p>
                   )}
                 </div>
               </div>

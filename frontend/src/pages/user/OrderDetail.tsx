@@ -249,17 +249,17 @@ export function OrderDetailPage() {
   const showCountdown = order.pembayaran.method === "TRANSFER" && order.pembayaran.status === "PENDING" && order.status !== "CANCELLED" && Number.isFinite(createdAtMs);
 
   // Dynamic Header Text
-  let headerTitle = "Pesanan Berhasil Dibuat 🎉";
-  let headerSubtitle = "Staff kami sedang bersiap menuju lokasi Anda";
+  let headerTitle = t("orderDetail.successTitle");
+  let headerSubtitle = t("orderDetail.successSubtitle");
   if (order.status === "COMPLETED") {
-    headerTitle = "Pesanan Selesai 🎉";
-    headerSubtitle = "Terima kasih telah menggunakan LokaClean";
+    headerTitle = t("orderDetail.completedTitle");
+    headerSubtitle = t("orderDetail.completedSubtitle");
   } else if (order.status === "CANCELLED") {
-    headerTitle = "Pesanan Dibatalkan";
-    headerSubtitle = "Silakan buat pesanan baru jika Anda berubah pikiran";
+    headerTitle = t("orderDetail.cancelledTitle");
+    headerSubtitle = t("orderDetail.cancelledSubtitle");
   } else if (order.status === "IN_PROGRESS") {
-    headerTitle = "Cleaner Sedang Bekerja";
-    headerSubtitle = "Mohon tunggu hasil kebersihan terbaik dari kami";
+    headerTitle = t("orderDetail.inProgressTitle");
+    headerSubtitle = t("orderDetail.inProgressSubtitle");
   }
 
   return (

@@ -1,5 +1,6 @@
 import { Camera, Image as ImageIcon, Upload } from "lucide-react";
 import { motion } from "framer-motion";
+import { t } from "../../lib/i18n";
 
 interface BeforeAfterPhotosProps {
   beforePhotos: string[];
@@ -15,12 +16,12 @@ export function BeforeAfterPhotos({ beforePhotos, afterPhotos, onUploadClick, ca
 
   return (
     <div className="px-4 py-4 space-y-4">
-      <h3 className="text-sm font-semibold text-slate-900 px-2">Dokumentasi Pekerjaan</h3>
+      <h3 className="text-sm font-semibold text-slate-900 px-2">{t('orderDetail.documentation')}</h3>
       
       <div className="grid grid-cols-2 gap-3">
         {/* Before Photo Card */}
         <div className="space-y-2">
-          <p className="text-xs font-medium text-slate-500 text-center">Foto Sebelum</p>
+          <p className="text-xs font-medium text-slate-500 text-center">{t('orderDetail.beforePhoto')}</p>
           <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm relative group">
             {beforePhotos.length > 0 ? (
               <img 
@@ -32,7 +33,7 @@ export function BeforeAfterPhotos({ beforePhotos, afterPhotos, onUploadClick, ca
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-slate-400 p-2 text-center">
                 <ImageIcon className="w-6 h-6 mb-1" />
-                <span className="text-[10px]">Belum ada foto</span>
+                <span className="text-[10px]">{t('orderDetail.noPhoto')}</span>
               </div>
             )}
           </div>
@@ -40,7 +41,7 @@ export function BeforeAfterPhotos({ beforePhotos, afterPhotos, onUploadClick, ca
 
         {/* After Photo Card */}
         <div className="space-y-2">
-          <p className="text-xs font-medium text-slate-500 text-center">Foto Sesudah</p>
+          <p className="text-xs font-medium text-slate-500 text-center">{t('orderDetail.afterPhoto')}</p>
           <div 
             className={`aspect-square rounded-xl overflow-hidden border shadow-sm relative transition-all group
               ${displayAfterPhoto
@@ -61,12 +62,12 @@ export function BeforeAfterPhotos({ beforePhotos, afterPhotos, onUploadClick, ca
                 {canUpload ? (
                   <>
                     <Upload className="w-6 h-6 mb-1" />
-                    <span className="text-[10px] font-bold">Upload Hasil</span>
+                    <span className="text-[10px] font-bold">{t('orderDetail.uploadResult')}</span>
                   </>
                 ) : (
                   <>
                     <ImageIcon className="w-6 h-6 mb-1 text-slate-400" />
-                    <span className="text-[10px] text-slate-400">Belum tersedia</span>
+                    <span className="text-[10px] text-slate-400">{t('orderDetail.notAvailable')}</span>
                   </>
                 )}
               </div>
@@ -82,7 +83,7 @@ export function BeforeAfterPhotos({ beforePhotos, afterPhotos, onUploadClick, ca
           className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold shadow-md shadow-emerald-200 flex items-center justify-center gap-2 mt-2"
         >
           <Camera className="w-4 h-4" />
-          Upload Hasil Pembersihan
+          {t('orderDetail.uploadCleaningResult')}
         </motion.button>
       )}
     </div>

@@ -1,6 +1,7 @@
-import { MapPin, Calendar, Clock, Package } from "lucide-react";
+import { MapPin, Calendar, Package } from "lucide-react";
 import { formatDateTimeWITA } from "../../utils/date";
 import type { Pesanan } from "../../types/api";
+import { t } from "../../lib/i18n";
 
 interface OrderSummaryCardProps {
   order: Pesanan;
@@ -21,10 +22,10 @@ export function OrderSummaryCard({ order, packageName, orderNumber }: OrderSumma
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'PENDING': return 'Menunggu Konfirmasi';
-      case 'IN_PROGRESS': return 'Dalam Proses';
-      case 'COMPLETED': return 'Selesai';
-      case 'CANCELLED': return 'Dibatalkan';
+      case 'PENDING': return t('orderDetail.statusSteps.waiting');
+      case 'IN_PROGRESS': return t('orderDetail.statusSteps.inProgress');
+      case 'COMPLETED': return t('orderDetail.statusSteps.completed');
+      case 'CANCELLED': return t('orderDetail.statusSteps.cancelled');
       default: return status;
     }
   };
@@ -50,7 +51,7 @@ export function OrderSummaryCard({ order, packageName, orderNumber }: OrderSumma
             <MapPin className="w-4 h-4 text-indigo-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500">Lokasi</p>
+            <p className="text-xs font-medium text-slate-500">{t('orderDetail.location')}</p>
             <p className="text-sm text-slate-700 leading-snug line-clamp-2">{order.address}</p>
           </div>
         </div>
@@ -60,18 +61,8 @@ export function OrderSummaryCard({ order, packageName, orderNumber }: OrderSumma
             <Calendar className="w-4 h-4 text-indigo-600" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500">Waktu Jadwal</p>
+            <p className="text-xs font-medium text-slate-500">{t('orderDetail.scheduleTime')}</p>
             <p className="text-sm text-slate-700">{formatDateTimeWITA(order.scheduled_date)}</p>
-          </div>
-        </div>
-        
-        <div className="flex items-start gap-3">
-           <div className="p-2 bg-indigo-50 rounded-full shrink-0">
-            <Clock className="w-4 h-4 text-indigo-600" />
-          </div>
-          <div>
-             <p className="text-xs font-medium text-slate-500">Estimasi Cleaner Tiba</p>
-             <p className="text-sm text-slate-700 font-medium">--:-- WITA</p>
           </div>
         </div>
       </div>

@@ -627,9 +627,37 @@ const translations = {
       leaveTip: "Berikan Tip (Opsional)",
       tipAmountLabel: "Jumlah",
       submitTip: "Kirim Tip",
-      completeFirst: "Selesaikan pesanan terlebih dahulu untuk mengirim rating/tip."
-    },
-    // Login
+      completeFirst: "Selesaikan pesanan terlebih dahulu untuk mengirim rating/tip.",
+      successTitle: "Pesanan Berhasil Dibuat 🎉",
+      successSubtitle: "Staff kami sedang bersiap menuju lokasi Anda",
+      cleanerOnWay: "Cleaner Menuju Lokasi",
+      working: "Sedang berlangsung...",
+      uploadCleaningResult: "Upload Hasil Pembersihan",
+      chatCleaner: "Chat Cleaner",
+      help: "Bantuan",
+      orderAgain: "Pesan Lagi",
+      paymentError: "Pembayaran gagal",
+      statusSteps: {
+         created: "Pesanan Dibuat",
+         confirmed: "Jadwal Dikonfirmasi",
+         cleanerOnWay: "Cleaner Menuju Lokasi",
+         completed: "Selesai",
+         waiting: "Menunggu Konfirmasi",
+         inProgress: "Dalam Proses",
+         cancelled: "Dibatalkan"
+      },
+      scheduleTime: "Waktu Jadwal",
+      documentation: "Dokumentasi Pekerjaan",
+      uploadResult: "Upload Hasil",
+      notAvailable: "Belum tersedia",
+      completedTitle: "Pesanan Selesai 🎉",
+      completedSubtitle: "Terima kasih telah menggunakan LokaClean",
+      cancelledTitle: "Pesanan Dibatalkan",
+      cancelledSubtitle: "Silakan buat pesanan baru jika Anda berubah pikiran",
+      inProgressTitle: "Cleaner Sedang Bekerja",
+      inProgressSubtitle: "Mohon tunggu hasil kebersihan terbaik dari kami"
+     },
+     // Login
     login: {
       title: "Selamat Datang Kembali",
       subtitle: "Clean Comfort, Island Style",
@@ -1380,10 +1408,38 @@ const translations = {
       leaveTip: "Leave a tip (optional)",
       tipAmountLabel: "Amount",
       submitTip: "Submit tip",
-      completeFirst: "Complete the order first to submit rating/tip."
-    },
-
-    // Admin
+      completeFirst: "Complete the order first to submit rating/tip.",
+      successTitle: "Order Created Successfully 🎉",
+      successSubtitle: "Our staff is getting ready to head to your location",
+      cleanerOnWay: "Cleaner on the Way",
+      working: "Work in progress...",
+      uploadCleaningResult: "Upload Cleaning Result",
+      chatCleaner: "Chat Cleaner",
+      help: "Help",
+      orderAgain: "Order Again",
+      paymentError: "Payment failed",
+      statusSteps: {
+         created: "Order Created",
+         confirmed: "Schedule Confirmed",
+         cleanerOnWay: "Cleaner on the Way",
+         completed: "Completed",
+         waiting: "Waiting for Confirmation",
+         inProgress: "In Progress",
+         cancelled: "Cancelled"
+      },
+      scheduleTime: "Schedule Time",
+      documentation: "Job Documentation",
+      uploadResult: "Upload Result",
+      notAvailable: "Not available",
+      completedTitle: "Order Completed 🎉",
+      completedSubtitle: "Thank you for using LokaClean",
+      cancelledTitle: "Order Cancelled",
+      cancelledSubtitle: "Please place a new order if you change your mind",
+      inProgressTitle: "Cleaner is Working",
+      inProgressSubtitle: "Please wait for our best cleaning results"
+     },
+ 
+     // Admin
     admin: {
       orders: "Orders",
       packages: "Packages",

@@ -1,5 +1,6 @@
 import { MessageCircle, Phone, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
+import { t } from "../../lib/i18n";
 
 interface StickyActionBarProps {
   onChat: () => void;
@@ -17,7 +18,7 @@ export function StickyActionBar({ onChat, onCall, onReorder }: StickyActionBarPr
           className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl hover:bg-slate-50 text-slate-600 hover:text-emerald-600 transition-colors"
         >
           <MessageCircle className="w-6 h-6" />
-          <span className="text-[10px] font-medium">Chat Cleaner</span>
+          <span className="text-[10px] font-medium">{t('orderDetail.chatCleaner')}</span>
         </motion.button>
         
         <motion.button
@@ -26,7 +27,7 @@ export function StickyActionBar({ onChat, onCall, onReorder }: StickyActionBarPr
           className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl hover:bg-slate-50 text-slate-600 hover:text-emerald-600 transition-colors"
         >
           <Phone className="w-6 h-6" />
-          <span className="text-[10px] font-medium">Bantuan</span>
+          <span className="text-[10px] font-medium">{t('orderDetail.help')}</span>
         </motion.button>
 
         <motion.button
@@ -35,7 +36,7 @@ export function StickyActionBar({ onChat, onCall, onReorder }: StickyActionBarPr
           className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl hover:bg-slate-50 text-slate-600 hover:text-emerald-600 transition-colors"
         >
           <RotateCcw className="w-6 h-6" />
-          <span className="text-[10px] font-medium">Pesan Lagi</span>
+          <span className="text-[10px] font-medium">{t('orderDetail.orderAgain')}</span>
         </motion.button>
       </div>
     </div>
