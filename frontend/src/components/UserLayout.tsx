@@ -992,7 +992,7 @@ export function UserLayout() {
                 }}
               >
                 <motion.img
-                  src="/img/Logo_LokaClean.jpg"
+                  src="/img/logo_full.png"
                   alt="LokaClean Logo"
                   className="h-full w-full object-contain p-1.5 sm:p-2"
                   animate={{
