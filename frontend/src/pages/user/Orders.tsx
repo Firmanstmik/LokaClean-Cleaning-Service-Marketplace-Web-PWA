@@ -224,8 +224,8 @@ function OrderCard({ order }: { order: Pesanan }) {
           {/* Image */}
           <div className="w-20 h-20 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-100">
             <img 
-              src={getPackageImage(order.paket)} 
-              alt={getPackageImageAlt(order.paket)}
+              src={getPackageImage(order.paket.name, order.paket.image)} 
+              alt={getPackageImageAlt(order.paket.name)}
               className="w-full h-full object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = '/images/packages/default.jpg'; 
