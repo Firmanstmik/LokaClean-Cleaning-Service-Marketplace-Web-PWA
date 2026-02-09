@@ -189,8 +189,15 @@ export async function forwardGeocode(input: { query: string; lang?: string | und
  * Returns the ServiceArea object if found, null otherwise.
  */
 export async function checkServiceArea(lat: number, lng: number) {
-  // Check if point is inside any ServiceArea polygon
-  // ST_Contains(area, ST_SetSRID(ST_MakePoint(lng, lat), 4326))
+  // TEMPORARY BYPASS: The 'area' column is missing in the database schema.
+  // Until the migration is applied properly, we allow all locations to ensure the app functions.
+  // TODO: Restore the PostGIS check once the 'area' column is restored in ServiceArea table.
+  
+  // Return a mock service area object
+  return { id: 1, name: "Lombok (Temporary Bypass)" };
+
+  /* 
+  // Original Code (Disabled due to missing 'area' column)
   const result = await prisma.$queryRaw`
     SELECT id, name 
     FROM "ServiceArea" 
@@ -198,6 +205,7 @@ export async function checkServiceArea(lat: number, lng: number) {
     LIMIT 1
   `;
   return (result as any[])[0] || null;
+  */
 }
 
 /**

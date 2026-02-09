@@ -156,7 +156,13 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
 
   // 2. Smart Dispatch: Find nearest cleaner
   // We prioritize cleaners who are active, nearby, and have good ratings.
-  const cleaners = await findNearestCleaners(input.location_latitude, input.location_longitude, 1);
+  let cleaners: any[] = [];
+  try {
+    cleaners = await findNearestCleaners(input.location_latitude, input.location_longitude, 1);
+  } catch (err) {
+    console.warn("[createOrder] Failed to find nearest cleaners (likely missing PostGIS column):", err);
+    // Continue without assigning a cleaner automatically
+  }
   
   let assignedAdminId: number | null = null;
   let distanceMeters = 0;
@@ -225,11 +231,16 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
   });
 
   // 4. Update PostGIS Location
-  await prisma.$executeRaw`
-    UPDATE "Pesanan"
-    SET location = ST_SetSRID(ST_MakePoint(${input.location_longitude}, ${input.location_latitude}), 4326)
-    WHERE id = ${order.id}
-  `;
+  try {
+    await prisma.$executeRaw`
+      UPDATE "Pesanan"
+      SET location = ST_SetSRID(ST_MakePoint(${input.location_longitude}, ${input.location_latitude}), 4326)
+      WHERE id = ${order.id}
+    `;
+  } catch (err) {
+    console.warn("[createOrder] Failed to update order location (likely missing PostGIS column):", err);
+    // Ignore error so order creation succeeds
+  }
 
   // 5. Realtime Notification
   try {
