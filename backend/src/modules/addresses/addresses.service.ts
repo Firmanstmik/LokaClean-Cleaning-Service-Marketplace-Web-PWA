@@ -149,29 +149,18 @@ export async function setPrimaryAddress(userId: number, addressId: number) {
 }
 
 export async function getAddresses(userId: number) {
-  return prisma.savedAddress.findMany({
-    where: { user_id: userId },
-    orderBy: [
-      { is_primary: 'desc' }, // Primary first
-      { created_at: 'desc' }
-    ],
-    select: {
-      id: true,
-      label: true,
-      address: true,
-      street: true,
-      village: true,
-      district: true,
-      city: true,
-      latitude: true,
-      longitude: true,
-      is_primary: true,
-      notes: true,
-      floor_number: true,
-      building_name: true,
-      gate_photo_url: true
-    }
-  });
+  // Use queryRaw to avoid potential Prisma/PostGIS mapping issues with findMany
+  const result = await prisma.$queryRaw`
+    SELECT 
+      id, label, address, street, village, district, city, 
+      latitude, longitude, is_primary, notes, floor_number, 
+      building_name, gate_photo_url
+    FROM "SavedAddress"
+    WHERE user_id = ${userId}
+    ORDER BY is_primary DESC, created_at DESC
+  `;
+
+  return result;
 }
 
 export async function deleteAddress(userId: number, addressId: number) {
