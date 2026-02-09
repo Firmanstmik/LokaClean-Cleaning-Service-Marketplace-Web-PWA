@@ -2,6 +2,7 @@
  * USER create order page.
  * Redesigned: Tropical Clean Lombok Theme
  * Steps: [ Paket ] -> [ Jadwal ] -> [ Lokasi ]
+ * Updated: Bilingual Support & Map Integration (v2)
  */
 
 import { useEffect, useMemo, useState, useRef } from "react";
