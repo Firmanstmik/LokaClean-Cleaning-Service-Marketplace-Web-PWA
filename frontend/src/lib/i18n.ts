@@ -489,6 +489,7 @@ const translations = {
         pending: "Belum Bayar",
         confirmed: "Dikonfirmasi",
         inProgress: "Diproses",
+        rate: "Beri Nilai",
         completed: "Selesai",
         cancelled: "Dibatalkan"
       },
@@ -547,6 +548,7 @@ const translations = {
       photoFormats: "PNG, JPG, atau JPEG (maks 5MB)",
       takePhoto: "Ambil Foto",
       chooseFromGallery: "Pilih dari Galeri",
+      swipeHint: "Geser untuk melihat semua tanggal",
       capturePhoto: "Ambil",
       cameraAccessError: "Tidak dapat mengakses kamera. Silakan gunakan pilihan galeri.",
       selected: "Dipilih",
@@ -1290,6 +1292,7 @@ const translations = {
         pending: "Unpaid",
         confirmed: "Confirmed",
         inProgress: "In Progress",
+        rate: "To Rate",
         completed: "Completed",
         cancelled: "Cancelled"
       },
@@ -1348,6 +1351,7 @@ const translations = {
       photoFormats: "PNG, JPG, or JPEG (max 5MB)",
       takePhoto: "Take Photo",
       chooseFromGallery: "Choose from Gallery",
+      swipeHint: "Swipe to see all available dates",
       capturePhoto: "Capture",
       cameraAccessError: "Cannot access camera. Please use gallery option.",
       selected: "Selected",

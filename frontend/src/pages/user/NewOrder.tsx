@@ -12,7 +12,7 @@ import {
   MapPin, Camera, Calendar, CheckCircle2, 
   AlertCircle, ChevronRight, ChevronLeft, 
   Banknote, Info, Sparkles, Palmtree,
-  Clock, ArrowRight, X
+  Clock, ArrowRight, X, Hand
 } from "lucide-react";
 
 import { MapPicker, type LatLng } from "../../components/MapPicker";
@@ -27,13 +27,18 @@ import type { PaketCleaning, PaymentMethod, User } from "../../types/api";
 // --- Types ---
 type Step = 1 | 2 | 3;
 
-// --- Helper: Generate Dates for Calendar ---
-const generateNextDays = (days = 14) => {
+// --- Helper: Generate Dates for Current Month Only ---
+const generateCurrentMonthDates = () => {
   const dates = [];
-  const today = new Date();
-  for (let i = 0; i < days; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  
+  // Get number of days in the current month
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(year, month, day);
     dates.push(d);
   }
   return dates;
@@ -192,7 +197,7 @@ export function NewOrderPage() {
 
   // --- Derived State ---
   const selectedPackage = packages.find(p => p.id === paketId);
-  const calendarDates = useMemo(() => generateNextDays(), []);
+  const calendarDates = useMemo(() => generateCurrentMonthDates(), []);
 
   // --- Render Helpers ---
 
@@ -350,29 +355,55 @@ export function NewOrderPage() {
 
                 {/* Date Picker (Horizontal Scroll) */}
                 <div className="space-y-3">
+                  <div className="px-1">
+                    <h3 className="text-xl font-bold text-slate-800 capitalize">
+                      {new Date().toLocaleDateString(language === "en" ? "en-US" : "id-ID", { month: 'long', year: 'numeric' })}
+                    </h3>
+                  </div>
                   <div className="flex items-center gap-2 px-1">
                     <Calendar className="w-4 h-4 text-teal-500" />
                     <span className="text-sm font-bold text-slate-700">{t("newOrder.selectDate")}</span>
+                    
+                    {/* Swipe Hint */}
+                    <div className="flex items-center gap-1 ml-auto opacity-70 animate-pulse">
+                       <span className="text-[10px] text-slate-500 font-medium">
+                         {t("newOrder.swipeHint")}
+                       </span>
+                       <Hand className="w-3.5 h-3.5 text-slate-500 rotate-90" />
+                       <ChevronRight className="w-3 h-3 text-slate-500 -ml-1" />
+                    </div>
                   </div>
                   <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide snap-x">
                     {calendarDates.map((date) => {
                       const isSelected = selectedDate.toDateString() === date.toDateString();
                       const dayName = date.toLocaleDateString(language === "en" ? "en-US" : "id-ID", { weekday: "short" });
                       const dayNum = date.getDate();
+
+                      // Date Validation: Blur/Disable past dates
+                      const now = new Date();
+                      now.setHours(0, 0, 0, 0); // Normalize today to start of day
+                      
+                      const checkDate = new Date(date);
+                      checkDate.setHours(0, 0, 0, 0);
+                      
+                      const isPast = checkDate < now;
                       
                       return (
                         <button
                           key={date.toISOString()}
-                          onClick={() => setSelectedDate(date)}
+                          disabled={isPast}
+                          onClick={() => !isPast && setSelectedDate(date)}
                           className={`
                             flex-shrink-0 w-16 h-20 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 snap-center
-                            ${isSelected 
-                              ? "bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/30 scale-105" 
-                              : "bg-white text-slate-600 border border-slate-200 hover:border-teal-200"
+                            ${isPast 
+                              ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed grayscale opacity-60 blur-[1px]"
+                              : isSelected 
+                                ? "bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/30 scale-105" 
+                                : "bg-white text-slate-600 border border-slate-200 hover:border-teal-200"
                             }
                           `}
                         >
-                          <span className={`text-xs font-medium ${isSelected ? "text-teal-100" : "text-slate-400"}`}>
+                          <span className={`text-xs font-medium ${isPast ? "text-slate-300" : isSelected ? "text-teal-100" : "text-slate-400"}`}>
                             {dayName}
                           </span>
                           <span className="text-xl font-bold">
@@ -393,15 +424,33 @@ export function NewOrderPage() {
                   <div className="grid grid-cols-3 gap-3">
                     {TIME_SLOTS.map((time) => {
                       const isSelected = selectedTime === time;
+                      
+                      // Time Validation Logic
+                      const now = new Date();
+                      const isToday = selectedDate.toDateString() === now.toDateString();
+                      let isDisabled = false;
+                      
+                      if (isToday) {
+                         const [hours, minutes] = time.split(':').map(Number);
+                         const slotDate = new Date(now);
+                         slotDate.setHours(hours, minutes, 0, 0);
+                         // Buffer: Disable if time is passed or within current hour? 
+                         // Requirement: "pukul 19.40 maka waktu yang ada tidak tersedia" -> passed times.
+                         if (slotDate < now) isDisabled = true;
+                      }
+
                       return (
                         <button
                           key={time}
-                          onClick={() => setSelectedTime(time)}
+                          disabled={isDisabled}
+                          onClick={() => !isDisabled && setSelectedTime(time)}
                           className={`
                             py-3 rounded-xl text-sm font-bold transition-all duration-200 border
-                            ${isSelected
-                              ? "bg-teal-50 border-teal-500 text-teal-700 shadow-sm"
-                              : "bg-white border-slate-200 text-slate-600 hover:border-teal-200"
+                            ${isDisabled 
+                              ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-60 blur-[1px]" 
+                              : isSelected
+                                ? "bg-teal-50 border-teal-500 text-teal-700 shadow-sm"
+                                : "bg-white border-slate-200 text-slate-600 hover:border-teal-200"
                             }
                           `}
                         >

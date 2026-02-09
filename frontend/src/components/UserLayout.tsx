@@ -977,11 +977,11 @@ export function UserLayout() {
                 stiffness: 260,
                 duration: 0.5
               }}
-              className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 rounded-2xl flex items-center justify-center overflow-visible"
+              className="relative h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 rounded-2xl flex items-center justify-center overflow-visible"
             >
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-tropical-400/30 via-ocean-400/25 to-sun-400/30 blur-lg" />
               <motion.div
-                className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-gradient-to-br from-white via-tropical-50/80 to-ocean-50/80 shadow-[0_8px_24px_rgba(15,23,42,0.15)] flex items-center justify-center border border-white/80"
+                className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(15,23,42,0.15)] flex items-center justify-center border border-white/80"
                 animate={{
                   y: [0, -1, 0],
                 }}
@@ -992,9 +992,9 @@ export function UserLayout() {
                 }}
               >
                 <motion.img
-                  src="/img/logo_full.png"
+                  src="/img/Logo_LokaClean.jpg"
                   alt="LokaClean Logo"
-                  className="h-full w-full object-contain p-1.5 sm:p-2"
+                  className="h-full w-full object-contain p-1.5 sm:p-2 mix-blend-multiply"
                   animate={{
                     scale: [1, 1.02, 1],
                   }}
@@ -1320,7 +1320,7 @@ export function UserLayout() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 w-full px-3 sm:px-4 pb-8 lg:pb-8 pt-14 sm:pt-24 lg:px-6 lg:pt-24 max-w-md md:max-w-4xl lg:max-w-7xl mx-auto bg-gray-50 shadow-2xl lg:shadow-none lg:bg-transparent mt-safe"
+        className="relative z-10 w-full px-3 sm:px-4 pb-8 lg:pb-8 pt-20 sm:pt-24 lg:px-6 lg:pt-24 max-w-md md:max-w-4xl lg:max-w-7xl mx-auto bg-gray-50 shadow-2xl lg:shadow-none lg:bg-transparent mt-safe"
       >
         <div className="mx-auto w-full max-w-7xl">
           {unpaidTransferCount > 0 && (

@@ -329,6 +329,10 @@ export const listMyOrdersHandler = asyncHandler(async (req: Request, res: Respon
   } else if (statusFilter === 'in_progress') {
     // In Progress: IN_PROGRESS
     where.status = OrderStatus.IN_PROGRESS;
+  } else if (statusFilter === 'rate') {
+    // Rate: COMPLETED but not rated
+    where.status = OrderStatus.COMPLETED;
+    where.rating = null;
   } else if (statusFilter === 'completed') {
     // Complete: COMPLETED
     where.status = OrderStatus.COMPLETED;

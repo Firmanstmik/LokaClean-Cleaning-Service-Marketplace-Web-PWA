@@ -271,7 +271,7 @@ export function OrderDetailPage() {
       />
 
       {/* Hidden Inputs */}
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleAfterFileSelect} className="hidden" multiple />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture onChange={handleAfterFileSelect} className="hidden" multiple />
       <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleAfterFileSelect} className="hidden" multiple />
 
       {/* Header */}

@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { 
   LayoutGrid, Wallet, PackageCheck, Truck, Star, XCircle,
   ArrowLeft, ShoppingBag, Calendar, MapPin, CreditCard,
-  ChevronRight, Search, RefreshCcw
+  ChevronRight, Search, RefreshCcw, CheckCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -21,14 +21,15 @@ import type { Pesanan } from "../../types/api";
 
 // --- Types & Helpers ---
 
-type FilterTab = 'all' | 'pending' | 'processing' | 'in_progress' | 'completed' | 'cancelled';
+type FilterTab = 'all' | 'pending' | 'processing' | 'in_progress' | 'rate' | 'completed' | 'cancelled';
 
 const TABS = [
   { id: 'all', labelKey: 'orders.tabs.all', icon: LayoutGrid },
   { id: 'pending', labelKey: 'orders.tabs.pending', icon: Wallet },
   { id: 'processing', labelKey: 'orders.tabs.confirmed', icon: PackageCheck },
   { id: 'in_progress', labelKey: 'orders.tabs.inProgress', icon: Truck },
-  { id: 'completed', labelKey: 'orders.tabs.completed', icon: Star },
+  { id: 'rate', labelKey: 'orders.tabs.rate', icon: Star },
+  { id: 'completed', labelKey: 'orders.tabs.completed', icon: CheckCircle },
   { id: 'cancelled', labelKey: 'orders.tabs.cancelled', icon: XCircle },
 ] as const;
 
@@ -48,38 +49,38 @@ const STATUS_LABELS_KEY: Record<string, string> = {
   CANCELLED: "orders.status.cancelled",
 };
 
+import { OrderRatingModal } from "../../components/order/OrderRatingModal";
+
 export function OrdersPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<Pesanan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [selectedOrder, setSelectedOrder] = useState<Pesanan | null>(null);
 
-  // Fetch Logic
-  useEffect(() => {
-    let alive = true;
+  const fetchOrders = async () => {
     setLoading(true);
-    (async () => {
-      try {
-        const params = new URLSearchParams();
-        params.append('page', '1');
-        params.append('limit', '50'); // Fetch more for scrolling list
-        
-        if (activeTab !== 'all') {
-          params.append('status', activeTab);
-        }
-        
-        const resp = await api.get(`/orders?${params.toString()}`);
-        if (alive) {
-          setItems(resp.data.data.items as Pesanan[]);
-        }
-      } catch (err) {
-        if (alive) setError(getApiErrorMessage(err));
-      } finally {
-        if (alive) setLoading(false);
+    try {
+      const params = new URLSearchParams();
+      params.append('page', '1');
+      params.append('limit', '50');
+      
+      if (activeTab !== 'all') {
+        params.append('status', activeTab);
       }
-    })();
-    return () => { alive = false; };
+      
+      const resp = await api.get(`/orders?${params.toString()}`);
+      setItems(resp.data.data.items as Pesanan[]);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
   }, [activeTab]);
 
   return (
@@ -177,16 +178,33 @@ export function OrdersPage() {
         ) : (
           <AnimatePresence mode="popLayout">
             {items.map((order) => (
-              <OrderCard key={order.id} order={order} />
+              <OrderCard 
+                key={order.id} 
+                order={order} 
+                onRate={(o) => setSelectedOrder(o)} 
+              />
             ))}
           </AnimatePresence>
         )}
       </div>
+
+      {/* Rating Modal */}
+      {selectedOrder && (
+        <OrderRatingModal
+          isOpen={!!selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onSuccess={() => {
+            fetchOrders();
+            setSelectedOrder(null);
+          }}
+          order={selectedOrder}
+        />
+      )}
     </div>
   );
 }
 
-function OrderCard({ order }: { order: Pesanan }) {
+function OrderCard({ order, onRate }: { order: Pesanan; onRate: (order: Pesanan) => void }) {
   const statusKey = STATUS_LABELS_KEY[order.status] || order.status;
   const statusColor = STATUS_COLORS[order.status] || "text-slate-600 bg-slate-50 border-slate-100";
   
@@ -196,6 +214,21 @@ function OrderCard({ order }: { order: Pesanan }) {
     currency: "IDR",
     maximumFractionDigits: 0
   }).format(order.pembayaran.amount);
+
+  // Check if rateable (1 hour after scheduled time OR completed but not rated)
+  const isRateable = (() => {
+    // If completed and not rated, always rateable
+    if (order.status === 'COMPLETED' && !order.rating) return true;
+    
+    // If In Progress and 1 hour passed
+    if (order.status === 'IN_PROGRESS') {
+      const scheduledTime = new Date(order.scheduled_date).getTime();
+      const oneHourAfter = scheduledTime + 60 * 60 * 1000; // 1 hour in ms
+      return Date.now() > oneHourAfter;
+    }
+    
+    return false;
+  })();
 
   return (
     <motion.div
@@ -263,13 +296,14 @@ function OrderCard({ order }: { order: Pesanan }) {
         </div>
         
         <div className="flex items-center gap-2">
-          {order.status === 'COMPLETED' ? (
-            <Link 
-              to={`/orders/${order.id}`}
-              className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg shadow-sm shadow-emerald-200 hover:bg-emerald-700 transition-colors"
+          {isRateable ? (
+            <button 
+              onClick={() => onRate(order)}
+              className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg shadow-sm shadow-emerald-200 hover:bg-emerald-700 transition-colors flex items-center gap-1"
             >
+              <Star className="w-3 h-3" />
               {t("orders.card.rate")}
-            </Link>
+            </button>
           ) : order.status === 'PENDING' ? (
             <Link 
               to={`/orders/${order.id}`}
