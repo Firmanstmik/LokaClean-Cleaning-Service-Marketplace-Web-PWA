@@ -267,7 +267,7 @@ function MapResizer({ isOpen }: { isOpen?: boolean }) {
 
 // Simple Save Modal Component
 function SimpleSaveModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose: () => void; onSave: (label: string, notes: string) => Promise<void> }) {
-  const [label, setLabel] = useState("Rumah");
+  const [label, setLabel] = useState(t("map.saveAddress.labels.home"));
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -277,29 +277,32 @@ function SimpleSaveModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="p-5">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">Pilih Label Lokasi</h3>
+          <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">{t("map.saveAddress.selectLabel")}</h3>
           
           <div className="grid grid-cols-3 gap-3 mb-4">
-             {["Rumah", "Kantor", "Villa"].map(l => (
+             {["home", "office", "villa"].map(key => {
+               const labelText = t(`map.saveAddress.labels.${key}`);
+               return (
                <button 
-                 key={l}
-                 onClick={() => setLabel(l)}
-                 className={`py-3 px-2 rounded-xl text-sm font-bold border-2 transition-all ${label === l ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-500 hover:border-indigo-100'}`}
+                 key={key}
+                 onClick={() => setLabel(labelText)}
+                 className={`py-3 px-2 rounded-xl text-sm font-bold border-2 transition-all ${label === labelText ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-500 hover:border-indigo-100'}`}
                >
-                 {l === "Rumah" && "🏠"}
-                 {l === "Kantor" && "🏢"}
-                 {l === "Villa" && "⭐"}
-                 <div className="mt-1">{l}</div>
+                 {key === "home" && "🏠"}
+                 {key === "office" && "🏢"}
+                 {key === "villa" && "⭐"}
+                 <div className="mt-1">{labelText}</div>
                </button>
-             ))}
+               );
+             })}
           </div>
 
           <div className="space-y-2 mb-6">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Catatan Lokasi <span className="font-normal normal-case">(Opsional)</span></label>
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t("map.saveAddress.notes")} <span className="font-normal normal-case">({t("common.optional")})</span></label>
             <textarea 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Contoh: Pagar hitam, dekat warung..."
+              placeholder={t("map.saveAddress.simpleNotesPlaceholder")}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               rows={2}
             />
@@ -307,7 +310,7 @@ function SimpleSaveModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose
 
           <div className="flex gap-3">
             <button onClick={onClose} className="flex-1 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-colors">
-              Batal
+              {t("map.saveAddress.cancel")}
             </button>
             <button 
               onClick={async () => {
@@ -319,7 +322,7 @@ function SimpleSaveModal({ isOpen, onClose, onSave }: { isOpen: boolean; onClose
               className="flex-1 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              Simpan
+              {t("map.saveAddress.save")}
             </button>
           </div>
         </div>
@@ -340,7 +343,8 @@ export const MapPicker = memo(function MapPicker({
   onSaveRequest,
   onRefresh,
   mapHeight = "h-[400px]",
-  savedAddresses: externalSavedAddresses
+  savedAddresses: externalSavedAddresses,
+  hideSearch = false
 }: {
   value: LatLng | null;
   onChange: (v: LatLng | null) => void;
@@ -354,6 +358,7 @@ export const MapPicker = memo(function MapPicker({
   onRefresh?: () => void;
   mapHeight?: string;
   savedAddresses?: SavedAddress[];
+  hideSearch?: boolean;
 }) {
   const defaultLabel = t("common.location");
   const defaultHelperText = t("map.tapToSetLocation");
@@ -381,7 +386,7 @@ export const MapPicker = memo(function MapPicker({
 
   const [recentLocations, setRecentLocations] = useState<SavedAddress[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveLabel, setSaveLabel] = useState("Home");
+  const [saveLabel, setSaveLabel] = useState(t("map.saveAddress.labels.home"));
   const [isSaving, setIsSaving] = useState(false);
   
   // Map control
@@ -458,7 +463,7 @@ export const MapPicker = memo(function MapPicker({
            setMainLocation(res.data.data);
         }
         setShowSimpleModal(false);
-        alert("Lokasi berhasil disimpan");
+        alert(t("map.saveAddress.success"));
         loadFavorites();
         if (onRefresh) onRefresh();
         if (onSaveRequest) {
@@ -466,7 +471,7 @@ export const MapPicker = memo(function MapPicker({
         }
       }
     } catch (e: any) {
-      const msg = e.response?.data?.message || "Gagal menyimpan lokasi. Silakan coba lagi.";
+      const msg = e.response?.data?.message || t("map.saveAddress.failed");
       alert(msg);
     }
   };
@@ -886,6 +891,7 @@ export const MapPicker = memo(function MapPicker({
       <style>{markerStyle}</style>
 
       {/* NTB City Selector & Search Bar */}
+      {!hideSearch && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 relative z-[500]">
         {/* City Selector & Primary Address */}
         <div className="flex flex-col gap-2">
@@ -964,6 +970,7 @@ export const MapPicker = memo(function MapPicker({
           )}
         </div>
       </div>
+      )}
 
       {/* Main Location Pill (Redesigned) */}
       {mainLocation && (
@@ -988,7 +995,26 @@ export const MapPicker = memo(function MapPicker({
 
                {/* Icon Container */}
                <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform border border-indigo-100">
-                  <span className="text-lg">{mainLocation.label === 'Rumah' ? '🏠' : mainLocation.label === 'Kantor' ? '🏢' : '📍'}</span>
+                  <span className="text-lg">
+                    {getIconForLabel(mainLocation.label) ? (
+                      // Convert Lucide icon to emoji or just use the icon?
+                      // The design uses emoji in the span.
+                      // Let's stick to the robust check but return emoji for consistency with original design if possible,
+                      // or just render the Lucide icon inside.
+                      // The original code returned emojis 🏠, 🏢, 📍.
+                      // getIconForLabel returns a React Node (<Home ... />).
+                      // Let's create a helper for emoji or just use the icon component.
+                      // Since the surrounding container expects text-lg, maybe emojis are better.
+                      // Let's duplicate the logic but make it robust.
+                      (() => {
+                        const l = mainLocation.label.toLowerCase();
+                        if (l.includes("home") || l.includes("rumah")) return '🏠';
+                        if (l.includes("office") || l.includes("kantor")) return '🏢';
+                        if (l.includes("villa")) return '⭐';
+                        return '📍';
+                      })()
+                    ) : '📍'}
+                  </span>
                </div>
 
                {/* Content */}

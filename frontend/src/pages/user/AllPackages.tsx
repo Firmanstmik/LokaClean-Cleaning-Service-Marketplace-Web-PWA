@@ -48,7 +48,7 @@ export function AllPackagesPage() {
     <div className="min-h-screen w-full bg-teal-50 pb-24 selection:bg-teal-200 selection:text-teal-900">
       
       {/* 1. TOP HERO SECTION */}
-      <div className="pt-20 px-4 sm:px-6 lg:px-8 pb-6">
+      <div className="pt-4 px-4 sm:px-6 lg:px-8 pb-6">
         <div className="max-w-7xl mx-auto">
           {/* Gradient Card */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-600 to-blue-600 p-6 sm:p-8 shadow-sm text-white">

@@ -102,7 +102,7 @@ export function SaveAddressModal({
     }
   };
 
-  const LABELS = ["Home", "Office", "Villa", "Custom"];
+  const LABELS = ["Home", "Office", "Apartment", "Villa", "Custom"];
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4">

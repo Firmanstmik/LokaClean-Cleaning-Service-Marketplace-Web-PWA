@@ -1320,7 +1320,7 @@ export function UserLayout() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 w-full px-3 sm:px-4 pb-8 lg:pb-8 pt-14 sm:pt-24 lg:px-6 lg:pt-24 max-w-md lg:max-w-7xl mx-auto bg-gray-50 shadow-2xl lg:shadow-none lg:bg-transparent mt-safe"
+        className="relative z-10 w-full px-3 sm:px-4 pb-8 lg:pb-8 pt-14 sm:pt-24 lg:px-6 lg:pt-24 max-w-md md:max-w-4xl lg:max-w-7xl mx-auto bg-gray-50 shadow-2xl lg:shadow-none lg:bg-transparent mt-safe"
       >
         <div className="mx-auto w-full max-w-7xl">
           {unpaidTransferCount > 0 && (
