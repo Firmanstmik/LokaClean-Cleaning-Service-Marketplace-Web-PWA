@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { 
-  Package, Search, Sparkles, ArrowRight, ShieldCheck, Star, 
-  CheckCircle2, Zap, Trophy, Users
+  Search, Sparkles, ArrowRight, Star, Plus
 } from "lucide-react";
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
 import { t, getLanguage } from "../../lib/i18n";
 import { PackageDetailModal } from "../../components/PackageDetailModal";
+import { OptimizedImage } from "../../components/ui/OptimizedImage";
 import type { PaketCleaning } from "../../types/api";
 
 export function AllPackagesPage() {
@@ -27,14 +28,31 @@ export function AllPackagesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<PaketCleaning | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const resp = await api.get("/packages");
-        const next = resp.data.data.items as PaketCleaning[];
-        if (alive) setItems(next);
+        const [packagesResp, userResp] = await Promise.allSettled([
+          api.get("/packages"),
+          api.get("/users/me")
+        ]);
+
+        if (alive) {
+          if (packagesResp.status === "fulfilled") {
+            setItems(packagesResp.value.data.data.items as PaketCleaning[]);
+          } else {
+            setError(getApiErrorMessage(packagesResp.reason));
+          }
+
+          if (userResp.status === "fulfilled") {
+             // Handle nested user object if present (common in this codebase)
+             const userData = userResp.value.data.data;
+             const name = userData?.user?.full_name || userData?.full_name;
+             setUserName(name);
+          }
+        }
       } catch (err) {
         if (alive) setError(getApiErrorMessage(err));
       } finally {
@@ -45,49 +63,49 @@ export function AllPackagesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-teal-50 pb-24 selection:bg-teal-200 selection:text-teal-900">
+    <div className="min-h-screen w-full bg-[#F8FAFC] pb-24 selection:bg-teal-200 selection:text-teal-900">
       
       {/* 1. TOP HERO SECTION */}
-      <div className="pt-4 px-4 sm:px-6 lg:px-8 pb-6">
+      <div className="pt-6 px-4 sm:px-6 lg:px-8 pb-8">
         <div className="max-w-7xl mx-auto">
-          {/* Gradient Card */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-600 to-blue-600 p-6 sm:p-8 shadow-sm text-white">
-            {/* Background Decoration */}
-            <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-teal-400/20 blur-2xl pointer-events-none" />
+          {/* Gradient Card with Personalized Welcome */}
+          <div className="relative overflow-hidden rounded-[24px] bg-slate-900 p-6 sm:p-8 shadow-xl shadow-slate-900/20 text-white isolate ring-1 ring-white/10 group">
+            {/* Background Image & Overlay */}
+            <div className="absolute inset-0 z-0">
+              <img 
+                src="/img/hero.png" 
+                alt="Welcome Background" 
+                className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-slate-800/90 mix-blend-multiply" />
+            </div>
 
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="bg-white/20 p-2 rounded-xl backdrop-blur-none">
-                  <Package className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-xs font-bold tracking-wider uppercase text-teal-100 bg-teal-800/30 px-2 py-1 rounded-lg">
-                  {isEnglish ? "Premium Service" : "Layanan Premium"}
-                </span>
-              </div>
-              
-              <h1 className="text-2xl sm:text-3xl font-bold mb-2 tracking-tight">
-                {isEnglish ? "All Packages" : "Semua Paket"}
-              </h1>
-              <p className="text-teal-50 text-sm sm:text-base max-w-lg leading-relaxed opacity-90">
-                {isEnglish ? "Premium cleaning services tailored for you" : "Layanan kebersihan premium khusus untuk Anda di Lombok"}
-              </p>
-
-              {/* Trust Chips */}
-              <div className="flex flex-wrap gap-2 sm:gap-3 mt-6">
-                <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-none border border-white/20 px-3 py-1.5 rounded-full">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-teal-200" />
-                  <span className="text-xs font-semibold">{isEnglish ? "Professional" : "Profesional"}</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-none border border-white/20 px-3 py-1.5 rounded-full">
-                  <ShieldCheck className="h-3.5 w-3.5 text-teal-200" />
-                  <span className="text-xs font-semibold">{isEnglish ? "Verified" : "Terverifikasi"}</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-none border border-white/20 px-3 py-1.5 rounded-full">
-                  <Trophy className="h-3.5 w-3.5 text-teal-200" />
-                  <span className="text-xs font-semibold">{isEnglish ? "Guaranteed" : "Garansi"}</span>
-                </div>
-              </div>
+            {/* Background Effects */}
+            <div className="absolute top-0 right-0 -mt-20 -mr-20 h-96 w-96 rounded-full bg-teal-500/20 blur-[80px] pointer-events-none z-0" />
+            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-80 w-80 rounded-full bg-blue-500/20 blur-[60px] pointer-events-none z-0" />
+            
+            {/* Content */}
+            <div className="relative z-10 flex flex-col items-start gap-3">
+               <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 shadow-lg">
+                  <Sparkles className="w-3 h-3 text-yellow-300 fill-yellow-300" />
+                  <span className="text-[10px] font-bold tracking-wide uppercase text-slate-200">
+                    {isEnglish ? "Premium Service" : "Layanan Premium"}
+                  </span>
+               </div>
+               
+               <div>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight mb-2 leading-tight drop-shadow-lg">
+                    {isEnglish ? "Welcome," : "Selamat Datang,"} <br/>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 via-white to-blue-200">
+                       {userName ? userName : (isEnglish ? "Guest" : "Kak")}! 👋
+                    </span>
+                  </h1>
+                  <p className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed font-medium">
+                    {isEnglish 
+                      ? "Ready to make your space sparkle? Choose your perfect cleaning package below." 
+                      : "Siap membuat ruanganmu berkilau? Pilih paket kebersihan premium di bawah ini dan biarkan kami yang bekerja."}
+                  </p>
+               </div>
             </div>
           </div>
         </div>
@@ -96,122 +114,111 @@ export function AllPackagesPage() {
       {/* 2. MAIN CONTENT */}
       <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            {isEnglish ? "Choose Service" : "Pilih Layanan"}
-            <span className="h-1.5 w-1.5 rounded-full bg-teal-500"></span>
-          </h2>
-          <p className="text-slate-500 text-sm mt-1">
-            {isEnglish ? "Select the package that suits your needs" : "Pilih paket yang sesuai dengan kebutuhan Anda"}
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
+              {isEnglish ? "Available Packages" : "Pilihan Paket"}
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse"></span>
+            </h2>
+            <p className="text-slate-500 text-xs sm:text-sm mt-0.5 font-medium">
+              {isEnglish ? "Select the package that suits your needs" : "Pilih paket yang sesuai dengan kebutuhan Anda"}
+            </p>
+          </div>
         </div>
 
         {/* Loading State */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600"></div>
-            <p className="mt-4 text-sm text-slate-500 font-medium">{t("packages.loading")}</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600 mb-4"></div>
+            <p className="text-xs text-slate-500 font-bold">{t("packages.loading")}</p>
           </div>
         )}
 
         {/* Error State */}
         {error && (
-          <div className="max-w-md mx-auto bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-100">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 mb-4">
+          <div className="max-w-md mx-auto bg-white rounded-2xl p-6 text-center shadow-lg shadow-slate-200/50 border border-slate-100">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 mb-3 ring-4 ring-rose-50/50">
               <Search className="h-6 w-6 text-rose-500" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">Oops!</h3>
-            <p className="text-slate-500 text-sm mb-4">{error}</p>
+            <h3 className="text-base font-bold text-slate-900 mb-1">Oops!</h3>
+            <p className="text-slate-500 text-xs mb-4">{error}</p>
             <button 
               onClick={() => window.location.reload()}
-              className="text-sm font-bold text-teal-600 hover:text-teal-700 hover:underline"
+              className="px-5 py-2 rounded-full bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20"
             >
               {isEnglish ? "Try Again" : "Coba Lagi"}
             </button>
           </div>
         )}
 
-        {/* 3. PACKAGE GRID - Mobile 2 Columns */}
+        {/* 3. PACKAGE GRID - Home Page Design */}
         {!loading && !error && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {items.map((pkg) => {
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+            {items.map((pkg, index) => {
               const name = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
               const image = getPackageImage(pkg.name, pkg.image);
               const alt = getPackageImageAlt(name);
-              const isNew = pkg.id > 2; // Simple logic for "New" badge example
-              const isPopular = pkg.price > 400000; // Logic for "Popular"
 
               return (
-                <div 
+                <motion.div
                   key={pkg.id}
-                  className="group relative flex flex-col bg-white rounded-2xl border border-slate-100 shadow-sm hover:scale-[1.01] transition-transform duration-300 overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-md border border-slate-300 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] hover:border-teal-500/50 transition-all duration-300"
                 >
-                  {/* Image Top Full Width */}
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                    <img 
+                  <div 
+                    className="relative aspect-[4/3] sm:aspect-video overflow-hidden cursor-pointer bg-slate-100"
+                    onClick={() => navigate(`/orders/new?paket_id=${pkg.id}`)}
+                  >
+                    <OptimizedImage 
                       src={image} 
-                      alt={alt} 
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                      alt={alt}
+                      priority={index < 2} 
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
                     
-                    {/* Gradient Overlay Bottom */}
-                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent opacity-90" />
-                    
-                    {/* Top Right Floating Price Pill */}
-                    <div className="absolute top-2 right-2 bg-white/95 px-2.5 py-1 rounded-full shadow-sm border border-slate-100 z-10">
-                      <div className="flex flex-col items-end leading-none">
-                        <span className="text-[9px] text-slate-500 font-medium mb-0.5">{isEnglish ? "Starts from" : "Mulai"}</span>
-                        <span className="text-xs font-bold text-teal-700">Rp {pkg.price.toLocaleString("id-ID")}</span>
-                      </div>
-                    </div>
-
-                    {/* Popular Badge */}
-                    {isPopular && (
-                      <div className="absolute top-2 left-2 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-white" />
-                        POPULAR
-                      </div>
-                    )}
-
-                    {/* Content inside Image Overlay (Bottom) */}
-                    <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <h3 className="text-sm sm:text-base font-bold leading-tight drop-shadow-sm line-clamp-2 mb-1">
-                        {name}
-                      </h3>
-                      
-                      {/* Under Title Chips */}
-                      <div className="flex items-center gap-2">
-                        {isNew && (
-                          <span className="flex items-center gap-1 text-[10px] font-semibold bg-emerald-500/90 px-1.5 py-0.5 rounded text-white backdrop-blur-none">
-                            <Sparkles className="w-3 h-3" /> New
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1 text-[10px] font-medium text-slate-200">
-                          <Users className="w-3 h-3" /> 2 Staff
-                        </span>
-                      </div>
+                    {/* Floating Price Badge */}
+                    <div className="absolute bottom-2 left-2 right-auto sm:bottom-3 sm:left-3 bg-white sm:bg-white/90 sm:backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg shadow-sm border border-white/50">
+                       <p className="text-xs sm:text-sm font-bold text-teal-700">
+                         Rp {pkg.price.toLocaleString("id-ID")}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Button Row - Bottom of Card */}
-                  <div className="p-3 mt-auto grid grid-cols-[1fr_1.5fr] gap-2">
-                    <button
-                      onClick={() => setSelectedPackage(pkg)}
-                      className="rounded-xl border border-slate-200 py-2 text-[10px] sm:text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
-                    >
-                      {isEnglish ? "Detail" : "Detail"}
-                    </button>
+                  <div className="flex flex-1 flex-col p-3 sm:p-5">
+                    <div className="mb-2 sm:mb-3">
+                      <h3 className="text-sm sm:text-lg font-bold text-slate-800 leading-tight mb-1 line-clamp-1 group-hover:text-teal-600 transition-colors">{name}</h3>
+                      <div className="h-0.5 w-8 sm:w-12 bg-teal-500/30 rounded-full" />
+                    </div>
                     
-                    <Link
-                      to={`/orders/new?paket_id=${pkg.id}`}
-                      className="rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 py-2 text-[10px] sm:text-xs font-bold text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1"
-                    >
-                      <span>{isEnglish ? "Book" : "Pesan"}</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
+                    <p className="mb-4 text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed">
+                      {pkg.description}
+                    </p>
+                    
+                    <div className="mt-auto flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedPackage(pkg)}
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-slate-50 border border-slate-200 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 transition-all duration-300 group/btn"
+                      >
+                        <span>{t("orders.viewDetails")}</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/orders/new?paket_id=${pkg.id}`);
+                        }}
+                        className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-teal-600 text-white shadow-lg shadow-teal-600/20 hover:bg-teal-500 hover:scale-105 active:scale-95 transition-all duration-300"
+                        title={isEnglish ? "Book Now" : "Pesan Sekarang"}
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>

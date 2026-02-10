@@ -6,7 +6,7 @@ import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth";
 import { requireActor } from "../../middleware/requireActor";
-import { imageUpload } from "../../middleware/upload";
+import { imageUpload, mediaUpload } from "../../middleware/upload";
 import {
   createOrderHandler,
   createRatingHandler,
@@ -23,7 +23,7 @@ export const ordersRouter = Router();
 ordersRouter.use(authenticate, requireActor("USER"));
 
 // Create order with BEFORE photo upload (multipart/form-data, supports multiple photos, max 4).
-ordersRouter.post("/", imageUpload.array("room_photo_before", 4), createOrderHandler);
+ordersRouter.post("/", mediaUpload.array("room_photo_before", 4), createOrderHandler);
 
 ordersRouter.get("/", listMyOrdersHandler);
 ordersRouter.get("/:id", getMyOrderHandler);
@@ -32,7 +32,7 @@ ordersRouter.get("/:id", getMyOrderHandler);
 ordersRouter.patch("/:id/payment-method", updatePaymentMethodHandler);
 
 // Optional: user can upload AFTER photo too (supports multiple photos, max 4).
-ordersRouter.post("/:id/after-photo", imageUpload.array("room_photo_after", 4), uploadAfterPhotoUserHandler);
+ordersRouter.post("/:id/after-photo", mediaUpload.array("room_photo_after", 4), uploadAfterPhotoUserHandler);
 
 // Verify job completion (IN_PROGRESS -> COMPLETED).
 ordersRouter.post("/:id/verify-completion", verifyCompletionHandler);

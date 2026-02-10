@@ -134,7 +134,7 @@ async function resolveAdminId(input: { id: number; origin?: "USER" | "ADMIN"; ac
 export const createOrderHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.auth) throw new HttpError(401, "Unauthenticated");
   const files = req.files as Express.Multer.File[];
-  if (!files || files.length === 0) throw new HttpError(400, "room_photo_before is required (at least 1 photo)");
+  // if (!files || files.length === 0) throw new HttpError(400, "room_photo_before is required (at least 1 photo)");
 
   const input = createOrderInputSchema.parse(req.body);
 
@@ -184,7 +184,11 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
   const surgeMultiplier = 1.0; // Placeholder for future logic
   const basePrice = paket.price;
   
-  const totalPrice = Math.ceil((basePrice + distancePrice) * surgeMultiplier);
+  // Calculate Extra Services Price
+  const extraServices = input.extras || [];
+  const extraPrice = extraServices.reduce((sum, item) => sum + item.price, 0);
+
+  const totalPrice = Math.ceil((basePrice + distancePrice + extraPrice) * surgeMultiplier);
   
   // ETA: Assume 30km/h average speed in city = 500 meters/minute
   const estimatedEta = distanceMeters > 0 ? Math.ceil(distanceMeters / 500) : 30; // Default 30 mins if unknown
@@ -214,9 +218,12 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
       // Pricing fields
       base_price: basePrice,
       distance_price: distancePrice,
+      extra_price: extraPrice,
       surge_multiplier: surgeMultiplier,
       total_price: totalPrice,
       estimated_eta: estimatedEta,
+      
+      extra_services: extraServices,
 
       pembayaran: {
         create: {
@@ -401,7 +408,7 @@ export const uploadAfterPhotoUserHandler = asyncHandler(async (req: Request, res
   if (!req.auth) throw new HttpError(401, "Unauthenticated");
   const id = parseId(req.params.id);
   const files = req.files as Express.Multer.File[];
-  if (!files || files.length === 0) throw new HttpError(400, "room_photo_after is required (at least 1 photo)");
+  // // if (!files || files.length === 0) throw new HttpError(400, "room_photo_after is required (at least 1 photo)");
 
   // Ensure the order belongs to the user and check status
   const order = await getOrderForUserOrThrow(id, req.auth.id);
@@ -479,6 +486,7 @@ export const verifyCompletionHandler = asyncHandler(async (req: Request, res: Re
   }
 
   // Check if after photo exists (supports both JSON array and single string)
+  /*
   let hasAfterPhoto = false;
   if (order.room_photo_after) {
     try {
@@ -491,6 +499,7 @@ export const verifyCompletionHandler = asyncHandler(async (req: Request, res: Re
   if (!hasAfterPhoto) {
     throw new HttpError(400, "room_photo_after must be uploaded before completion verification");
   }
+  */
   if (!order.tip) {
     throw new HttpError(400, "Tip must be submitted before completion verification (can be 0 for no tip)");
   }
@@ -571,6 +580,7 @@ export const createTipHandler = asyncHandler(async (req: Request, res: Response)
   }
   
   // If IN_PROGRESS, require after photo to be uploaded (supports both JSON array and single string)
+  /*
   if (order.status === OrderStatus.IN_PROGRESS) {
     let hasAfterPhoto = false;
     if (order.room_photo_after) {
@@ -585,6 +595,7 @@ export const createTipHandler = asyncHandler(async (req: Request, res: Response)
       throw new HttpError(400, "After photo must be uploaded before submitting tip");
     }
   }
+  */
   
   if (order.tip) throw new HttpError(409, "Tip already exists for this order");
 

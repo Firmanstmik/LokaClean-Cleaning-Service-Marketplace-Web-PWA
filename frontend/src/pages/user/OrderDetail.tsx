@@ -382,7 +382,7 @@ export function OrderDetailPage() {
       )}
 
       {/* Completion & Tip Section */}
-      {order.status === "IN_PROGRESS" && afterPhotoPaths.length > 0 && canDoAfterAndComplete && (
+      {order.status === "IN_PROGRESS" && canDoAfterAndComplete && (
         <div className="mx-4 mt-6 p-5 bg-white rounded-xl shadow-sm border border-slate-100">
           <h3 className="font-bold text-slate-800 mb-4">{t("orderDetail.completeOrder")}</h3>
           

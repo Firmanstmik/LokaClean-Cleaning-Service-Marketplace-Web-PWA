@@ -38,12 +38,31 @@ function fileFilter(
   return cb(null, true);
 }
 
+function mediaFilter(
+  _req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) {
+  if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")) {
+    return cb(null, true);
+  }
+  return cb(new HttpError(400, "Only image and video uploads are allowed"));
+}
+
 export const imageUpload = multer({
   storage,
   fileFilter,
   limits: {
     // Keep the limit modest; increase later if needed.
     fileSize: 10 * 1024 * 1024 // 10MB
+  }
+});
+
+export const mediaUpload = multer({
+  storage,
+  fileFilter: mediaFilter,
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB
   }
 });
 

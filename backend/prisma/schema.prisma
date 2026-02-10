@@ -186,9 +186,12 @@ model Pesanan {
   // Price details
   base_price         Int      @default(50000)
   distance_price     Int      @default(0)
+  extra_price        Int      @default(0)
   surge_multiplier   Float    @default(1.0)
   total_price        Int      
   estimated_eta      Int?     // In minutes
+
+  extra_services     Json?
 
   created_at         DateTime    @default(now())
   updated_at         DateTime    @updatedAt

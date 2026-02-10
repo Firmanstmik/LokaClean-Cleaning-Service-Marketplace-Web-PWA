@@ -6,7 +6,7 @@ import { Router } from "express";
 
 import { authenticate } from "../../middleware/auth";
 import { requireActor } from "../../middleware/requireActor";
-import { imageUpload } from "../../middleware/upload";
+import { imageUpload, mediaUpload } from "../../middleware/upload";
 import {
   assignOrderAdminHandler,
   deleteOrderAdminHandler,
@@ -29,7 +29,7 @@ adminOrdersRouter.get("/:id", getOrderAdminHandler);
 adminOrdersRouter.patch("/:id/assign", assignOrderAdminHandler);
 adminOrdersRouter.patch("/:id/status", updateOrderStatusAdminHandler);
 
-adminOrdersRouter.post("/:id/after-photo", imageUpload.single("room_photo_after"), uploadAfterPhotoAdminHandler);
+adminOrdersRouter.post("/:id/after-photo", mediaUpload.single("room_photo_after"), uploadAfterPhotoAdminHandler);
 
 adminOrdersRouter.post("/bulk-delete", deleteOrdersBulkAdminHandler);
 adminOrdersRouter.delete("/:id", deleteOrderAdminHandler);

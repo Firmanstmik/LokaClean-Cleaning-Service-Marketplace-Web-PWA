@@ -25,7 +25,19 @@ export const createOrderInputSchema = z.object({
   scheduled_date: z.preprocess((val) => {
     if (typeof val === "string" || val instanceof Date) return new Date(val);
     return val;
-  }, z.date())
+  }, z.date()),
+  extras: z.string().optional().transform((val) => {
+    if (!val) return [];
+    try {
+      return JSON.parse(val);
+    } catch {
+      return [];
+    }
+  }).pipe(z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    price: z.number()
+  })).optional().default([]))
 });
 
 export const createRatingSchema = z.object({

@@ -84,10 +84,7 @@ export function OrderRatingModal({ isOpen, onClose, onSuccess, order }: OrderRat
   };
 
   const submitUpload = async () => {
-    if (photos.length === 0 && !order.room_photo_after) {
-      setError("Mohon upload minimal 1 foto hasil pekerjaan.");
-      return;
-    }
+    // Photos are optional now
     
     setLoading(true);
     setError(null);
@@ -196,22 +193,30 @@ export function OrderRatingModal({ isOpen, onClose, onSuccess, order }: OrderRat
                 </div>
                 <h3 className="font-bold text-slate-800">Foto Hasil Pekerjaan</h3>
                 <p className="text-sm text-slate-500">
-                  Silakan upload foto bukti pekerjaan telah selesai untuk verifikasi.
+                  Silakan upload foto/video bukti pekerjaan telah selesai (Opsional).
                 </p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                {photoPreviews.map((src, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group">
-                    <img src={src} alt="Preview" className="w-full h-full object-cover" />
-                    <button 
-                      onClick={() => removePhoto(idx)}
-                      className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+                {photoPreviews.map((src, idx) => {
+                  const file = photos[idx];
+                  const isVideo = file?.type.startsWith('video/');
+                  return (
+                    <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative group">
+                      {isVideo ? (
+                        <video src={src} className="w-full h-full object-cover" muted autoPlay loop playsInline />
+                      ) : (
+                        <img src={src} alt="Preview" className="w-full h-full object-cover" />
+                      )}
+                      <button 
+                        onClick={() => removePhoto(idx)}
+                        className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                })}
                 {photoPreviews.length < 4 && (
                   <button 
                     onClick={() => fileInputRef.current?.click()}
@@ -227,18 +232,18 @@ export function OrderRatingModal({ isOpen, onClose, onSuccess, order }: OrderRat
                 ref={fileInputRef} 
                 onChange={handlePhotoSelect} 
                 multiple 
-                accept="image/*" 
+                accept="image/*,video/*" 
                 className="hidden" 
               />
 
               <button
                 onClick={submitUpload}
-                disabled={loading || (photos.length === 0 && !order.room_photo_after)}
-                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={loading}
+                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>
-                    Lanjut <ChevronRight className="w-4 h-4" />
+                    {photos.length > 0 ? "Upload & Lanjut" : "Lewati Foto"} <ChevronRight className="w-4 h-4" />
                   </>
                 )}
               </button>

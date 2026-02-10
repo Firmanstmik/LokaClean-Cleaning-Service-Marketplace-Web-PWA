@@ -10,6 +10,12 @@ interface BeforeAfterPhotosProps {
   afterPhotoPreviews?: string[];
 }
 
+const isVideo = (url: string) => {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.ogg') || lower.endsWith('.mov') || lower.endsWith('.quicktime');
+};
+
 export function BeforeAfterPhotos({ beforePhotos, afterPhotos, onUploadClick, canUpload, afterPhotoPreviews = [] }: BeforeAfterPhotosProps) {
   // Use previews if available, otherwise use URLs (for existing photos)
   const displayAfterPhoto = afterPhotoPreviews.length > 0 ? afterPhotoPreviews[0] : (afterPhotos.length > 0 ? afterPhotos[0] : null);
@@ -24,12 +30,23 @@ export function BeforeAfterPhotos({ beforePhotos, afterPhotos, onUploadClick, ca
           <p className="text-xs font-medium text-slate-500 text-center">{t('orderDetail.beforePhoto')}</p>
           <div className="aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm relative group">
             {beforePhotos.length > 0 ? (
-              <img 
-                src={beforePhotos[0]} 
-                alt="Before" 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                loading="lazy"
-              />
+              isVideo(beforePhotos[0]) ? (
+                <video 
+                  src={beforePhotos[0]} 
+                  className="w-full h-full object-cover" 
+                  muted 
+                  autoPlay 
+                  loop 
+                  playsInline 
+                />
+              ) : (
+                <img 
+                  src={beforePhotos[0]} 
+                  alt="Before" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                />
+              )
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-slate-400 p-2 text-center">
                 <ImageIcon className="w-6 h-6 mb-1" />
@@ -51,12 +68,23 @@ export function BeforeAfterPhotos({ beforePhotos, afterPhotos, onUploadClick, ca
             onClick={!displayAfterPhoto && canUpload ? onUploadClick : undefined}
           >
             {displayAfterPhoto ? (
-              <img 
-                src={displayAfterPhoto} 
-                alt="After" 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                loading="lazy"
-              />
+              isVideo(displayAfterPhoto) ? (
+                <video 
+                  src={displayAfterPhoto} 
+                  className="w-full h-full object-cover" 
+                  muted 
+                  autoPlay 
+                  loop 
+                  playsInline 
+                />
+              ) : (
+                <img 
+                  src={displayAfterPhoto} 
+                  alt="After" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                />
+              )
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-emerald-600 p-2 text-center">
                 {canUpload ? (

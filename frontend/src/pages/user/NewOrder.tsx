@@ -50,6 +50,14 @@ const TIME_SLOTS = [
   "13:00", "14:00", "15:00", "16:00", "17:00"
 ];
 
+const EXTRA_SERVICES = [
+  { id: "deep-clean-bath", name: "Deep Clean Kamar Mandi", price: 30000, icon: "bath" },
+  { id: "fridge", name: "Pembersihan Kulkas (Dalam)", price: 20000, icon: "fridge" },
+  { id: "dishes", name: "Cuci Piring (Max 1 Rak)", price: 15000, icon: "dishes" },
+  { id: "folding", name: "Lipat Baju (Max 1 Keranjang)", price: 20000, icon: "shirt" },
+  { id: "cupboard", name: "Pembersihan Lemari (Dalam)", price: 25000, icon: "cabinet" }
+];
+
 export function NewOrderPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -71,6 +79,7 @@ export function NewOrderPage() {
   const [address, setAddress] = useState("");
   const [beforePhotos, setBeforePhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [selectedExtras, setSelectedExtras] = useState<typeof EXTRA_SERVICES>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // --- Refs ---
@@ -174,6 +183,11 @@ export function NewOrderPage() {
       formData.append("location_latitude", String(location.lat));
       formData.append("location_longitude", String(location.lng));
       
+      // Extras
+      if (selectedExtras.length > 0) {
+        formData.append("extras", JSON.stringify(selectedExtras));
+      }
+
       // Force Payment Method: CASH (Hide others for now)
       formData.append("payment_method", "CASH"); 
 
@@ -333,6 +347,52 @@ export function NewOrderPage() {
                   <div className="bg-white p-3 rounded-xl border border-slate-100 flex items-center gap-2 shadow-sm">
                     <Palmtree className="w-4 h-4 text-emerald-500" />
                     <span className="text-[10px] font-medium text-slate-600">{t("newOrder.localStaff")}</span>
+                  </div>
+                </div>
+
+                {/* EXTRA SERVICES */}
+                <div className="mt-8">
+                  <div className="text-center mb-6">
+                    <h3 className="text-md font-bold text-slate-800">{t("newOrder.extraServicesTitle") || "Layanan Tambahan (Opsional)"}</h3>
+                    <p className="text-xs text-slate-500">{t("newOrder.extraServicesDesc") || "Pilih layanan tambahan jika diperlukan"}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {EXTRA_SERVICES.map((extra) => {
+                      const isSelected = selectedExtras.some(e => e.id === extra.id);
+                      return (
+                        <div
+                          key={extra.id}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedExtras(prev => prev.filter(e => e.id !== extra.id));
+                            } else {
+                              setSelectedExtras(prev => [...prev, extra]);
+                            }
+                          }}
+                          className={`
+                            flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer
+                            ${isSelected 
+                              ? "bg-teal-50 border-teal-500 shadow-sm" 
+                              : "bg-white border-slate-200 hover:border-teal-200"
+                            }
+                          `}
+                        >
+                          <div className="flex items-center gap-3">
+                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isSelected ? "bg-teal-200 text-teal-700" : "bg-slate-100 text-slate-500"}`}>
+                               <Sparkles className="w-4 h-4" />
+                             </div>
+                             <div>
+                               <div className="text-sm font-bold text-slate-800">{extra.name}</div>
+                               <div className="text-xs text-slate-500">+ Rp {extra.price.toLocaleString("id-ID")}</div>
+                             </div>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? "bg-teal-500 border-teal-500" : "border-slate-300 bg-white"}`}>
+                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </motion.div>
@@ -521,21 +581,31 @@ export function NewOrderPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 px-1">
                     <Camera className="w-4 h-4 text-teal-500" />
-                    <span className="text-sm font-bold text-slate-700">{t("newOrder.roomPhoto")}</span>
+                    <span className="text-sm font-bold text-slate-700">
+                      {t("newOrder.roomPhoto")} <span className="text-slate-400 font-normal text-xs">(Opsional - Foto/Video)</span>
+                    </span>
                   </div>
                   
                   <div className="grid grid-cols-4 gap-2">
-                    {photoPreviews.map((src, idx) => (
-                      <div key={idx} className="aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 relative group">
-                        <img src={src} alt="Preview" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => setBeforePhotos(prev => prev.filter((_, i) => i !== idx))}
-                          className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <ChevronLeft className="w-3 h-3 rotate-45" /> {/* Close Icon */}
-                        </button>
-                      </div>
-                    ))}
+                    {photoPreviews.map((src, idx) => {
+                      const file = beforePhotos[idx];
+                      const isVideo = file?.type.startsWith('video/');
+                      return (
+                        <div key={idx} className="aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 relative group">
+                          {isVideo ? (
+                            <video src={src} className="w-full h-full object-cover" muted autoPlay loop playsInline />
+                          ) : (
+                            <img src={src} alt="Preview" className="w-full h-full object-cover" />
+                          )}
+                          <button
+                            onClick={() => setBeforePhotos(prev => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <ChevronLeft className="w-3 h-3 rotate-45" /> {/* Close Icon */}
+                          </button>
+                        </div>
+                      );
+                    })}
                     
                     {beforePhotos.length < 4 && (
                       <button 
@@ -551,7 +621,7 @@ export function NewOrderPage() {
                   <input
                     type="file"
                     ref={cameraInputRef}
-                    accept="image/*"
+                    accept="image/*,video/*"
                     className="hidden"
                     onChange={handlePhotoSelect}
                     multiple
@@ -589,13 +659,32 @@ export function NewOrderPage() {
                   <div className="bg-slate-800 text-white p-5 rounded-2xl shadow-lg mt-8">
                     <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
                       <span className="text-sm text-slate-300">{t("newOrder.totalPayment")}</span>
-                      <span className="text-xl font-bold">Rp {selectedPackage.price.toLocaleString("id-ID")}</span>
+                      <div className="text-right">
+                        <span className="text-xl font-bold block">
+                          Rp {(selectedPackage.price + selectedExtras.reduce((acc, curr) => acc + curr.price, 0)).toLocaleString("id-ID")}
+                        </span>
+                        {selectedExtras.length > 0 && (
+                          <span className="text-[10px] text-slate-400 font-normal">
+                            (Paket: {selectedPackage.price.toLocaleString()} + Extra: {selectedExtras.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()})
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2 text-xs text-slate-400">
                       <div className="flex justify-between">
                         <span>{t("newOrder.summaryPackage")}</span>
                         <span className="text-slate-200">{isEnglish && selectedPackage.name_en ? selectedPackage.name_en : selectedPackage.name}</span>
                       </div>
+                      {selectedExtras.length > 0 && (
+                        <div className="flex justify-between items-start">
+                           <span>Extras</span>
+                           <div className="text-right text-slate-200">
+                             {selectedExtras.map(e => (
+                               <div key={e.id}>{e.name}</div>
+                             ))}
+                           </div>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span>{t("newOrder.summarySchedule")}</span>
                         <span className="text-slate-200">
