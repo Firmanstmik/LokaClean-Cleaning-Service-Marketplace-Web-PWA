@@ -14,6 +14,12 @@ git pull origin main
 # 2. Update Frontend (Includes SEO Prerendering)
 echo "🎨 Updating Frontend..."
 cd frontend
+
+# FORCE CLEAN: Remove previous build artifacts and cache to ensure image optimizer runs fresh
+echo "🧹 Cleaning previous build artifacts..."
+rm -rf dist
+rm -rf node_modules/.vite
+
 npm install
 # Note: npm run build triggers 'react-snap' (prerendering) automatically via postbuild
 echo "🏗️  Building Frontend & Prerendering SEO pages..."
