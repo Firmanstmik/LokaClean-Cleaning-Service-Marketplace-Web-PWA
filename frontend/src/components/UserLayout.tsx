@@ -366,8 +366,8 @@ export function UserLayout() {
                     navigator.serviceWorker.ready.then((registration) => {
                       registration.showNotification(friendlyMsg.title, {
                         body: friendlyMsg.message,
-                        icon: '/img/Logo_LokaClean.jpg',
-                        badge: '/img/Logo_LokaClean.jpg',
+                        icon: '/img/Logo_LokaClean_fixed.jpg',
+                        badge: '/img/Logo_LokaClean_fixed.jpg',
                         tag: `notification-${notif.id}`,
                         requireInteraction: false,
                         data: {
@@ -382,8 +382,8 @@ export function UserLayout() {
                       // Fallback to direct Notification API if service worker not ready
                   const browserNotification = new Notification(friendlyMsg.title, {
                     body: friendlyMsg.message,
-                    icon: '/img/Logo_LokaClean.jpg',
-                    badge: '/img/Logo_LokaClean.jpg',
+                    icon: '/img/Logo_LokaClean_fixed.jpg',
+                    badge: '/img/Logo_LokaClean_fixed.jpg',
                     tag: `notification-${notif.id}`,
                     requireInteraction: false,
                     data: {
@@ -406,8 +406,8 @@ export function UserLayout() {
                     // Fallback to direct Notification API if service worker not supported
                     const browserNotification = new Notification(friendlyMsg.title, {
                       body: friendlyMsg.message,
-                      icon: '/img/Logo_LokaClean.jpg',
-                      badge: '/img/Logo_LokaClean.jpg',
+                      icon: '/img/Logo_LokaClean_fixed.jpg',
+                      badge: '/img/Logo_LokaClean_fixed.jpg',
                       tag: `notification-${notif.id}`,
                       requireInteraction: false,
                       data: {
@@ -992,7 +992,7 @@ export function UserLayout() {
                 }}
               >
                 <motion.img
-          src="/img/Logo_LokaClean.jpg"
+          src="/img/Logo_LokaClean_fixed.jpg"
           alt="LokaClean Logo"
           className="h-full w-full object-contain p-1.5 sm:p-2 mix-blend-multiply"
           animate={{

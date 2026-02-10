@@ -238,7 +238,7 @@ export function UserHomePage() {
                 className="h-28 sm:h-32 w-auto flex items-center justify-center"
               >
                 <img 
-          src="/img/maskot.jpg" 
+          src="/img/maskot_fixed.jpg" 
           alt="LokaClean Mascot" 
           className="h-full w-auto object-contain mix-blend-multiply transition-all duration-500 ease-out hover:-translate-y-1"
         />
