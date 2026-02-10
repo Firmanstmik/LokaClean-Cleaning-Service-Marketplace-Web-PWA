@@ -330,9 +330,20 @@ export const listMyOrdersHandler = asyncHandler(async (req: Request, res: Respon
     // In Progress: IN_PROGRESS
     where.status = OrderStatus.IN_PROGRESS;
   } else if (statusFilter === 'rate') {
-    // Rate: COMPLETED but not rated
-    where.status = OrderStatus.COMPLETED;
-    where.rating = null;
+    // Rate: COMPLETED but not rated OR IN_PROGRESS and > 1 hour past schedule
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    where.OR = [
+      {
+        status: OrderStatus.COMPLETED,
+        rating: null
+      },
+      {
+        status: OrderStatus.IN_PROGRESS,
+        scheduled_date: {
+          lt: oneHourAgo
+        }
+      }
+    ];
   } else if (statusFilter === 'completed') {
     // Complete: COMPLETED
     where.status = OrderStatus.COMPLETED;
