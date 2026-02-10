@@ -20,7 +20,7 @@ import addressesRouter from "./modules/addresses/addresses.routes";
 
 export const apiRouter = Router();
 
-apiRouter.get("/health", (_req, res) => {
+apiRouter.get("/health", (_req: Request, res: Response) => {
   return res.json({ ok: true, data: { status: "ok" } });
 });
 
