@@ -7,6 +7,11 @@ set -e # Stop script jika ada error
 
 echo "🚀 Starting LokaClean Update..."
 
+# 0. Force clean artifacts
+echo "🧹 Cleaning up old builds..."
+rm -rf frontend/dist
+rm -rf frontend/node_modules/.vite
+
 # 1. Pull latest code
 echo "📥 Pulling latest changes from git..."
 git pull origin main

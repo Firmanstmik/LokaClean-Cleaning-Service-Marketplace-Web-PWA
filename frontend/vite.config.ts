@@ -12,21 +12,21 @@ import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 export default defineConfig({
   plugins: [
     react(),
-    ViteImageOptimizer({
-      exclude: ['**/maskot_fixed.jpg', '**/Logo_LokaClean_fixed.jpg', '**/logo*.jpg', '**/*.png'], 
-      png: {
-        quality: 80,
-      },
-      jpeg: {
-        quality: 80,
-      },
-      jpg: {
-        quality: 80,
-      },
-      webp: {
-        lossless: true,
-      },
-    }),
+    // ViteImageOptimizer({
+    //   exclude: ['**/maskot_fixed.jpg', '**/Logo_LokaClean_fixed.jpg', '**/logo*.jpg', '**/*.png'], 
+    //   png: {
+    //     quality: 80,
+    //   },
+    //   jpeg: {
+    //     quality: 80,
+    //   },
+    //   jpg: {
+    //     quality: 80,
+    //   },
+    //   webp: {
+    //     lossless: true,
+    //   },
+    // }),
     // "PWA-ready" foundation: installable web app + offline caching can be enabled gradually.
     VitePWA({
       registerType: "autoUpdate",
