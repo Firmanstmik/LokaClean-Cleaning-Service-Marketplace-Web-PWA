@@ -240,6 +240,7 @@ export function UserHomePage() {
                 <img 
           src="/img/maskot_fixed.jpg" 
           alt="LokaClean Mascot" 
+          loading="eager"
           className="h-full w-auto object-contain mix-blend-multiply transition-all duration-500 ease-out hover:-translate-y-1"
         />
               </motion.div>
