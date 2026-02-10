@@ -4,7 +4,7 @@
  * All routes are mounted under `/api` from `app.ts`.
  */
 
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 
 import { env } from "./config/env";
 import { authRouter } from "./modules/auth/auth.routes";
