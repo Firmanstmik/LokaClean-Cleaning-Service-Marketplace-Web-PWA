@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [
     react(),
     ViteImageOptimizer({
-      exclude: [/maskot\.jpg$/i, /Logo_LokaClean\.jpg$/i, /logo.*\.jpg$/i], 
+      exclude: ['**/maskot.jpg', '**/Logo_LokaClean.jpg', '**/logo*.jpg'], 
       png: {
         quality: 80,
       },
