@@ -14,9 +14,10 @@ import { LanguageSwitcherPill } from "../../components/LanguageSwitcher";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { normalizeWhatsAppPhone } from "../../lib/phone";
 import { t, useCurrentLanguage } from "../../lib/i18n";
+import { Helmet } from "react-helmet-async";
 
 export function UserLogin() {
-  const lang = useCurrentLanguage();
+  useCurrentLanguage();
   const { token, actor, setAuth } = useAuth();
   const navigate = useNavigate();
 
@@ -44,6 +45,9 @@ export function UserLogin() {
 
   return (
     <div className="flex min-h-screen w-full bg-white overflow-hidden">
+      <Helmet>
+        <title>Login LokaClean | Cleaning Service Mandalika</title>
+      </Helmet>
       {/* Left Side - Hero Section (Desktop Only) */}
       <motion.div 
         initial={{ x: "-100%", opacity: 0 }}

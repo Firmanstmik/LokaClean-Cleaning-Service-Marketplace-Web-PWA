@@ -12,21 +12,20 @@ import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 export default defineConfig({
   plugins: [
     react(),
-    // ViteImageOptimizer({
-    //   /* pass your config */
-    //   png: {
-    //     quality: 80,
-    //   },
-    //   jpeg: {
-    //     quality: 75,
-    //   },
-    //   jpg: {
-    //     quality: 75,
-    //   },
-    //   webp: {
-    //     lossless: true,
-    //   },
-    // }),
+    ViteImageOptimizer({
+      png: {
+        quality: 80,
+      },
+      jpeg: {
+        quality: 80,
+      },
+      jpg: {
+        quality: 80,
+      },
+      webp: {
+        lossless: true,
+      },
+    }),
     // "PWA-ready" foundation: installable web app + offline caching can be enabled gradually.
     VitePWA({
       registerType: "autoUpdate",
@@ -60,6 +59,9 @@ export default defineConfig({
   ],
   server: {
     port: 5173
+  },
+  build: {
+    target: "es2015"
   }
 });
 

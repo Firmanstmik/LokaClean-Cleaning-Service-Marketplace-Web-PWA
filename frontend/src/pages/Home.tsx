@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CheckCircle2, MapPin, Camera, Star, Zap, Shield, Heart, ArrowRight, Handshake, Leaf, Globe, User, Calendar, Clock, Home as HomeIcon, Quote, Check, X, Construction, Package, Download, LogIn } from "lucide-react";
+import { MapPin, Camera, Star, ArrowRight, Handshake, Leaf, User, Calendar, X, Construction, Shield, Heart, Zap, LogIn, Download, Quote } from "lucide-react";
 
 import { useAuth } from "../lib/auth";
 import { Footer } from "../components/Footer";
@@ -23,6 +23,8 @@ import { MobileWelcome } from "./MobileWelcome";
 import { OptimizedImage } from "../components/ui/OptimizedImage";
 import { IOSInstallPrompt } from "../components/IOSInstallPrompt";
 import { AndroidInstallPrompt } from "../components/AndroidInstallPrompt";
+
+import { Helmet } from "react-helmet-async";
 
 export function Home() {
   const { token, actor } = useAuth();
@@ -134,6 +136,37 @@ export function Home() {
 
   return (
     <div className="min-h-screen bg-white sm:bg-gradient-to-br sm:from-white sm:via-blue-50/30 sm:to-purple-50/20 overflow-hidden relative">
+      <Helmet>
+        <title>Jasa Kebersihan Lombok & Mandalika | LokaClean</title>
+        <meta name="description" content="Jasa cleaning service profesional di Kuta Mandalika & Lombok Tengah. Villa cleaning, home cleaning, daily housekeeping standar hotel. Booking via aplikasi sekarang." />
+        
+        {/* OpenGraph / Social Media */}
+        <meta property="og:title" content="Jasa Kebersihan Lombok & Mandalika | LokaClean" />
+        <meta property="og:description" content="Jasa cleaning service profesional di Kuta Mandalika. Villa cleaning, home cleaning, daily housekeeping standar hotel." />
+        <meta property="og:image" content="https://lokaclean.com/img/hero.png" />
+        <meta property="og:url" content="https://lokaclean.com" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="id_ID" />
+        <meta property="og:site_name" content="LokaClean" />
+        
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "LocalBusiness",
+              "name": "LokaClean",
+              "image": "https://lokaclean.com/img/logo.jpg",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Kuta",
+                "addressRegion": "Lombok Tengah",
+                "addressCountry": "ID"
+              },
+              "priceRange": "$$"
+            }
+          `}
+        </script>
+      </Helmet>
       
       {/* Welcome Alert - Floating Top Right */}
       <AnimatePresence>
@@ -479,6 +512,16 @@ export function Home() {
               </div>
             </div>
         </motion.section>
+
+        {/* SEO Text Section - Visible for Google */}
+        <section className="w-full bg-slate-50 border-y border-slate-200 py-10 px-4 sm:px-6 lg:px-8 mb-12">
+          <div className="max-w-4xl mx-auto text-center">
+             <h2 className="text-xl font-bold text-slate-800 mb-3">Layanan Kebersihan Profesional Lombok</h2>
+             <p className="text-slate-600 text-base leading-relaxed">
+               LokaClean melayani jasa kebersihan profesional di Kuta Mandalika dan Lombok Tengah. Menyediakan layanan villa cleaning, home cleaning, dan daily housekeeping dengan standar hotel.
+             </p>
+          </div>
+        </section>
 
         {/* Content Wrapper for remaining sections */}
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 lg:pb-20">
@@ -1117,6 +1160,17 @@ export function Home() {
           </div>
         </section>
         </div>
+        {/* Visible SEO Section (Phase 4) */}
+        <section className="py-12 px-4 bg-slate-50 border-t border-slate-200">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">LokaClean Lombok</h2>
+            <p className="text-slate-600 leading-relaxed">
+              LokaClean melayani jasa kebersihan profesional di Kuta Mandalika dan Lombok Tengah. 
+              Menyediakan layanan villa cleaning, home cleaning, dan daily housekeeping dengan standar hotel.
+            </p>
+          </div>
+        </section>
+
       </main>
 
 

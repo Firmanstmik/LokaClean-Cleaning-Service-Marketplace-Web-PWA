@@ -9,7 +9,10 @@ Panduan ini menjelaskan cara men-deploy dan meng-update aplikasi LokaClean di VP
 
 ## 1. Persiapan VPS (Initial Setup)
 
-Jika ini pertama kali deploy, jalankan perintah berikut di VPS:
+### A. Install Dependencies Dasar & SEO Libs (PENTING)
+
+Jika ini pertama kali deploy, jalankan perintah berikut di VPS.
+**Note:** Kita perlu install library tambahan untuk `react-snap` (SEO Prerendering) agar bisa berjalan di VPS.
 
 ```bash
 # Update system
@@ -23,8 +26,17 @@ sudo apt install -y nodejs
 sudo npm install -g pm2
 sudo apt install -y nginx certbot python3-certbot-nginx
 
-# Install Database (PostgreSQL) - Opsional jika pakai database lokal
+# Install Database (PostgreSQL)
 sudo apt install -y postgresql postgresql-contrib
+
+# --- KHUSUS SEO PRERENDERING ---
+# Install library Chrome/Puppeteer agar build frontend berhasil
+sudo apt-get install -y ca-certificates fonts-liberation libappindicator3-1 libasound2 \
+libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 \
+libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 \
+libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 \
+libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 \
+libxrender1 libxss1 libxtst6 lsb-release wget xdg-utils
 ```
 
 ## 2. Setup Aplikasi (Pertama Kali)
@@ -115,38 +127,40 @@ pm2 startup
 ---
 
 ## 5. Cara UPDATE Aplikasi (Rutin)
-
-Setiap kali ada perubahan di GitHub (seperti perbaikan tampilan mobile yang baru saja dilakukan), lakukan langkah ini di VPS:
-
+ 
+Setiap kali ada perubahan di GitHub (seperti perbaikan tampilan mobile atau update SEO), lakukan langkah ini di VPS:
+ 
 1. **Masuk ke direktori project:**
    ```bash
-   cd ~/lokaclean  # atau /var/www/lokaclean tergantung lokasi install
+   cd ~/lokaclean
    ```
 
-2. **Tarik perubahan terbaru:**
+2. **Jalankan Script Update Otomatis:**
+   Saya sudah buatkan script `update.sh` untuk mengotomatisasi pull, install, build, dan restart.
+   
+   **Pertama kali (beri izin execute):**
    ```bash
-   git pull origin main
+   chmod +x update.sh install_seo_deps.sh
    ```
-
-3. **Build ulang Frontend (jika ada perubahan tampilan):**
+   
+   **Jalankan update:**
    ```bash
-   cd frontend
-   npm install      # jaga-jaga ada library baru
-   npm run build    # PENTING: ini yang mengupdate tampilan
-   cd ..
+   ./update.sh
    ```
-
-4. **Restart Backend (jika ada perubahan logic/API):**
+   
+   *Script ini akan otomatis:*
+   - `git pull`
+   - Install dependencies & Build Frontend (termasuk Prerendering SEO)
+   - Install dependencies & Build Backend
+   - Migrate database (jika perlu)
+   - Restart PM2
+ 
+3. **Jika Build Gagal (Error Chrome/Puppeteer):**
+   Jika `npm run build` di frontend gagal dengan error terkait Chrome/Puppeteer, jalankan script ini sekali saja:
    ```bash
-   cd backend
-   npm install      # jaga-jaga ada library baru
-   npm run build    # compile ulang typescript
-   npx prisma migrate deploy # jika ada perubahan database
-   pm2 restart lokaclean-api
-   cd ..
+   sudo ./install_seo_deps.sh
    ```
-
-5. **Selesai!** Cek website `lokaclean.com`.
+   Lalu coba `./update.sh` lagi.
 
 ---
 

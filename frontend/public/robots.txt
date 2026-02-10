@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /orders
+Sitemap: https://lokaclean.com/sitemap.xml

@@ -20,6 +20,7 @@ import { OrdersPage } from "./pages/user/Orders";
 import { OrderDetailPage } from "./pages/user/OrderDetail";
 import { ProfilePage } from "./pages/user/Profile";
 import { AddressesPage } from "./pages/user/Addresses";
+import { SEOPage } from "./pages/landing/SEOPage";
 
 import { AdminLogin } from "./pages/admin/AdminLogin";
 import { AdminDashboardPage } from "./pages/admin/AdminDashboard";
@@ -43,6 +44,13 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      
+      {/* SEO Landing Pages (Phase 3) */}
+      <Route path="/jasa-kebersihan-lombok" element={<SEOPage />} />
+      <Route path="/cleaning-service-mandalika" element={<SEOPage />} />
+      <Route path="/villa-cleaning-kuta" element={<SEOPage />} />
+      <Route path="/home-cleaning-lombok" element={<SEOPage />} />
+
       {/* Security: Redirect /admin to Home to hide admin login URL. 
           If authenticated, RequireActor will handle access to nested /admin/* routes 
           but we need to ensure /admin root is handled if typed manually by logged in admin 

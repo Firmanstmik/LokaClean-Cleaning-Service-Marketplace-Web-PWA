@@ -12,6 +12,7 @@ import "./styles.css";
 // Leaflet marker icon fix (must be imported once).
 import "./lib/leaflet";
 
+import { HelmetProvider } from "react-helmet-async";
 import { App } from "./App";
 import { registerSW } from 'virtual:pwa-register';
 
@@ -29,9 +30,11 @@ const updateSW = registerSW({
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <App />
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <App />
+      </BrowserRouter>
+    </HelmetProvider>
   </React.StrictMode>
 );
 

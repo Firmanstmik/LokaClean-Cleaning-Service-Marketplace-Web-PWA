@@ -7,8 +7,29 @@
     "dev": "vite",
     "dev:host": "vite --host",
     "build": "tsc -p tsconfig.json && vite build",
+    "postbuild": "react-snap",
     "preview": "vite preview",
     "lint": "eslint ."
+  },
+  "reactSnap": {
+    "source": "dist",
+    "minifyHtml": {
+      "collapseWhitespace": false,
+      "removeComments": false
+    },
+    "puppeteerArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ],
+    "include": [
+      "/",
+      "/login",
+      "/register",
+      "/jasa-kebersihan-lombok",
+      "/cleaning-service-mandalika",
+      "/villa-cleaning-kuta",
+      "/home-cleaning-lombok"
+    ]
   },
   "dependencies": {
     "@types/canvas-confetti": "^1.9.0",
@@ -21,6 +42,7 @@
     "nprogress": "^0.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.26.2",
     "recharts": "^3.6.0",
@@ -40,6 +62,7 @@
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
     "postcss": "^8.4.49",
+    "react-snap": "^1.23.0",
     "sharp": "^0.34.5",
     "svgo": "^4.0.0",
     "tailwindcss": "^3.4.17",
