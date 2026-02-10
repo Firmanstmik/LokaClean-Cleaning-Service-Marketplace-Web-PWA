@@ -238,10 +238,10 @@ export function UserHomePage() {
                 className="h-28 sm:h-32 w-auto flex items-center justify-center"
               >
                 <img 
-                  src="/img/maskot.jpg" 
-                  alt="LokaClean Mascot" 
-                  className="h-full w-auto object-contain mix-blend-multiply transition-all duration-500 ease-out hover:-translate-y-1"
-                />
+          src="/img/maskot.jpg" 
+          alt="LokaClean Mascot" 
+          className="h-full w-auto object-contain transition-all duration-500 ease-out hover:-translate-y-1"
+        />
               </motion.div>
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700">LokaClean</h1>
