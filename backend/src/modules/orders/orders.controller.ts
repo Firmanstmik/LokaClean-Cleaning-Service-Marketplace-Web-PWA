@@ -317,73 +317,78 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
  * - status: filter by status - 'pending' (PENDING), 'in_progress' (IN_PROGRESS), 'completed' (COMPLETED)
  */
 export const listMyOrdersHandler = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.auth) throw new HttpError(401, "Unauthenticated");
+  try {
+    if (!req.auth) throw new HttpError(401, "Unauthenticated");
 
-  const page = Math.max(1, parseInt(req.query.page as string) || 1);
-  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 7));
-  const skip = (page - 1) * limit;
-  const statusFilter = req.query.status as string | undefined;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 7));
+    const skip = (page - 1) * limit;
+    const statusFilter = req.query.status as string | undefined;
 
-  // Build where clause
-  const where: any = { user_id: req.auth.id };
-  
-  if (statusFilter === 'pending') {
-    // Belum dikonfirmasi: PENDING
-    where.status = OrderStatus.PENDING;
-  } else if (statusFilter === 'processing') {
-    // Dikonfirmasi: PROCESSING
-    where.status = OrderStatus.PROCESSING;
-  } else if (statusFilter === 'in_progress') {
-    // In Progress: IN_PROGRESS
-    where.status = OrderStatus.IN_PROGRESS;
-  } else if (statusFilter === 'rate') {
-    // Rate: COMPLETED but not rated OR IN_PROGRESS and > 1 hour past schedule
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    where.OR = [
-      {
-        status: OrderStatus.COMPLETED,
-        rating: null
-      },
-      {
-        status: OrderStatus.IN_PROGRESS,
-        scheduled_date: {
-          lt: oneHourAgo
+    // Build where clause
+    const where: any = { user_id: req.auth.id };
+    
+    if (statusFilter === 'pending') {
+      // Belum dikonfirmasi: PENDING
+      where.status = OrderStatus.PENDING;
+    } else if (statusFilter === 'processing') {
+      // Dikonfirmasi: PROCESSING
+      where.status = OrderStatus.PROCESSING;
+    } else if (statusFilter === 'in_progress') {
+      // In Progress: IN_PROGRESS
+      where.status = OrderStatus.IN_PROGRESS;
+    } else if (statusFilter === 'rate') {
+      // Rate: COMPLETED but not rated OR IN_PROGRESS and > 1 hour past schedule
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      where.OR = [
+        {
+          status: OrderStatus.COMPLETED,
+          rating: null
+        },
+        {
+          status: OrderStatus.IN_PROGRESS,
+          scheduled_date: {
+            lt: oneHourAgo
+          }
         }
-      }
-    ];
-  } else if (statusFilter === 'completed') {
-    // Complete: COMPLETED
-    where.status = OrderStatus.COMPLETED;
-  } else if (statusFilter === 'cancelled') {
-    // Cancelled: CANCELLED
-    where.status = OrderStatus.CANCELLED;
-  }
-  // If statusFilter is undefined or 'all', show all orders
-
-  const [items, total] = await Promise.all([
-    prisma.pesanan.findMany({
-      where,
-      orderBy: { created_at: "desc" },
-      include: orderInclude,
-      skip,
-      take: limit
-    }),
-    prisma.pesanan.count({ where })
-  ]);
-
-  const totalPages = Math.ceil(total / limit);
-  const hasNext = page < totalPages;
-
-  return ok(res, { 
-    items, 
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNext
+      ];
+    } else if (statusFilter === 'completed') {
+      // Complete: COMPLETED
+      where.status = OrderStatus.COMPLETED;
+    } else if (statusFilter === 'cancelled') {
+      // Cancelled: CANCELLED
+      where.status = OrderStatus.CANCELLED;
     }
-  });
+    // If statusFilter is undefined or 'all', show all orders
+
+    const [items, total] = await Promise.all([
+      prisma.pesanan.findMany({
+        where,
+        orderBy: { created_at: "desc" },
+        include: orderInclude,
+        skip,
+        take: limit
+      }),
+      prisma.pesanan.count({ where })
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNext = page < totalPages;
+
+    return ok(res, { 
+      items, 
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext
+      }
+    });
+  } catch (err) {
+    console.error("[listMyOrdersHandler] Error:", err);
+    throw err;
+  }
 });
 
 /**
