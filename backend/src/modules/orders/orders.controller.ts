@@ -485,20 +485,9 @@ export const verifyCompletionHandler = asyncHandler(async (req: Request, res: Re
     }
   }
 
-  // Check if after photo exists (supports both JSON array and single string)
+  // After photo check removed for user convenience
   /*
-  let hasAfterPhoto = false;
-  if (order.room_photo_after) {
-    try {
-      const parsed = JSON.parse(order.room_photo_after);
-      hasAfterPhoto = Array.isArray(parsed) ? parsed.length > 0 : true;
-    } catch {
-      hasAfterPhoto = true; // Single string format
-    }
-  }
-  if (!hasAfterPhoto) {
-    throw new HttpError(400, "room_photo_after must be uploaded before completion verification");
-  }
+  // Original check removed
   */
   if (!order.tip) {
     throw new HttpError(400, "Tip must be submitted before completion verification (can be 0 for no tip)");
@@ -579,22 +568,9 @@ export const createTipHandler = asyncHandler(async (req: Request, res: Response)
     throw new HttpError(400, "Order must be IN_PROGRESS or COMPLETED to submit tip");
   }
   
-  // If IN_PROGRESS, require after photo to be uploaded (supports both JSON array and single string)
+  // After photo check removed for user convenience
   /*
-  if (order.status === OrderStatus.IN_PROGRESS) {
-    let hasAfterPhoto = false;
-    if (order.room_photo_after) {
-      try {
-        const parsed = JSON.parse(order.room_photo_after);
-        hasAfterPhoto = Array.isArray(parsed) ? parsed.length > 0 : true;
-      } catch {
-        hasAfterPhoto = true; // Single string format
-      }
-    }
-    if (!hasAfterPhoto) {
-      throw new HttpError(400, "After photo must be uploaded before submitting tip");
-    }
-  }
+  // Original check removed
   */
   
   if (order.tip) throw new HttpError(409, "Tip already exists for this order");
