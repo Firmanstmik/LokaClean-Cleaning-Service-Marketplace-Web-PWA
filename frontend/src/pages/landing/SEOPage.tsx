@@ -30,7 +30,7 @@ const PAGES: Record<string, PageConfig> = {
           <li><strong>Bergaransi:</strong> Kepuasan pelanggan adalah prioritas utama kami.</li>
         </ul>
         <p className="mb-4">
-          Sebagai penyedia <em>cleaning service Lombok</em> terdepan, kami melayani berbagai area termasuk Mataram, Senggigi, Praya, dan fokus utama kami di kawasan pariwisata Mandalika. Jangan biarkan debu dan kotoran mengganggu kenyamanan Anda. Percayakan kebersihan hunian Anda kepada ahlinya.
+          Sebagai penyedia <em>cleaning service Lombok</em> terdepan, kami melayani berbagai area termasuk Lombok Barat, Mataram, Praya, Rembitan, dan fokus utama kami di kawasan pariwisata Mandalika. Jangan biarkan debu dan kotoran mengganggu kenyamanan Anda. Percayakan kebersihan hunian Anda kepada ahlinya.
         </p>
         <p>
           Download aplikasi LokaClean sekarang dan nikmati kemudahan memesan jasa kebersihan di Lombok dalam genggaman Anda. Bersih, wangi, dan rapi kini hanya sejauh satu klik.
@@ -48,7 +48,7 @@ const PAGES: Record<string, PageConfig> = {
           Kawasan Kuta Mandalika kini menjadi primadona pariwisata Indonesia. Seiring dengan menjamurnya villa, homestay, dan penginapan, kebutuhan akan <strong>cleaning service Mandalika</strong> yang berkualitas semakin meningkat. LokaClean hadir untuk menjawab tantangan tersebut dengan layanan kebersihan standar internasional.
         </p>
         <p className="mb-4">
-          Kami mengkhususkan diri dalam melayani properti di area Kuta, Tanjung Aan, hingga Selong Belanak. LokaClean mengerti standar tinggi yang diharapkan oleh wisatawan mancanegara dan domestik. Oleh karena itu, SOP (Standar Operasional Prosedur) kami dirancang menyerupai housekeeping hotel berbintang.
+          Kami mengkhususkan diri dalam melayani properti di area Kuta Mandalika, Rembitan, hingga Lombok Barat dan Mataram. LokaClean mengerti standar tinggi yang diharapkan oleh wisatawan mancanegara dan domestik. Oleh karena itu, SOP (Standar Operasional Prosedur) kami dirancang menyerupai housekeeping hotel berbintang.
         </p>
         <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">Layanan Unggulan Kami di Mandalika</h3>
         <p className="mb-4">
@@ -109,7 +109,7 @@ const PAGES: Record<string, PageConfig> = {
           Kesibukan sehari-hari seringkali membuat kita tidak sempat membersihkan rumah. Tumpukan debu, lantai lengket, dan kamar mandi kotor bisa menjadi sumber penyakit dan stres. LokaClean menghadirkan layanan <strong>home cleaning Lombok</strong> untuk mengembalikan kenyamanan hunian Anda.
         </p>
         <p className="mb-4">
-          Layanan kami cocok untuk rumah tinggal, rumah kontrakan, hingga kamar kos mahasiswa. Dengan harga yang kompetitif, Anda mendapatkan layanan kebersihan setara hotel. Kami melayani area Lombok Tengah (Praya, Kuta) dan sekitarnya dengan respon cepat.
+          Layanan kami cocok untuk rumah tinggal, rumah kontrakan, hingga kamar kos mahasiswa. Dengan harga yang kompetitif, Anda mendapatkan layanan kebersihan setara hotel. Kami melayani area Lombok Tengah (Praya, Kuta), Lombok Barat, Mataram, Rembitan, dan sekitarnya dengan respon cepat.
         </p>
         <h3 className="text-xl font-bold text-slate-800 mt-6 mb-3">Paket Home Cleaning Favorit</h3>
         <p className="mb-4">
@@ -201,7 +201,7 @@ export function SEOPage() {
           <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
             <MapPin className="w-8 h-8 text-emerald-600 mb-3" />
             <h3 className="font-bold text-slate-900 mb-1">Lokasi Luas</h3>
-            <p className="text-sm text-slate-500">Melayani Kuta, Praya, dan sekitarnya.</p>
+            <p className="text-sm text-slate-500">Melayani Kuta, Praya, Mataram, & Lombok Barat.</p>
           </div>
         </div>
 

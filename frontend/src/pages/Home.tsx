@@ -190,10 +190,10 @@ export function Home() {
                 "opens": "08:00",
                 "closes": "18:00"
               },
-              "areaServed": ["Kuta Mandalika", "Lombok Tengah", "Praya", "Selong Belanak"]
-            }
-          `}
-        </script>
+              "areaServed": ["Kuta Mandalika", "Lombok Tengah", "Praya", "Lombok Barat", "Mataram", "Rembitan"]
+             }
+           `}
+         </script>
       </Helmet>
       
       {/* Welcome Alert - Floating Top Right */}
@@ -552,7 +552,7 @@ export function Home() {
              
              {/* Service Areas - Keywords */}
              <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                {["Kuta Mandalika", "Praya", "Selong Belanak", "Awang", "Gerupuk"].map((area) => (
+                {["Kuta Mandalika", "Praya", "Lombok Barat", "Mataram", "Rembitan"].map((area) => (
                   <span key={area} className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium shadow-sm">
                     📍 {area}
                   </span>

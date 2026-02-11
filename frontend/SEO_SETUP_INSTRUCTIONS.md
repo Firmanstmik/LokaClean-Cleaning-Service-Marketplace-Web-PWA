@@ -8,7 +8,7 @@
 2.  **Verification:** Verify location in Kuta, Lombok Tengah (postcard/video).
 3.  **Core Info:**
     *   **Category:** House Cleaning Service (Primary), Upholstery Cleaning Service, Pool Cleaning Service.
-    *   **Service Areas:** Kuta, Mandalika, Praya, Selong Belanak, Gerupuk.
+    *   **Service Areas:** Kuta Mandalika, Praya, Lombok Barat, Mataram, Rembitan.
     *   **Hours:** Set correctly (e.g., 8:00 AM - 6:00 PM).
 4.  **Description (SEO Optimized):**
     > "LokaClean adalah jasa kebersihan profesional di Kuta Mandalika & Lombok Tengah. Melayani villa cleaning, home cleaning, dan daily housekeeping dengan standar hotel. Tim terlatih, peralatan lengkap, dan harga transparan."
