@@ -18,6 +18,14 @@ export function RequireActor({ actor, children }: { actor: Actor; children: Reac
   }
 
   if (currentActor !== actor) {
+    // If token exists but actor is missing/mismatch, redirect to login to re-verify
+    // instead of sending to Home (which causes a flash of landing page).
+    // Login page will handle the redirect back to the intended destination.
+    if (!currentActor) {
+      const to = actor === "ADMIN" ? "/adminlokacleanmandalika/login" : "/login";
+      return <Navigate to={to} replace state={{ from: location.pathname }} />;
+    }
+
     // Hard separation: if a USER tries to access ADMIN routes (or vice versa),
     // redirect them to their correct area instead of letting them see the other login pages.
     if (currentActor === "ADMIN") return <Navigate to="/admin/orders" replace />;

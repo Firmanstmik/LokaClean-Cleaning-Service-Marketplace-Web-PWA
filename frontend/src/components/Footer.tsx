@@ -34,12 +34,13 @@ export function Footer({ variant = "all" }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-8 lg:gap-12 text-center sm:text-left">
           {/* Brand Section */}
           <div className="space-y-2 sm:space-y-4 flex flex-col items-center sm:items-start">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-hidden border border-white/20 flex-shrink-0 shadow-lg">
-                <img
-                  src="/img/Logo_LokaClean.jpg"
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-2xl bg-white flex items-center justify-center overflow-hidden border border-slate-700 flex-shrink-0 shadow-xl shadow-black/20 relative group">
+                 <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100 opacity-50" />
+                 <img
+                  src="/img/logo.jpg"
                   alt="LokaClean Logo"
-                  className="h-full w-full object-contain p-0.5 sm:p-1"
+                  className="relative z-10 h-full w-full object-cover mix-blend-multiply"
                 />
               </div>
               <div className="text-left">

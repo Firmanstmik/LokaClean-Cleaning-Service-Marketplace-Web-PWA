@@ -3,7 +3,7 @@
  */
 
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, Lock, LogIn, Sparkles, ArrowLeft, Hand } from "lucide-react";
 

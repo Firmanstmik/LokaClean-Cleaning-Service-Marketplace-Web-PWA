@@ -14,7 +14,7 @@ type UserContextValue = {
 const UserContext = createContext<UserContextValue | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
+  const { token, actor, setAuth } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +30,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // Don't set loading to true on refresh to avoid UI flickering if data exists
       // But for first load, loading is true.
       const resp = await api.get("/users/me");
-      setUser(resp.data.data.user as User);
+      const userData = resp.data.data.user as User;
+      setUser(userData);
       setError(null);
+
+      // Self-healing: If token is valid but actor is missing/wrong, restore it
+      // This fixes the issue where missing actor in localStorage causes redirect to Landing Page
+      if (userData.role && (!actor || actor !== userData.role)) {
+        console.log("[UserGlobalData] Restoring missing/mismatched actor state:", userData.role);
+        // Cast to any to avoid strict type checking issues if role string varies slightly, 
+        // though it should match "USER" | "ADMIN"
+        setAuth(token, userData.role as any); 
+      }
     } catch (err) {
       const msg = getApiErrorMessage(err);
       // If 401/404, the interceptor handles it, but we catch it here too
@@ -40,7 +50,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, actor, setAuth]);
 
   useEffect(() => {
     fetchUser();
