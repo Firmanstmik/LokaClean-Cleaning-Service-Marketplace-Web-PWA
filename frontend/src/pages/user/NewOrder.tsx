@@ -350,7 +350,8 @@ export function NewOrderPage() {
                   </div>
                 </div>
 
-                {/* EXTRA SERVICES */}
+                {/* EXTRA SERVICES - TEMPORARILY DISABLED */}
+                {/* 
                 <div className="mt-8">
                   <div className="text-center mb-6">
                     <h3 className="text-md font-bold text-slate-800">{t("newOrder.extraServicesTitle") || "Layanan Tambahan (Opsional)"}</h3>
@@ -395,6 +396,7 @@ export function NewOrderPage() {
                     })}
                   </div>
                 </div>
+                */}
               </motion.div>
             )}
 

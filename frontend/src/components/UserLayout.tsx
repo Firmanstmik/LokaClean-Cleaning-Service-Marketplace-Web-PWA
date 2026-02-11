@@ -21,6 +21,7 @@ import { playOrderNotificationSound } from "../utils/sound";
 import { speakNotification } from "../utils/textToSpeech";
 import { getLanguage } from "../lib/i18n";
 import { LanguageSwitcherPill } from "./LanguageSwitcher";
+import { useUserGlobal } from "./UserGlobalData";
 import type { User, Notification, Pesanan } from "../types/api";
 
 function NavItem({
@@ -133,7 +134,7 @@ export function UserLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, refreshUser } = useUserGlobal();
   
   // Clear app badge when user opens the app (UserLayout mounts)
   useEffect(() => {
@@ -166,15 +167,6 @@ export function UserLayout() {
   const [reminderOrders, setReminderOrders] = useState<Array<{ id: number; paket_name: string }>>([]); // Orders needing after photo
   const currentLanguage = useCurrentLanguage();
   const [isPageReady, setIsPageReady] = useState(false); // Track if page is ready to show notifications
-
-  const fetchUser = async () => {
-    try {
-      const resp = await api.get("/users/me");
-      setUser(resp.data.data.user as User);
-    } catch {
-      // Ignore errors - user data will be null
-    }
-  };
 
   const fetchUnpaidTransferOrders = useCallback(async () => {
     try {
@@ -650,14 +642,13 @@ export function UserLayout() {
   }, [location.pathname]); // Reset and restart timer when route changes
 
   useEffect(() => {
-    fetchUser();
     fetchNotifications();
     checkReminderNotifications();
 
-    // Poll for new notifications every 2 seconds for real-time feel
+    // Poll for new notifications every 10 seconds (reduced frequency to prevent lag)
     const interval = setInterval(() => {
       fetchNotifications();
-    }, 2000);
+    }, 10000);
 
     // Check for reminder notifications every 10 minutes (600000ms)
     // This will trigger reminder notifications to appear periodically
@@ -667,7 +658,7 @@ export function UserLayout() {
 
     // Listen for profile update events to refresh navbar photo
     const handleProfileUpdate = () => {
-      fetchUser();
+      refreshUser();
     };
     window.addEventListener("profileUpdated", handleProfileUpdate);
 
@@ -676,7 +667,7 @@ export function UserLayout() {
       clearInterval(reminderInterval);
       window.removeEventListener("profileUpdated", handleProfileUpdate);
     };
-  }, [fetchNotifications, checkReminderNotifications]);
+  }, [fetchNotifications, checkReminderNotifications, refreshUser]);
 
   // Refresh notifications when modal is opened
   useEffect(() => {

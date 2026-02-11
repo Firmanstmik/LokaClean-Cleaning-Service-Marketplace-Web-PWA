@@ -13,45 +13,11 @@ import { getApiErrorMessage } from "../lib/apiError";
 import { isUserProfileComplete } from "../lib/profile";
 import type { User } from "../types/api";
 import { CircularLoader } from "./ui/CircularLoader";
+import { useUserGlobal } from "./UserGlobalData";
 
 export function RequireUserProfileComplete() {
   const location = useLocation();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [me, setMe] = useState<User | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      setError(null);
-      try {
-        const resp = await api.get("/users/me");
-        const user = resp.data.data.user as User;
-        if (!alive) return;
-        setMe(user);
-      } catch (err) {
-        if (!alive) return;
-        
-        // Backup: If interceptor failed to catch 404 (User not found), handle it here
-        // This ensures the user isn't stuck on a broken screen
-        const msg = getApiErrorMessage(err);
-        if (msg.toLowerCase().includes("user not found") || msg.toLowerCase().includes("account not found")) {
-           console.log("[RequireUserProfileComplete] User not found (backup handler). Redirecting...");
-           localStorage.removeItem("lokaclean_token");
-           localStorage.removeItem("lokaclean_actor");
-           window.location.href = "/register";
-           return;
-        }
-
-        setError(msg);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const { user: me, loading, error } = useUserGlobal();
 
   if (loading) {
     return (

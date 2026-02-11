@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { AuthProvider } from "./lib/auth";
 import { AppRoutes } from "./routes";
 import { WelcomeScreen } from "./components/WelcomeScreen";
+import { UserProvider } from "./components/UserGlobalData";
 
 export function App() {
   const [showSplash, setShowSplash] = useState(false);
@@ -22,8 +23,10 @@ export function App() {
 
   return (
     <AuthProvider>
-      {showSplash && <WelcomeScreen onComplete={() => setShowSplash(false)} />}
-      <AppRoutes />
+      <UserProvider>
+        {showSplash && <WelcomeScreen onComplete={() => setShowSplash(false)} />}
+        <AppRoutes />
+      </UserProvider>
     </AuthProvider>
   );
 }
