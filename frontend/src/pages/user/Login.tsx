@@ -20,6 +20,7 @@ export function UserLogin() {
   useCurrentLanguage();
   const { token, actor, setAuth } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [loginMethod, setLoginMethod] = useState<"EMAIL" | "WHATSAPP">("EMAIL");
   const [login, setLogin] = useState("");
@@ -40,7 +41,8 @@ export function UserLogin() {
   // - Logged-in ADMIN should not see user login page.
   // - Logged-in USER should be sent to the user area.
   if (token) {
-    return <Navigate to={actor === "ADMIN" ? "/admin/orders" : "/home"} replace />;
+    const from = (location.state as any)?.from || (actor === "ADMIN" ? "/admin/orders" : "/home");
+    return <Navigate to={from} replace />;
   }
 
   return (

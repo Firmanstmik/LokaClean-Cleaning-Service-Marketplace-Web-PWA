@@ -480,7 +480,7 @@ const translations = {
       viewDetails: "Lihat Detail",
       pending: "Menunggu",
       processing: "Diproses",
-      inProgress: "Sedang Berlangsung",
+      inProgress: "Sedang Progres",
       completed: "Selesai",
       paid: "Lunas",
       unpaid: "Belum Lunas",

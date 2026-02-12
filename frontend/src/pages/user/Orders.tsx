@@ -16,7 +16,7 @@ import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { formatDateOnlyWITA } from "../../utils/date";
 import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
-import { t } from "../../lib/i18n";
+import { t, useCurrentLanguage } from "../../lib/i18n";
 import type { Pesanan } from "../../types/api";
 
 // --- Types & Helpers ---
@@ -52,6 +52,7 @@ const STATUS_LABELS_KEY: Record<string, string> = {
 import { OrderRatingModal } from "../../components/order/OrderRatingModal";
 
 export function OrdersPage() {
+  useCurrentLanguage();
   const navigate = useNavigate();
   const [items, setItems] = useState<Pesanan[]>([]);
   const [loading, setLoading] = useState(true);
