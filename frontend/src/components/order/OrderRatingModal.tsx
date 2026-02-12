@@ -126,6 +126,8 @@ export function OrderRatingModal({ isOpen, onClose, onSuccess, order }: OrderRat
     try {
         setLoading(true);
         await api.post(`/orders/${order.id}/verify-completion`);
+        // Notify app that order status has changed
+        window.dispatchEvent(new Event('orderUpdated'));
         setStep("rating");
     } catch (err) {
         setError(getApiErrorMessage(err));
@@ -142,6 +144,8 @@ export function OrderRatingModal({ isOpen, onClose, onSuccess, order }: OrderRat
         rating_value: rating,
         review: review
       });
+      // Notify app that order status/rating has changed
+      window.dispatchEvent(new Event('orderUpdated'));
       setStep("success");
       setTimeout(() => {
         onSuccess();

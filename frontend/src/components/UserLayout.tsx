@@ -650,22 +650,31 @@ export function UserLayout() {
       fetchNotifications();
     }, 10000);
 
-    // Check for reminder notifications every 10 minutes (600000ms)
-    // This will trigger reminder notifications to appear periodically
+    // Check for reminder notifications every 30 seconds (was 10 minutes)
+    // This ensures that if an order status changes (e.g. Completed), the reminder is removed quickly
     const reminderInterval = setInterval(() => {
       checkReminderNotifications();
-    }, 600000); // 10 minutes = 600000 milliseconds
+    }, 30000); // 30 seconds
 
     // Listen for profile update events to refresh navbar photo
     const handleProfileUpdate = () => {
       refreshUser();
     };
+    
+    // Listen for order updates to refresh notifications immediately
+    const handleOrderUpdate = () => {
+      fetchNotifications();
+      checkReminderNotifications();
+    };
+    
     window.addEventListener("profileUpdated", handleProfileUpdate);
+    window.addEventListener("orderUpdated", handleOrderUpdate);
 
     return () => {
       clearInterval(interval);
       clearInterval(reminderInterval);
       window.removeEventListener("profileUpdated", handleProfileUpdate);
+      window.removeEventListener("orderUpdated", handleOrderUpdate);
     };
   }, [fetchNotifications, checkReminderNotifications, refreshUser]);
 

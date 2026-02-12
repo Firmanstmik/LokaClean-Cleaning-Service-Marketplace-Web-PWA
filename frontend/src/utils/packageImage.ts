@@ -37,6 +37,7 @@ export function getPackageImage(packageName: string, packageImage?: string | nul
     normalizedName.includes("deep") || 
     normalizedName.includes("mendalam") || 
     normalizedName.includes("rumah baru") ||
+    normalizedName.includes("new house") ||
     normalizedName.includes("pindahan") ||
     normalizedName.includes("total")
   ) {

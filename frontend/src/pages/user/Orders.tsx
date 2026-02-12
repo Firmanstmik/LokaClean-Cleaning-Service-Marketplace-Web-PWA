@@ -42,11 +42,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS_KEY: Record<string, string> = {
-  PENDING: "orders.status.pending",
-  PROCESSING: "orders.status.processing",
-  IN_PROGRESS: "orders.status.inProgress",
-  COMPLETED: "orders.status.completed",
-  CANCELLED: "orders.status.cancelled",
+  PENDING: "orders.pending",
+  PROCESSING: "orders.processing",
+  IN_PROGRESS: "orders.inProgress",
+  COMPLETED: "orders.completed",
+  CANCELLED: "orders.cancelled",
 };
 
 import { OrderRatingModal } from "../../components/order/OrderRatingModal";
