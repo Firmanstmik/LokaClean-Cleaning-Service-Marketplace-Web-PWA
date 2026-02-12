@@ -44,11 +44,18 @@ const generateCurrentMonthDates = () => {
   return dates;
 };
 
-// --- Helper: Time Slots ---
-const TIME_SLOTS = [
-  "09:00", "10:00", "11:00", "12:00", 
-  "13:00", "14:00", "15:00", "16:00", "17:00"
-];
+// --- Helper: Get Time Slots based on Day ---
+const getTimeSlots = (date: Date) => {
+  const isSunday = date.getDay() === 0;
+  const startHour = isSunday ? 7 : 8;
+  const endHour = 17;
+  
+  const slots = [];
+  for (let h = startHour; h <= endHour; h++) {
+    slots.push(`${h < 10 ? '0' + h : h}:00`);
+  }
+  return slots;
+};
 
 const EXTRA_SERVICES = [
   { id: "deep-clean-bath", name: "Deep Clean Kamar Mandi", price: 30000, icon: "bath" },
@@ -168,13 +175,20 @@ export function NewOrderPage() {
       setSubmitting(true);
       setError(null);
 
-      // Construct Scheduled Date (YYYY-MM-DDTHH:mm)
-      // Note: We need to combine selectedDate (Date object) and selectedTime (HH:mm string)
-      // into a format backend expects.
+      // Construct Scheduled Date (YYYY-MM-DDTHH:mm:ss+08:00)
+      // We explicitly append +08:00 (WITA) to ensure it represents the correct absolute time.
+      // Then we convert it to an ISO string (UTC) to ensure the backend receives an unambiguous timestamp.
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
-      const finalScheduledDate = `${year}-${month}-${day}T${selectedTime}`;
+      
+      // Create a Date object from the ISO 8601 string with offset
+      // This correctly parses "17:00+08:00" as "09:00 UTC"
+      const witaDateString = `${year}-${month}-${day}T${selectedTime}:00+08:00`;
+      const dateObj = new Date(witaDateString);
+      
+      // Send as UTC ISO string to be safe
+      const finalScheduledDate = dateObj.toISOString();
 
       const formData = new FormData();
       formData.append("paket_id", String(paketId));
@@ -483,22 +497,33 @@ export function NewOrderPage() {
                     <Clock className="w-4 h-4 text-teal-500" />
                     <span className="text-sm font-bold text-slate-700">{t("newOrder.selectTime")}</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {TIME_SLOTS.map((time) => {
+                  <div className="grid grid-cols-4 gap-3">
+                    {getTimeSlots(selectedDate).map((time) => {
                       const isSelected = selectedTime === time;
                       
-                      // Time Validation Logic
+                      // Time Validation Logic (WITA Based)
                       const now = new Date();
-                      const isToday = selectedDate.toDateString() === now.toDateString();
+                      // Get current time in WITA (Asia/Makassar)
+                      const witaNowString = now.toLocaleString("en-US", { timeZone: "Asia/Makassar" });
+                      const witaNow = new Date(witaNowString);
+
+                      // Check if selectedDate matches Today in WITA
+                      // We compare year, month, date explicitly to handle timezone differences
+                      const isToday = 
+                        selectedDate.getFullYear() === witaNow.getFullYear() &&
+                        selectedDate.getMonth() === witaNow.getMonth() &&
+                        selectedDate.getDate() === witaNow.getDate();
+
                       let isDisabled = false;
                       
                       if (isToday) {
                          const [hours, minutes] = time.split(':').map(Number);
-                         const slotDate = new Date(now);
+                         // Create a comparable date object using WITA time basis
+                         const slotDate = new Date(witaNow);
                          slotDate.setHours(hours, minutes, 0, 0);
-                         // Buffer: Disable if time is passed or within current hour? 
-                         // Requirement: "pukul 19.40 maka waktu yang ada tidak tersedia" -> passed times.
-                         if (slotDate < now) isDisabled = true;
+                         
+                         // Disable if slot time is strictly in the past relative to WITA time
+                         if (slotDate < witaNow) isDisabled = true;
                       }
 
                       return (

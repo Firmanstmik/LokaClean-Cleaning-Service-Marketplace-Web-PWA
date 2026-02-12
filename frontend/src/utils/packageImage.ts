@@ -60,7 +60,9 @@ export function getPackageImage(packageName: string, packageImage?: string | nul
     normalizedName.includes("standar") ||
     normalizedName.includes("kamar") || // e.g. "2 Kamar", "Kamar Mandi"
     normalizedName.includes("bedroom") || // English for Kamar
+    normalizedName.includes("bed") || // Catch "2-bed"
     normalizedName.includes("bathroom") || // English for Kamar Mandi
+    normalizedName.includes("bath") || // Catch "1-bath"
     normalizedName.includes("apartemen") ||
     normalizedName.includes("apartment")
   ) {

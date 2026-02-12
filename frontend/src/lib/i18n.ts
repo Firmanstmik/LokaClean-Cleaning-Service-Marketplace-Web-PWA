@@ -132,7 +132,7 @@ const translations = {
         rightsReserved: "Hak cipta dilindungi undang-undang.",
         privacyPolicy: "Kebijakan Privasi",
         termsOfService: "Syarat Layanan",
-        hours: "Sen - Sab: 08.00 - 18.00"
+        hours: "Sen - Sab 08.00 - 17.00 | Min: 07.00 - 17.00"
       },
       mascot: {
         speech: "Siap Bersih-bersih? 🧹✨"

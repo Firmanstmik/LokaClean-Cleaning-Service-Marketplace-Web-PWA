@@ -51,6 +51,9 @@ const STATUS_LABELS_KEY: Record<string, string> = {
 
 import { OrderRatingModal } from "../../components/order/OrderRatingModal";
 
+import { Skeleton } from "../../components/ui/Skeleton";
+import { OptimizedImage } from "../../components/ui/OptimizedImage";
+
 export function OrdersPage() {
   useCurrentLanguage();
   const navigate = useNavigate();
@@ -139,13 +142,13 @@ export function OrdersPage() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 animate-pulse">
-                <div className="h-4 bg-slate-100 rounded w-1/3 mb-4" />
+              <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                <Skeleton className="h-4 w-1/3 mb-4 rounded" />
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-slate-100 rounded-lg" />
+                  <Skeleton className="w-20 h-20 rounded-lg" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-slate-100 rounded w-3/4" />
-                    <div className="h-3 bg-slate-100 rounded w-1/2" />
+                    <Skeleton className="h-4 w-3/4 rounded" />
+                    <Skeleton className="h-3 w-1/2 rounded" />
                   </div>
                 </div>
               </div>
@@ -259,13 +262,10 @@ function OrderCard({ order, onRate }: { order: Pesanan; onRate: (order: Pesanan)
         <div className="flex gap-4">
           {/* Image */}
           <div className="w-20 h-20 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-100">
-            <img 
+            <OptimizedImage 
               src={getPackageImage(order.paket.name, order.paket.image)} 
               alt={getPackageImageAlt(order.paket.name)}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/images/packages/default.jpg'; 
-              }}
             />
           </div>
           
