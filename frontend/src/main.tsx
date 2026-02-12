@@ -14,6 +14,7 @@ import "./lib/leaflet";
 
 import { HelmetProvider } from "react-helmet-async";
 import { App } from "./App";
+import { AutoScrollToTop } from "./components/AutoScrollToTop";
 import { registerSW } from 'virtual:pwa-register';
 
 // Auto-update Service Worker
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <HelmetProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <AutoScrollToTop />
         <App />
       </BrowserRouter>
     </HelmetProvider>
