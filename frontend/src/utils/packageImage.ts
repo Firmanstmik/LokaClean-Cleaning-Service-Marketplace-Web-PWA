@@ -59,7 +59,10 @@ export function getPackageImage(packageName: string, packageImage?: string | nul
     normalizedName.includes("standard") || 
     normalizedName.includes("standar") ||
     normalizedName.includes("kamar") || // e.g. "2 Kamar", "Kamar Mandi"
-    normalizedName.includes("apartemen")
+    normalizedName.includes("bedroom") || // English for Kamar
+    normalizedName.includes("bathroom") || // English for Kamar Mandi
+    normalizedName.includes("apartemen") ||
+    normalizedName.includes("apartment")
   ) {
     return "/img/packages/standar_clean.png";
   }
