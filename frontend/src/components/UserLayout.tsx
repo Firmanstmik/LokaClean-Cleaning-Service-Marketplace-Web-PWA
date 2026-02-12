@@ -955,7 +955,7 @@ export function UserLayout() {
         <div className="relative mx-auto flex w-full max-w-full items-center justify-between gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 lg:px-6 lg:py-3">
           <NavLink
             to="/home"
-            className="flex items-center gap-2.5 sm:gap-3.5 flex-1 min-w-0 group"
+            className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0 group"
           >
             <motion.div
               whileHover={{ scale: 1.03 }}
@@ -968,39 +968,22 @@ export function UserLayout() {
                 stiffness: 260,
                 duration: 0.5
               }}
-              className="relative h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 rounded-2xl flex items-center justify-center overflow-visible"
+              className="relative h-10 w-10 sm:h-14 sm:w-14 flex-shrink-0 rounded-xl sm:rounded-2xl flex items-center justify-center overflow-visible"
             >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-tropical-400/30 via-ocean-400/25 to-sun-400/30 blur-lg" />
+              <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-tropical-400/30 via-ocean-400/25 to-sun-400/30 blur-lg" />
               <motion.div
-                className="relative z-10 h-full w-full overflow-hidden rounded-2xl bg-white shadow-[0_8px_24px_rgba(15,23,42,0.15)] flex items-center justify-center border border-white/80"
-                animate={{
-                  y: [0, -1, 0],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <motion.img
-          src="/img/Logo_LokaClean_fixed.jpg"
-          alt="LokaClean Logo"
-          loading="eager"
-          className="h-full w-full object-contain p-1.5 sm:p-2 mix-blend-multiply"
-          animate={{
-            scale: [1, 1.02, 1],
-          }}
-                  transition={{
-                    duration: 6,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              </motion.div>
+                  className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-center border border-white"
+                >
+                  <motion.img
+                    src="/img/logo.jpg"
+                    alt="LokaClean Logo"
+                    className="h-full w-full object-cover mix-blend-multiply"
+                  />
+                </motion.div>
             </motion.div>
             
             {/* Premium Brand Typography */}
-            <div className="min-w-0 hidden sm:flex flex-col">
+            <div className="min-w-0 flex flex-col">
               <motion.div
                 className="relative"
                 initial={{ opacity: 0, y: -10 }}
@@ -1008,18 +991,7 @@ export function UserLayout() {
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
                 <motion.span
-                  className="block text-base sm:text-xl font-black leading-tight bg-gradient-to-r from-tropical-600 via-ocean-600 to-tropical-600 bg-clip-text text-transparent truncate"
-                  animate={{
-                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                  }}
-                  transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  style={{
-                    backgroundSize: "200% 100%",
-                  }}
+                  className="block text-lg sm:text-2xl font-black leading-tight bg-gradient-to-r from-tropical-600 via-ocean-600 to-tropical-600 bg-clip-text text-transparent truncate"
                 >
                   LokaClean
                 </motion.span>
@@ -1037,7 +1009,7 @@ export function UserLayout() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
               >
-                ✨ Clean Comfort, Island Style
+                ✨ {t("home.footer.tagline")}
               </motion.div>
             </div>
           </NavLink>
