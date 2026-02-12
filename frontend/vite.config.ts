@@ -61,6 +61,11 @@ export default defineConfig({
   server: {
     port: 5173
   },
+  resolve: {
+    alias: {
+      "@": "/src",
+    },
+  },
   build: {
     target: "es2015"
   }
