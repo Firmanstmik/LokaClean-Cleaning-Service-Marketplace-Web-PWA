@@ -66,10 +66,10 @@ export function AllPackagesPage() {
     <div className="min-h-screen w-full bg-[#F8FAFC] pb-24 selection:bg-teal-200 selection:text-teal-900">
       
       {/* 1. TOP HERO SECTION */}
-      <div className="pt-6 px-4 sm:px-6 lg:px-8 pb-8">
+      <div className="pt-4 px-4 sm:px-6 lg:px-8 pb-6">
         <div className="max-w-7xl mx-auto">
           {/* Gradient Card with Personalized Welcome */}
-          <div className="relative overflow-hidden rounded-[24px] bg-slate-900 p-6 sm:p-8 shadow-xl shadow-slate-900/20 text-white isolate ring-1 ring-white/10 group">
+          <div className="relative overflow-hidden rounded-2xl bg-slate-900 p-5 sm:p-8 shadow-lg shadow-slate-900/20 text-white isolate border border-white/15 group">
             {/* Background Image & Overlay */}
             <div className="absolute inset-0 z-0">
               <img 
@@ -85,22 +85,22 @@ export function AllPackagesPage() {
             <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-80 w-80 rounded-full bg-blue-500/20 blur-[60px] pointer-events-none z-0" />
             
             {/* Content */}
-            <div className="relative z-10 flex flex-col items-start gap-3">
-               <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 shadow-lg">
+            <div className="relative z-10 flex flex-col items-start gap-2">
+               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 shadow-lg">
                   <Sparkles className="w-3 h-3 text-yellow-300 fill-yellow-300" />
-                  <span className="text-[10px] font-bold tracking-wide uppercase text-slate-200">
+                  <span className="text-[9px] font-bold tracking-wide uppercase text-slate-200">
                     {isEnglish ? "Premium Service" : "Layanan Premium"}
                   </span>
                </div>
                
                <div>
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight mb-2 leading-tight drop-shadow-lg">
+                  <h1 className="text-lg sm:text-2xl md:text-3xl font-black tracking-tight mb-1 leading-tight drop-shadow-lg">
                     {isEnglish ? "Welcome," : "Selamat Datang,"} <br/>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 via-white to-blue-200">
                        {userName ? userName : (isEnglish ? "Guest" : "Kak")}! 👋
                     </span>
                   </h1>
-                  <p className="text-sm sm:text-base text-slate-300 max-w-xl leading-relaxed font-medium">
+                  <p className="text-xs sm:text-base text-slate-300 max-w-lg leading-relaxed font-medium">
                     {isEnglish 
                       ? "Ready to make your space sparkle? Choose your perfect cleaning package below." 
                       : "Siap membuat ruanganmu berkilau? Pilih paket kebersihan premium di bawah ini dan biarkan kami yang bekerja."}
