@@ -594,14 +594,22 @@ export function UserLayout() {
       const resp = await api.get("/orders");
       const orders = resp.data.data.items as Array<{ 
         id: number; 
-        status: string; 
+        status: string;
+        scheduled_date: string;
         room_photo_after: string | null;
         paket: { name: string };
       }>;
 
-      // Find orders with IN_PROGRESS status that don't have after photo
+      // Find orders with IN_PROGRESS status that don't have after photo AND are 1 hour past schedule
       const ordersNeedingReminder = orders
-        .filter(order => order.status === 'IN_PROGRESS' && !order.room_photo_after)
+        .filter(order => {
+          if (order.status !== 'IN_PROGRESS' || order.room_photo_after) return false;
+          
+          // Check if 1 hour has passed since scheduled time
+          const scheduledTime = new Date(order.scheduled_date).getTime();
+          const oneHourAfter = scheduledTime + 60 * 60 * 1000; // 1 hour in ms
+          return Date.now() > oneHourAfter;
+        })
         .map(order => ({ id: order.id, paket_name: order.paket.name }));
 
       // Update reminder orders - this will trigger reminder notifications to appear
