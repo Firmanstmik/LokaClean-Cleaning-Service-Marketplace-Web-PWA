@@ -12,7 +12,7 @@ import { PageSkeleton } from "./ui/PageSkeleton";
 
 export function RequireActor({ actor, children }: { actor: Actor; children: ReactNode }) {
   const { token, actor: currentActor } = useAuth();
-  const { loading } = useUserGlobal();
+  const { user, loading } = useUserGlobal();
   const location = useLocation();
 
   // If we have a token but user data is still loading, wait before redirecting.
@@ -27,6 +27,12 @@ export function RequireActor({ actor, children }: { actor: Actor; children: Reac
   }
 
   if (currentActor !== actor) {
+    // FALLBACK: If user data is loaded and matches the required actor, allow access
+    // This handles the race condition where UserGlobal restores the actor but AuthContext hasn't propagated it yet.
+    if (user?.role === actor) {
+      return <>{children}</>;
+    }
+
     // If token exists but actor is missing/mismatch, redirect to login to re-verify
     // instead of sending to Home (which causes a flash of landing page).
     // Login page will handle the redirect back to the intended destination.
