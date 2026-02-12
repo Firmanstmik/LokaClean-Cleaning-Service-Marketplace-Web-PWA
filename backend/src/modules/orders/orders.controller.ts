@@ -51,9 +51,12 @@ const adminSelect = {
 const packageSelect = {
   id: true,
   name: true,
+  name_en: true,
   description: true,
+  description_en: true,
   price: true,
   estimated_duration: true,
+  image: true,
   created_at: true,
   updated_at: true
 };

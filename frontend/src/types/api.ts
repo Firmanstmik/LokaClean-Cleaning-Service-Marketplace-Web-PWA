@@ -40,7 +40,7 @@ export type PaketCleaning = {
   price: number;
   estimated_duration: number;
   image?: string | null; // Optional image path for package
-  category: string; // "SERVICE" | "PRODUCT"
+  category: "SERVICE" | "PRODUCT";
   stock: number;
   created_at: string;
   updated_at: string;

@@ -16,7 +16,7 @@ import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { formatDateOnlyWITA } from "../../utils/date";
 import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
-import { t, useCurrentLanguage } from "../../lib/i18n";
+import { t, useCurrentLanguage, getLanguage } from "../../lib/i18n";
 import type { Pesanan } from "../../types/api";
 
 // --- Types & Helpers ---
@@ -208,6 +208,8 @@ export function OrdersPage() {
 function OrderCard({ order, onRate }: { order: Pesanan; onRate: (order: Pesanan) => void }) {
   const statusKey = STATUS_LABELS_KEY[order.status] || order.status;
   const statusColor = STATUS_COLORS[order.status] || "text-slate-600 bg-slate-50 border-slate-100";
+  const isEnglish = getLanguage() === "en";
+  const packageName = isEnglish && order.paket.name_en ? order.paket.name_en : order.paket.name;
   
   // Format Price
   const priceFormatted = new Intl.NumberFormat("id-ID", {
@@ -270,7 +272,7 @@ function OrderCard({ order, onRate }: { order: Pesanan; onRate: (order: Pesanan)
           {/* Details */}
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-slate-900 text-sm truncate mb-1">
-              {order.paket.name}
+              {packageName}
             </h3>
             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <Calendar className="w-3 h-3" />

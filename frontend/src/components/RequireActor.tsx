@@ -8,7 +8,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import type { Actor } from "../lib/auth";
 import { useAuth } from "../lib/auth";
 import { useUserGlobal } from "./UserGlobalData";
-import { CircularLoader } from "./ui/CircularLoader";
+import { PageSkeleton } from "./ui/PageSkeleton";
 
 export function RequireActor({ actor, children }: { actor: Actor; children: ReactNode }) {
   const { token, actor: currentActor } = useAuth();
@@ -18,11 +18,7 @@ export function RequireActor({ actor, children }: { actor: Actor; children: Reac
   // If we have a token but user data is still loading, wait before redirecting.
   // This prevents the "flash of login/landing page" when refreshing.
   if (token && loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <CircularLoader className="w-8 h-8 text-emerald-600" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   if (!token) {
