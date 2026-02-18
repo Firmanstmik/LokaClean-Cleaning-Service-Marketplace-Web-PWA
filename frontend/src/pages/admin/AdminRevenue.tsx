@@ -5,32 +5,27 @@
  * This is necessary because colors are determined at runtime based on order status.
  */
 
-import { useEffect, useState, type CSSProperties } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import {
-  TrendingUp,
-  DollarSign,
-  Calendar,
-  Package,
   AlertCircle,
+  ArrowDown,
   ArrowUp,
-  Heart,
+  Calendar,
+  Download,
   Filter,
+  DollarSign,
+  Heart,
+  Package,
+  TrendingUp,
 } from "lucide-react";
 import {
   AreaChart,
   Area,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-  RadialBarChart,
-  RadialBar,
 } from "recharts";
 
 import { api } from "../../lib/api";
@@ -191,25 +186,49 @@ export function AdminRevenuePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-12 w-12 rounded-full border-4 border-slate-200 border-t-indigo-600"
-        />
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-4 w-32 rounded bg-slate-200 animate-pulse" />
+            <div className="h-3 w-48 rounded bg-slate-200 animate-pulse" />
+          </div>
+          <div className="hidden gap-2 sm:flex">
+            <div className="h-9 w-28 rounded-full bg-slate-200 animate-pulse" />
+            <div className="h-9 w-24 rounded-full bg-slate-200 animate-pulse" />
+            <div className="h-9 w-32 rounded-full bg-slate-200 animate-pulse" />
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+              <div className="h-3 w-24 rounded bg-slate-200 animate-pulse" />
+              <div className="mt-4 h-7 w-32 rounded bg-slate-200 animate-pulse" />
+              <div className="mt-3 h-3 w-20 rounded bg-slate-200 animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="h-72 rounded-xl border border-slate-200 bg-white shadow-sm animate-pulse lg:col-span-2" />
+          <div className="h-72 rounded-xl border border-slate-200 bg-white shadow-sm animate-pulse" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <AnimatedCard delay={0} className="card-lombok">
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <AlertCircle className="h-16 w-16 text-red-500 mb-4" />
-          <h2 className="text-2xl font-black text-slate-900 mb-2">Error loading revenue data</h2>
-          <p className="text-sm font-semibold text-red-700">{error}</p>
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+        <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+          <AlertCircle className="h-6 w-6 text-red-600" />
         </div>
-      </AnimatedCard>
+        <h2 className="text-lg font-semibold text-slate-900">
+          Gagal memuat data pendapatan
+        </h2>
+        <p className="mt-2 text-sm text-red-600">{error}</p>
+      </div>
     );
   }
 
@@ -270,147 +289,117 @@ export function AdminRevenuePage() {
     return "Tren 12 bulan terakhir";
   };
 
+  const latestMonth =
+    data.monthlyData.length > 0 ? data.monthlyData[data.monthlyData.length - 1] : null;
+  const previousMonth =
+    data.monthlyData.length > 1 ? data.monthlyData[data.monthlyData.length - 2] : null;
+
+  const previousAvgMonthlyRevenue =
+    data.monthlyData.length > 1
+      ? data.monthlyData
+          .slice(0, -1)
+          .reduce((sum, month) => sum + month.revenue, 0) /
+        (data.monthlyData.length - 1)
+      : null;
+
+  const getChangeInfo = (current: number, previous: number | null | undefined) => {
+    if (!previous || previous === 0) {
+      return null;
+    }
+    const diff = current - previous;
+    const percent = (diff / previous) * 100;
+    return {
+      direction: diff >= 0 ? "up" as const : "down" as const,
+      percent: Math.abs(percent),
+    };
+  };
+
+  const kpiCards = [
+    {
+      id: "totalRevenue",
+      label: "Total Pendapatan",
+      value: `Rp ${data.totalRevenue.toLocaleString("id-ID")}`,
+      change: getChangeInfo(latestMonth?.revenue ?? 0, previousMonth?.revenue ?? null),
+      icon: DollarSign,
+    },
+    {
+      id: "totalOrders",
+      label: "Total Pesanan",
+      value: data.totalOrders.toLocaleString("id-ID"),
+      change: getChangeInfo(latestMonth?.orders ?? 0, previousMonth?.orders ?? null),
+      icon: Package,
+    },
+    {
+      id: "avgMonthly",
+      label: "Rata-rata Bulanan",
+      value: `Rp ${avgMonthlyRevenue.toLocaleString("id-ID", {
+        maximumFractionDigits: 0,
+      })}`,
+      change: getChangeInfo(avgMonthlyRevenue, previousAvgMonthlyRevenue),
+      icon: TrendingUp,
+    },
+    {
+      id: "tipRevenue",
+      label: "Pendapatan Tip",
+      value: `Rp ${data.totalTipRevenue.toLocaleString("id-ID")}`,
+      change: getChangeInfo(
+        latestMonth?.tipRevenue ?? 0,
+        previousMonth?.tipRevenue ?? null,
+      ),
+      icon: Heart,
+    },
+  ];
+
+  const totalStatusOrders = data.statusData.reduce((sum, s) => sum + s.count, 0);
+
+  const handleExportCsv = () => {
+    if (!data) return;
+    const header = ["Bulan", "Pendapatan", "PendapatanTip", "JumlahPesanan"];
+    const rows = data.monthlyData.map((month) => [
+      month.month,
+      month.revenue.toString(),
+      month.tipRevenue.toString(),
+      month.orders.toString(),
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "lokaclean-revenue.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="space-y-4 animate-fade-in">
-      {/* Compact Header - Consistent with other pages */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-wrap items-start justify-between gap-3"
-      >
-        <div>
-          <h1 className="flex items-center gap-3 text-2xl sm:text-3xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <TrendingUp className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-600" />
-            </motion.div>
-            Ringkasan Pendapatan
-          </h1>
-          <p className="mt-2 text-sm text-slate-600 font-medium">
-            Analitik pendapatan dan insight finansial secara real-time
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Key Metrics - Modern Mobile-First Horizontal Layout */}
-      <div className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-x-visible scrollbar-hide">
-        <div className="flex gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4 min-w-max sm:min-w-0">
-          <AnimatedCard delay={0.1} className="card-lombok relative overflow-hidden p-4 min-w-[160px] sm:min-w-0 backdrop-blur-sm bg-white/90 border border-emerald-100 shadow-lg shadow-emerald-500/5">
-            <motion.div 
-              className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-2xl"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 4, repeat: Infinity }}
-            />
-            <div className="relative z-10">
-              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2">
-                <DollarSign className="h-4 w-4" />
-                Pendapatan
-              </div>
-              <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-                Rp {data.totalRevenue.toLocaleString("id-ID")}
-              </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                <ArrowUp className="h-3 w-3" />
-                Sepanjang waktu
-              </div>
-            </div>
-          </AnimatedCard>
-
-          <AnimatedCard delay={0.15} className="card-lombok relative overflow-hidden p-4 min-w-[160px] sm:min-w-0 backdrop-blur-sm bg-white/90 border border-blue-100 shadow-lg shadow-blue-500/5">
-            <motion.div 
-              className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-2xl"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
-            />
-            <div className="relative z-10">
-              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-700 mb-2">
-                <Package className="h-4 w-4" />
-                Pesanan
-              </div>
-              <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-                {data.totalOrders}
-              </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-blue-600">
-                <Calendar className="h-3 w-3" />
-                Total
-              </div>
-            </div>
-          </AnimatedCard>
-
-          <AnimatedCard delay={0.2} className="card-lombok relative overflow-hidden p-4 min-w-[160px] sm:min-w-0 backdrop-blur-sm bg-white/90 border border-purple-100 shadow-lg shadow-purple-500/5">
-            <motion.div 
-              className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-2xl"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 4, repeat: Infinity, delay: 1 }}
-            />
-            <div className="relative z-10">
-              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-purple-700 mb-2">
-                <TrendingUp className="h-4 w-4" />
-                Rata-rata Bulanan
-              </div>
-              <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                Rp {avgMonthlyRevenue.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
-              </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-purple-600">
-                Per bulan (excl. tip)
-              </div>
-            </div>
-          </AnimatedCard>
-
-          <AnimatedCard delay={0.25} className="card-lombok relative overflow-hidden p-4 min-w-[160px] sm:min-w-0 backdrop-blur-sm bg-white/90 border border-pink-100 shadow-lg shadow-pink-500/5">
-            <motion.div 
-              className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-br from-pink-400/20 to-rose-400/20 rounded-full blur-2xl"
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 4, repeat: Infinity, delay: 1.5 }}
-            />
-            <div className="relative z-10">
-              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-pink-700 mb-2">
-                <Heart className="h-4 w-4" />
-                Tips
-              </div>
-              <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-2">
-                Rp {data.totalTipRevenue.toLocaleString("id-ID")}
-              </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-pink-600">
-                From users/tourists
-              </div>
-            </div>
-          </AnimatedCard>
-        </div>
-      </div>
-
-      {/* Charts - Modern Full-Width Mobile Layout */}
-      <div className="space-y-4">
-        {/* Monthly Revenue Chart */}
-        <AnimatedCard delay={0.3} className="card-lombok p-4 sm:p-6 backdrop-blur-sm bg-white/90 border border-emerald-100/50 shadow-xl shadow-emerald-500/5">
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex-1">
-              <h3 className="text-lg sm:text-xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                Pendapatan Bulanan
-              </h3>
-              <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
-                {getSelectedPeriodLabel()}
-                {selectedPeriodRevenue !== null && (
-                  <span className="ml-2 text-emerald-600 font-bold">
-                    - Rp {selectedPeriodRevenue.toLocaleString("id-ID")}
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Year Filter */}
+    <div className="space-y-8">
+      <div className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 pb-3 pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">
+              Ringkasan Pendapatan
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Analitik performa finansial
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <Calendar className="h-4 w-4" />
+                </span>
                 <select
                   id="year-filter-revenue"
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
-                  className="pl-9 pr-4 py-2 text-xs sm:text-sm font-semibold rounded-lg border-2 border-slate-200 bg-white text-slate-900 transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none appearance-none"
+                  className="h-9 rounded-full border border-slate-300 bg-white pl-9 pr-4 text-xs font-medium text-slate-900 focus:border-blue-600 focus:outline-none"
                   title="Filter berdasarkan tahun"
-                  aria-label="Filter pendapatan bulanan berdasarkan tahun"
+                  aria-label="Filter pendapatan berdasarkan tahun"
                 >
                   <option value="ALL">Semua tahun</option>
                   {availableYears.map((year) => (
@@ -420,17 +409,17 @@ export function AdminRevenuePage() {
                   ))}
                 </select>
               </div>
-              
-              {/* Month Filter */}
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <Calendar className="h-4 w-4" />
+                </span>
                 <select
                   id="month-filter-revenue"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="pl-9 pr-4 py-2 text-xs sm:text-sm font-semibold rounded-lg border-2 border-slate-200 bg-white text-slate-900 transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none appearance-none"
+                  className="h-9 rounded-full border border-slate-300 bg-white pl-9 pr-4 text-xs font-medium text-slate-900 focus:border-blue-600 focus:outline-none"
                   title="Filter berdasarkan bulan"
-                  aria-label="Filter pendapatan bulanan berdasarkan bulan"
+                  aria-label="Filter pendapatan berdasarkan bulan"
                 >
                   <option value="ALL">Semua bulan</option>
                   {allMonths.map((month) => (
@@ -440,248 +429,228 @@ export function AdminRevenuePage() {
                   ))}
                 </select>
               </div>
-              
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              >
-                <TrendingUp className="h-5 w-5 text-emerald-600" />
-              </motion.div>
             </div>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <Filter className="h-4 w-4" />
+              <span>Filter</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-1.5 rounded-full border border-blue-600 bg-white px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50"
+            >
+              <Download className="h-4 w-4" />
+              <span>Export CSV</span>
+            </button>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <AreaChart data={filteredMonthlyData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
-                  <stop offset="50%" stopColor="#14b8a6" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-              <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke="#e2e8f0" 
-                opacity={0.3}
-                vertical={false}
-              />
-              <XAxis 
-                dataKey="month" 
-                stroke="#64748b" 
-                fontSize={12}
-                tick={{ fill: "#64748b", fontWeight: 600 }}
-                axisLine={{ stroke: "#cbd5e1", strokeWidth: 2 }}
-                tickLine={{ stroke: "#cbd5e1" }}
-              />
-              <YAxis 
-                stroke="#64748b" 
-                fontSize={12}
-                tick={{ fill: "#64748b", fontWeight: 600 }}
-                axisLine={{ stroke: "#cbd5e1", strokeWidth: 2 }}
-                tickLine={{ stroke: "#cbd5e1" }}
-                tickFormatter={(value) => {
-                  if (value >= 1000000) return `Rp${(value / 1000000).toFixed(1)}M`;
-                  if (value >= 1000) return `Rp${(value / 1000).toFixed(0)}k`;
-                  return `Rp${value}`;
-                }}
-              />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const value = payload[0].value as number;
-                    return (
-                      <div className="bg-white/95 backdrop-blur-md border-2 border-emerald-200 rounded-xl p-4 shadow-2xl">
-                        <p className="font-bold text-sm text-emerald-700 mb-2">{label}</p>
-                        <div className="flex items-center gap-2">
-                          <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                          <p className="text-sm text-slate-900">
-                            <span className="font-semibold">Pendapatan:</span>{" "}
-                            <span className="font-black text-emerald-600">
-                              Rp {value.toLocaleString("id-ID")}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="#10b981"
-                strokeWidth={4}
-                fillOpacity={1}
-                fill="url(#colorRevenue)"
-                dot={{ fill: "#10b981", strokeWidth: 2, r: 5 }}
-                activeDot={{ r: 8, stroke: "#10b981", strokeWidth: 2, fill: "#fff" }}
-                animationDuration={1000}
-                animationEasing="ease-out"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </AnimatedCard>
+        </div>
+      </div>
 
-        {/* Orders Status Chart - Modern 3D Pie Chart */}
-        <AnimatedCard delay={0.4} className="card-lombok p-4 sm:p-6 backdrop-blur-sm bg-white/90 border border-blue-100/50 shadow-xl shadow-blue-500/5">
-          <div className="mb-4 flex items-center justify-between">
+      <div className="grid grid-cols-2 gap-4">
+        {kpiCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={card.id}
+              className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  {card.label}
+                </div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                  <Icon className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="mt-3 text-3xl font-bold text-slate-900">
+                {card.value}
+              </div>
+            {card.change ? (
+              <div
+                className={`mt-2 inline-flex items-center text-xs font-medium ${
+                  card.change.direction === "up"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {card.change.direction === "up" ? (
+                  <ArrowUp className="mr-1 h-3 w-3" />
+                ) : (
+                  <ArrowDown className="mr-1 h-3 w-3" />
+                )}
+                <span>
+                  {card.change.direction === "up" ? "+" : "-"}
+                  {card.change.percent.toFixed(1)}% vs bulan lalu
+                </span>
+              </div>
+            ) : (
+              <div className="mt-2 text-xs text-slate-400">
+                Belum ada data pembanding
+              </div>
+            )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6">
             <div>
-              <h3 className="text-lg sm:text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Pesanan berdasarkan status
-              </h3>
-              <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
-                Ringkasan distribusi dengan visualisasi 3D
+              <h2 className="text-lg font-medium text-slate-900">
+                Tren Pendapatan
+              </h2>
+              <p className="text-xs text-slate-500">
+                {getSelectedPeriodLabel()}
+                {selectedPeriodRevenue !== null && (
+                  <span className="ml-1 font-semibold text-slate-700">
+                    · Rp {selectedPeriodRevenue.toLocaleString("id-ID")}
+                  </span>
+                )}
               </p>
             </div>
-            <motion.div
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            >
-              <Package className="h-5 w-5 text-blue-600" />
-            </motion.div>
           </div>
-          
-          <div className="grid gap-6 sm:grid-cols-2 items-center">
-            {/* 3D Pie Chart */}
-            <div className="relative">
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <defs>
-                    {data.statusData.map((entry, index) => {
-                      const fillColor = entry.fill || STATUS_COLORS[entry.status] || "#6b7280";
-                      return (
-                        <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={fillColor} stopOpacity={1} />
-                          <stop offset="100%" stopColor={fillColor} stopOpacity={0.6} />
-                        </linearGradient>
-                      );
-                    })}
-                  </defs>
-                  <Pie
-                    data={data.statusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ percent = 0 }) => {
-                      if (percent < 0.05) return "";
-                      return `${(percent * 100).toFixed(0)}%`;
-                    }}
-                    outerRadius={100}
-                    innerRadius={40}
-                    paddingAngle={4}
-                    dataKey="count"
-                    animationBegin={0}
-                    animationDuration={800}
-                    animationEasing="ease-out"
-                  >
-                    {data.statusData.map((entry, index) => {
-                      const fillColor = entry.fill || STATUS_COLORS[entry.status] || "#6b7280";
-                      return (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={`url(#gradient-${index})`}
-                          stroke={fillColor}
-                          strokeWidth={2}
-                        />
-                      );
-                    })}
-                  </Pie>
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const tooltipPayload = payload[0];
-                        const tooltipData = tooltipPayload.payload as typeof data.statusData[0];
-                        const total = data.statusData.reduce((sum, s) => sum + s.count, 0);
-                        const percentage = total > 0 ? (((tooltipPayload.value as number) / total) * 100).toFixed(1) : "0";
-                        return (
-                          <div className="bg-white/95 backdrop-blur-md border-2 border-slate-200 rounded-xl p-3 shadow-xl">
-                            <p className="font-bold text-sm text-slate-900">{tooltipData.status}</p>
-                            <p className="text-xs text-slate-600 mt-1">
-                              Count: <span className="font-bold">{tooltipPayload.value}</span>
-                            </p>
-                            <p className="text-xs text-slate-600">
-                              Percentage: <span className="font-bold">{percentage}%</span>
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              
-              {/* 3D Shadow Effect */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {/* Dynamic radial gradient for 3D effect */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl opacity-30 chart-shadow-glow" />
+          <div className="px-4 py-4 sm:px-6 sm:py-5">
+            {filteredMonthlyData.length === 0 ? (
+              <div className="flex h-64 items-center justify-center text-sm text-slate-500">
+                Tidak ada data pendapatan untuk periode ini
               </div>
-            </div>
-
-            {/* Status Legend with Cards */}
-            <div className="space-y-3">
-              {data.statusData.map((entry, index) => {
-                const total = data.statusData.reduce((sum, s) => sum + s.count, 0);
-                const percentage = total > 0 ? ((entry.count / total) * 100).toFixed(1) : "0";
-                const fillColor = entry.fill || STATUS_COLORS[entry.status] || "#6b7280";
-                return (
-                  <motion.div
-                    key={entry.status}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="relative overflow-hidden rounded-xl border-2 p-3 backdrop-blur-sm bg-white/80 status-card-wrapper"
-                    style={{
-                      "--status-color": fillColor,
-                      "--status-color-shadow": `${fillColor}80`,
-                      "--status-color-border": `${fillColor}40`,
-                      "--status-color-bg": fillColor
-                    } as CSSProperties}
+            ) : (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={filteredMonthlyData}
+                    margin={{ top: 10, right: 16, left: 0, bottom: 0 }}
                   >
-                    <div className="absolute inset-0 opacity-10 status-card-bg" />
-                    <div className="relative z-10 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-4 w-4 rounded-full shadow-md status-indicator-dot" />
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">{entry.status}</p>
-                          <p className="text-xs text-slate-500">{percentage}% dari total</p>
-                        </div>
+                    <CartesianGrid
+                      stroke="#e5e7eb"
+                      strokeDasharray="3 3"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="month"
+                      stroke="#9ca3af"
+                      tick={{ fill: "#9ca3af", fontSize: 12 }}
+                      axisLine={{ stroke: "#e5e7eb", strokeWidth: 1 }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      stroke="#9ca3af"
+                      tick={{ fill: "#9ca3af", fontSize: 12 }}
+                      axisLine={{ stroke: "#e5e7eb", strokeWidth: 1 }}
+                      tickLine={false}
+                      tickFormatter={(value) => {
+                        if (value >= 1000000)
+                          return `Rp${(value / 1000000).toFixed(1)}M`;
+                        if (value >= 1000)
+                          return `Rp${(value / 1000).toFixed(0)}k`;
+                        return `Rp${value}`;
+                      }}
+                    />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const v = payload[0].value as number;
+                          return (
+                            <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-sm">
+                              <div className="mb-1 font-medium">{label}</div>
+                              <div>
+                                Pendapatan:{" "}
+                                <span className="font-semibold">
+                                  Rp {v.toLocaleString("id-ID")}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#2563eb"
+                      strokeWidth={2}
+                      fill="none"
+                      dot={{
+                        r: 3,
+                        stroke: "#2563eb",
+                        strokeWidth: 1,
+                      }}
+                      activeDot={{
+                        r: 5,
+                        stroke: "#1d4ed8",
+                        strokeWidth: 1,
+                        fill: "#ffffff",
+                      }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-4 py-3 sm:px-6">
+            <h2 className="text-lg font-medium text-slate-900">
+              Status Pesanan
+            </h2>
+            <p className="text-xs text-slate-500">
+              Distribusi pesanan berdasarkan status
+            </p>
+          </div>
+          <div className="space-y-4 px-4 py-4 sm:px-6 sm:py-5">
+            {totalStatusOrders === 0 ? (
+              <div className="flex h-40 items-center justify-center text-sm text-slate-500">
+                Belum ada data pesanan
+              </div>
+            ) : (
+              <>
+                {data.statusData.map((entry) => {
+                  const percentage =
+                    totalStatusOrders > 0
+                      ? Math.round((entry.count / totalStatusOrders) * 100)
+                      : 0;
+                  const barColor =
+                    entry.fill || STATUS_COLORS[entry.status] || "#2563eb";
+                  return (
+                    <div key={entry.status} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-slate-700">
+                          {entry.status}
+                        </span>
+                        <span className="text-slate-500">
+                          {percentage}% · {entry.count} pesanan
+                        </span>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-black status-count-text">
-                          {entry.count}
-                        </p>
-                        <p className="text-xs text-slate-500">orders</p>
+                      <div className="h-2 rounded-full bg-slate-100">
+                        <div
+                          className="h-2 rounded-full"
+                          style={{
+                            width: `${percentage}%`,
+                            backgroundColor: barColor,
+                          }}
+                        />
                       </div>
                     </div>
-                  </motion.div>
-                );
-              })}
-              
-              {/* Total Summary */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="mt-4 pt-4 border-t-2 border-slate-200 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-slate-700">Total Pesanan</p>
-                  <p className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    {data.statusData.reduce((sum, s) => sum + s.count, 0)}
-                  </p>
+                  );
+                })}
+                <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-3 text-xs">
+                  <span className="font-medium text-slate-600">
+                    Total pesanan
+                  </span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    {totalStatusOrders}
+                  </span>
                 </div>
-              </motion.div>
-            </div>
+              </>
+            )}
           </div>
-        </AnimatedCard>
+        </div>
       </div>
     </div>
   );

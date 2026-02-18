@@ -176,7 +176,19 @@ export function AdminOrderDetailPage() {
     async (value: string, message: string) => {
       if (!value) return;
       try {
-        await navigator.clipboard.writeText(value);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(value);
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = value;
+          textarea.style.position = "fixed";
+          textarea.style.left = "-9999px";
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+        }
         setActionError(null);
         setActionSuccess(message);
       } catch {
@@ -343,7 +355,7 @@ export function AdminOrderDetailPage() {
       />
 
       {actionSuccess && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-[88px] z-40 flex justify-center px-4">
+        <div className="pointer-events-none fixed inset-x-0 top-1/2 z-40 flex justify-center px-4 transform -translate-y-1/2 sm:bottom-6 sm:top-auto sm:translate-y-0">
           <div className="pointer-events-auto inline-flex max-w-[420px] items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-medium text-white shadow-lg shadow-slate-900/30 sm:text-sm">
             <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
             <span className="truncate">{actionSuccess}</span>
@@ -845,7 +857,8 @@ function OrderActionBar({
   onDelete,
 }: OrderActionBarProps) {
   const isCompleted = order.status === "COMPLETED";
-  const disableAssign = busyAction !== null || isCompleted;
+  const isAssigned = order.status === "IN_PROGRESS" || order.status === "COMPLETED";
+  const disableAssign = busyAction !== null || isAssigned;
   const disableComplete = busyAction !== null || isCompleted;
 
   return (
@@ -860,9 +873,13 @@ function OrderActionBar({
           {busyAction === "assign" ? (
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
           ) : (
-            <User className="h-4 w-4" />
+            isAssigned ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <User className="h-4 w-4" />
+            )
           )}
-          <span>Tugaskan petugas</span>
+          <span>{isAssigned ? "Sudah ditugaskan" : "Tugaskan petugas"}</span>
         </button>
         <button
           type="button"

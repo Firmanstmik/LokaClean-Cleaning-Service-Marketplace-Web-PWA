@@ -275,10 +275,11 @@ export function AdminLayout() {
 
       {/* Mobile bottom nav - inspired by user layout, simplified for performance */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white shadow-[0_-4px_16px_rgba(15,23,42,0.08)] pb-safe lg:hidden">
-        <div className="mx-auto flex h-[60px] items-center justify-between px-2">
+        <div className="mx-auto flex h-[60px] items-center justify-between px-1.5 gap-1.5">
           <AdminBottomNavItem to="/admin/dashboard" label="Dashboard" icon={LayoutDashboard} />
           <AdminBottomNavItem to="/admin/orders" label="Pesanan" icon={ClipboardList} />
           <AdminBottomNavItem to="/admin/packages" label="Paket" icon={Package} />
+          <AdminBottomNavItem to="/admin/revenue" label="Pendapatan" icon={TrendingUp} />
           <AdminBottomNavItem to="/admin/users" label="Pengguna" icon={Users} />
           <AdminBottomNavItem to="/admin/ratings" label="Rating" icon={Star} />
         </div>
