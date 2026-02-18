@@ -376,7 +376,7 @@ export function AdminRevenuePage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-8">
       <div className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 pb-3 pt-1">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -465,7 +465,7 @@ export function AdminRevenuePage() {
                   <Icon className="h-4 w-4" />
                 </div>
               </div>
-              <div className="mt-3 text-3xl font-bold text-slate-900">
+              <div className="mt-3 text-2xl font-bold leading-snug text-slate-900 sm:text-3xl">
                 {card.value}
               </div>
             {card.change ? (

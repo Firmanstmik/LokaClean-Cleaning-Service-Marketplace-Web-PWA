@@ -367,7 +367,7 @@ export function AdminOrdersPage() {
   }, [deleteConfirm, fetchOrders]);
 
   return (
-    <div className="space-y-4 bg-slate-50 px-0 py-0 sm:space-y-5">
+    <div className="space-y-4 bg-slate-50 px-0 pb-8 pt-0 sm:space-y-5 sm:pb-8">
       <OrdersHeader
         visibleCount={filteredItems.length}
         totalCount={items.length}
