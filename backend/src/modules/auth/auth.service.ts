@@ -190,6 +190,27 @@ export async function loginUser(input: { login: string; password: string }) {
 
 export async function loginAdmin(input: { login: string; password: string }) {
   const { login: rawLogin, password } = input;
+
+  // In development, auto-create a default admin if none exists (for localhost testing).
+  if (env.NODE_ENV === "development") {
+    const adminCount = await prisma.admin.count();
+    if (adminCount === 0) {
+      const devEmail = process.env.ADMIN_SEED_EMAIL ?? "admin@lokaclean.local";
+      const devPasswordPlain = process.env.ADMIN_SEED_PASSWORD ?? "admin12345";
+      const devPasswordHash = await bcrypt.hash(devPasswordPlain, 12);
+
+      await prisma.admin.create({
+        data: {
+          full_name: "LokaClean Dev Admin",
+          email: devEmail,
+          phone_number: "+6281234567890",
+          password: devPasswordHash,
+          role: Role.ADMIN
+        }
+      });
+    }
+  }
+
   // Normalize login (email) to lowercase if it's an email
   const login = rawLogin.includes("@") ? rawLogin.trim().toLowerCase() : rawLogin.trim();
   
@@ -254,19 +275,34 @@ export async function loginAdmin(input: { login: string; password: string }) {
     if (admin) isUserTable = true;
   }
 
-  if (!admin) throw new HttpError(401, "Invalid credentials");
+  if (!admin) {
+    const message =
+      env.NODE_ENV === "development"
+        ? "Invalid credentials. Untuk localhost, gunakan admin@lokaclean.local dan password admin12345."
+        : "Invalid credentials";
+    throw new HttpError(401, message);
+  }
 
   // 3. Verify Password
   // Admin table uses 'password', User table uses 'password_hash'
   const dbPassword = isUserTable ? admin.password_hash : admin.password;
   
   if (!dbPassword) {
-      // If user has no password (e.g. google auth only), they can't login this way
-      throw new HttpError(401, "Invalid credentials");
+    const message =
+      env.NODE_ENV === "development"
+        ? "Invalid credentials. Untuk localhost, gunakan admin@lokaclean.local dan password admin12345."
+        : "Invalid credentials";
+    throw new HttpError(401, message);
   }
 
   const ok = await bcrypt.compare(password, dbPassword);
-  if (!ok) throw new HttpError(401, "Invalid credentials");
+  if (!ok) {
+    const message =
+      env.NODE_ENV === "development"
+        ? "Invalid credentials. Untuk localhost, gunakan admin@lokaclean.local dan password admin12345."
+        : "Invalid credentials";
+    throw new HttpError(401, message);
+  }
 
   // 4. Return Token
   const tokenPayload: JwtTokenPayload = { 

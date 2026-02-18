@@ -5,7 +5,17 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, LogOut, Shield, Sparkles, Users, TrendingUp, Bell, Star, User, ClipboardList } from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  LogOut,
+  Users,
+  TrendingUp,
+  Bell,
+  Star,
+  User,
+  ClipboardList,
+} from "lucide-react";
 
 import { useAuth } from "../lib/auth";
 import { ScrollToTop } from "./ScrollToTop";
@@ -13,58 +23,6 @@ import { api } from "../lib/api";
 import { AdminNotificationContainer } from "./AdminNotificationToast";
 import { playOrderNotificationSound } from "../utils/sound";
 import { speakNotification, isSpeechSynthesisSupported } from "../utils/textToSpeech";
-
-function BottomNavItem({ to, label, icon: Icon }: { to: string; label: string; icon: typeof LayoutDashboard }) {
-  return (
-    <NavLink to={to} className="flex-1">
-      {({ isActive }) => (
-        <motion.div
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          className={`relative flex flex-col items-center justify-center gap-1 sm:gap-1.5 rounded-xl px-2 sm:px-3 py-2.5 sm:py-3 transition-all duration-300 touch-manipulation ${
-            isActive
-              ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
-              : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
-          {isActive && (
-            <>
-              <motion.div
-                layoutId="adminBottomActiveNav"
-                className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600"
-                initial={false}
-                transition={{ type: "spring", stiffness: 380, damping: 30 }}
-              />
-              {/* Glow effect */}
-              <motion.div
-                className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400/30 via-indigo-400/30 to-purple-400/30"
-                animate={{
-                  opacity: [0.4, 0.7, 0.4],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            </>
-          )}
-          <motion.div
-            animate={isActive ? { scale: 1.2 } : { scale: 1 }}
-            whileHover={{ scale: 1.25 }}
-            transition={{ duration: 0.3 }}
-            className="relative z-10"
-          >
-            <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${isActive ? "text-white" : "text-slate-500"}`} />
-          </motion.div>
-          <span className={`relative z-10 text-[10px] sm:text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>
-            {label}
-          </span>
-        </motion.div>
-      )}
-    </NavLink>
-  );
-}
 
 export function AdminLayout() {
   const { logout } = useAuth();
@@ -211,228 +169,124 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/60 relative overflow-x-hidden scrollbar-hide">
-      {/* Animated background particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-gradient-to-br from-blue-400/20 to-indigo-500/20 blur-xl"
-            style={{
-              width: Math.random() * 300 + 100,
-              height: Math.random() * 300 + 100,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              x: [0, Math.random() * 200 - 100],
-              y: [0, Math.random() * 200 - 100],
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{
-              duration: Math.random() * 20 + 15,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Premium glassmorphism header - Professional */}
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/60 bg-white/95 backdrop-blur-xl backdrop-saturate-200 shadow-sm"
-      >
-        {/* Subtle header glow */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-blue-500/3 via-indigo-500/3 to-purple-500/3"
-          animate={{
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-
-        <div className="relative mx-auto flex w-full items-center justify-between gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 lg:px-6 lg:py-3">
-          {/* Logo section */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer"
+    <div className="relative min-h-dvh overflow-x-hidden bg-slate-50 scrollbar-hide">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md">
+        <div className="relative mx-auto flex w-full items-center justify-between gap-3 px-3 py-2.5 sm:px-4 sm:py-3 lg:px-6">
+          {/* Logo section - match user layout style (compact, modern) */}
+          <button
+            type="button"
+            className="flex cursor-pointer items-center gap-2 sm:gap-3"
             onClick={() => navigate("/admin/dashboard")}
           >
-            <motion.div
-              className="relative flex h-14 w-14 sm:h-16 sm:w-16 lg:h-20 lg:w-20 items-center justify-center rounded-lg overflow-hidden bg-white shadow-sm"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            >
-              <img
-                src="/img/Logo_LokaClean.jpg"
-                alt="LokaClean Logo"
-                className="h-full w-full object-contain p-0.5 scale-110"
-              />
-            </motion.div>
-            <div className="block">
-              <div className="text-[11px] sm:text-xs md:text-sm font-black text-slate-900 leading-tight">
-                LokaClean Admin
-              </div>
-              <div className="text-[9px] sm:text-[10px] md:text-xs font-medium text-slate-500 leading-tight">
-                Operations Dashboard
+            <div className="relative h-9 w-9 flex-shrink-0 rounded-xl sm:h-11 sm:w-11 flex items-center justify-center overflow-visible">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-tropical-400/30 via-ocean-400/25 to-sun-400/30 blur-lg" />
+              <div className="relative z-10 h-full w-full overflow-hidden rounded-xl bg-gradient-to-br from-white via-slate-50 to-white shadow-[0_4px_10px_rgba(15,23,42,0.08)] flex items-center justify-center border border-white">
+                <img
+                  src="/img/logo.jpg"
+                  alt="LokaClean Logo"
+                  loading="lazy"
+                  className="h-full w-full object-cover mix-blend-multiply"
+                />
               </div>
             </div>
-          </motion.div>
+            <div className="flex min-w-0 flex-col text-left">
+              <span className="text-sm font-black leading-tight text-slate-900 sm:text-base">
+                LokaClean Admin
+              </span>
+              <span className="text-[10px] font-medium leading-tight text-slate-500 sm:text-xs">
+                Panel Operasional
+              </span>
+            </div>
+          </button>
 
           {/* Navigation items - Desktop only */}
-          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+          <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
             <NavHeaderItem to="/admin/dashboard" label="Dashboard" icon={LayoutDashboard} />
-            <NavHeaderItem to="/admin/orders" label="Orders" icon={ClipboardList} />
-            <NavHeaderItem to="/admin/packages" label="Packages" icon={Package} />
-            <NavHeaderItem to="/admin/users" label="Users" icon={Users} />
-            <NavHeaderItem to="/admin/revenue" label="Revenue" icon={TrendingUp} />
-            <NavHeaderItem to="/admin/ratings" label="Ratings" icon={Star} />
+            <NavHeaderItem to="/admin/orders" label="Pesanan" icon={ClipboardList} />
+            <NavHeaderItem to="/admin/packages" label="Paket" icon={Package} />
+            <NavHeaderItem to="/admin/users" label="Pengguna" icon={Users} />
+            <NavHeaderItem to="/admin/revenue" label="Pendapatan" icon={TrendingUp} />
+            <NavHeaderItem to="/admin/ratings" label="Rating" icon={Star} />
           </nav>
 
-          {/* Notification badge and Logout button - top right */}
+          {/* Right section */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Admin name display - Show on md and above */}
             {adminData && adminData.full_name && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="hidden md:flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 shadow-sm"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-sm">
+              <div className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-sm md:flex">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
                   <User className="h-3.5 w-3.5" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 leading-tight whitespace-nowrap">Logged in as</span>
-                  <span className="text-[10px] sm:text-xs font-black text-slate-900 leading-tight truncate max-w-[120px] sm:max-w-[150px]" title={adminData.full_name}>
+                  <span className="text-[9px] font-medium leading-tight text-slate-500 whitespace-nowrap sm:text-[10px]">
+                    Masuk sebagai
+                  </span>
+                  <span
+                    className="truncate text-[10px] font-bold leading-tight text-slate-900 sm:text-xs"
+                    title={adminData.full_name}
+                  >
                     {adminData.full_name}
                   </span>
                 </div>
-              </motion.div>
+              </div>
             )}
             
             {/* Pending orders badge */}
             {pendingCount > 0 && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="relative"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={{ 
-                    scale: [1, 1.05, 1],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="relative z-10 flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg cursor-pointer border-2 border-white/20"
+              <button
+                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 shadow-sm sm:h-10 sm:w-10"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate("/admin/orders?filter=PENDING");
                   }}
-                  title={`${pendingCount} pesanan pending - Klik untuk melihat`}
+                  title={`${pendingCount} pesanan menunggu - klik untuk melihat`}
                 >
                   <Bell className="h-4 w-4 sm:h-5 sm:w-5 relative z-10" />
                   {pendingCount > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md z-20"
-                    >
+                    <span className="absolute -right-1 -top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md">
                       {pendingCount > 9 ? '9+' : pendingCount}
-                    </motion.span>
+                    </span>
                   )}
-                </motion.button>
-                {/* Pulsing glow effect - behind button */}
-                <motion.div
-                  className="absolute inset-0 rounded-full bg-amber-400 blur-lg opacity-50 pointer-events-none"
-                  animate={{
-                    scale: [1, 1.3, 1],
-                    opacity: [0.5, 0.2, 0.5]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-              </motion.div>
+                </button>
             )}
             
             {/* Logout button */}
-            <motion.button
-            whileHover={{ scale: 1.05, x: -2 }}
-            whileTap={{ scale: 0.95 }}
-            className="group relative overflow-hidden flex items-center gap-1.5 sm:gap-2 rounded-xl border-2 border-red-300 bg-gradient-to-r from-red-50 via-rose-50 to-red-50 px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 text-[11px] sm:text-xs md:text-sm font-bold text-red-700 transition-all hover:border-red-400 hover:shadow-lg hover:shadow-red-200 touch-manipulation"
-            onClick={() => {
-              // Clear admin data on logout
-              localStorage.removeItem("lokaclean_admin_data");
-              logout();
-              navigate("/adminlokacleanmandalika/login", { replace: true });
-            }}
-          >
-            {/* Button shimmer */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-              animate={{
-                x: ["-100%", "200%"],
+            <button
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-[11px] font-semibold text-red-700 shadow-sm transition-colors hover:border-red-300 hover:bg-red-100 sm:px-3 sm:text-xs"
+              onClick={() => {
+                localStorage.removeItem("lokaclean_admin_data");
+                logout();
+                navigate("/adminlokacleanmandalika/login", { replace: true });
               }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatDelay: 1.5,
-                ease: "linear",
-              }}
-            />
-            <LogOut className="relative z-10 h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform group-hover:-translate-x-1" />
-            <span className="relative z-10 hidden sm:inline">Logout</span>
-          </motion.button>
+            >
+              <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      {/* Main content with smooth fade-in - Professional Layout */}
-      <motion.main
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 w-full px-3 sm:px-4 py-4 sm:py-6 pb-20 sm:pb-24 pt-24 sm:pt-28 lg:px-6 lg:py-6 lg:pt-32 lg:pb-6"
-      >
+      <main className="relative z-10 w-full px-3 pb-10 pt-20 sm:px-4 sm:pb-16 sm:pt-24 lg:px-6 lg:pb-12 lg:pt-24">
         <div className="mx-auto w-full max-w-7xl">
           <Outlet />
         </div>
-      </motion.main>
+      </main>
 
-      {/* Bottom Navigation - Professional Clean Theme */}
-      <motion.footer
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30, delay: 0.2 }}
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/80 bg-white/90 backdrop-blur-2xl backdrop-saturate-200 shadow-2xl shadow-slate-900/10 lg:hidden"
-      >
-        <div className="mx-auto flex max-w-7xl items-center justify-around gap-0.5 sm:gap-1 px-1 sm:px-2 py-2.5 sm:py-3">
-          <BottomNavItem to="/admin/dashboard" label="Home" icon={LayoutDashboard} />
-          <BottomNavItem to="/admin/orders" label="Orders" icon={ClipboardList} />
-          <BottomNavItem to="/admin/packages" label="Packages" icon={Package} />
-          <BottomNavItem to="/admin/users" label="Users" icon={Users} />
-          <BottomNavItem to="/admin/revenue" label="Rev" icon={TrendingUp} />
+      {/* Mobile bottom nav - inspired by user layout, simplified for performance */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white shadow-[0_-4px_16px_rgba(15,23,42,0.08)] pb-safe lg:hidden">
+        <div className="mx-auto flex h-[60px] items-center justify-between px-2">
+          <AdminBottomNavItem to="/admin/dashboard" label="Dashboard" icon={LayoutDashboard} />
+          <AdminBottomNavItem to="/admin/orders" label="Pesanan" icon={ClipboardList} />
+          <AdminBottomNavItem to="/admin/packages" label="Paket" icon={Package} />
+          <AdminBottomNavItem to="/admin/users" label="Pengguna" icon={Users} />
+          <AdminBottomNavItem to="/admin/ratings" label="Rating" icon={Star} />
         </div>
-      </motion.footer>
+      </nav>
 
       {/* Scroll to Top Button */}
       <ScrollToTop />
-      
+
       {/* Admin Notification Toast */}
       {showNotification && (
         <AdminNotificationContainer
@@ -451,9 +305,9 @@ function NavHeaderItem({ to, label, icon: Icon }: { to: string; label: string; i
     <NavLink to={to}>
       {({ isActive }) => (
         <motion.div
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          className={`relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          className={`relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold transition-all duration-150 ${
             isActive
               ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20"
               : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
@@ -470,6 +324,47 @@ function NavHeaderItem({ to, label, icon: Icon }: { to: string; label: string; i
           <Icon className={`relative z-10 h-4 w-4 flex-shrink-0 ${isActive ? "text-white" : "text-slate-500"}`} />
           <span className="relative z-10 whitespace-nowrap">{label}</span>
         </motion.div>
+      )}
+    </NavLink>
+  );
+}
+
+interface AdminBottomNavItemProps {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+}
+
+function AdminBottomNavItem({ to, label, icon: Icon }: AdminBottomNavItemProps) {
+  return (
+    <NavLink
+      to={to}
+      end={to === "/admin/dashboard"}
+      className="flex h-full flex-1 items-center justify-center"
+    >
+      {({ isActive }) => (
+        <div className="flex flex-col items-center justify-center gap-0.5">
+          <div
+            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition-all ${
+              isActive
+                ? "bg-slate-900 text-white shadow-md shadow-slate-900/30"
+                : "bg-slate-50 text-slate-500"
+            }`}
+          >
+            <Icon
+              className={`h-4 w-4 transition-colors ${
+                isActive ? "text-white" : "text-slate-500"
+              }`}
+            />
+          </div>
+          <span
+            className={`text-[10px] font-medium ${
+              isActive ? "text-slate-900" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </span>
+        </div>
       )}
     </NavLink>
   );

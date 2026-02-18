@@ -1,32 +1,11 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, memo } from "react";
 import { Users, ShoppingBag, DollarSign, Activity, MapPin } from "lucide-react";
 
 import { api } from "../../lib/api";
 import { getSocket, connectSocket } from "../../lib/socket";
 import { AnimatedCard } from "../../components/AnimatedCard";
-import "../../lib/leaflet"; // Fix Leaflet default icons
 
-// Custom Icons
-const cleanerIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-const activeCleanerIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+const AdminLiveMap = lazy(() => import("../../components/admin/AdminLiveMap"));
 
 const formatRupiah = (amount: number) => 
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount);
@@ -49,6 +28,9 @@ export function AdminDashboardPage() {
     revenue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [isMapCollapsed, setIsMapCollapsed] = useState(true);
+  const [hasMapBeenVisible, setHasMapBeenVisible] = useState(false);
+  const mapSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const socket = connectSocket();
@@ -117,94 +99,182 @@ export function AdminDashboardPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      setIsMapCollapsed(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const el = mapSectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setHasMapBeenVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -80px 0px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const statsConfig = useMemo(
+    () => [
+      {
+        id: "total-orders",
+        title: "Total Pesanan",
+        value: stats.totalOrders,
+        icon: ShoppingBag,
+        color: "blue" as const,
+      },
+      {
+        id: "active-cleaners",
+        title: "Cleaner Aktif",
+        value: stats.activeCleaners,
+        icon: Users,
+        color: "green" as const,
+      },
+      {
+        id: "revenue",
+        title: "Perkiraan Pendapatan",
+        value: formatRupiah(stats.revenue),
+        icon: DollarSign,
+        color: "purple" as const,
+      },
+      {
+        id: "system-load",
+        title: "Status Sistem",
+        value: "Normal",
+        icon: Activity,
+        color: "orange" as const,
+      },
+    ],
+    [stats]
+  );
+
+  const shouldRenderMap = !loading && !isMapCollapsed && hasMapBeenVisible;
+
   return (
-    <div className="space-y-6 pb-24">
-      <div className="flex items-center justify-between">
-         <div>
-           <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-           <p className="text-sm text-slate-500">Welcome back, Admin!</p>
-         </div>
-         <div className="flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-            <span className="flex h-2 w-2 relative">
-               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            System Live
-         </div>
-      </div>
+    <DashboardLayout
+      title="Dashboard"
+      subtitle="Selamat datang kembali, Admin"
+      right={<SystemLiveBadge />}
+    >
+      <section className="space-y-5 sm:space-y-6">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {loading
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-full rounded-xl border border-slate-100 bg-white px-3 py-3 sm:px-4 sm:py-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <div className="h-2.5 w-20 rounded-full bg-slate-100" />
+                      <div className="h-4 w-24 rounded-full bg-slate-100" />
+                    </div>
+                    <div className="h-8 w-8 rounded-lg bg-slate-100" />
+                  </div>
+                </div>
+              ))
+            : statsConfig.map((item) => (
+                <StatCard
+                  key={item.id}
+                  title={item.title}
+                  value={item.value}
+                  icon={item.icon}
+                  color={item.color}
+                />
+              ))}
+        </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-         <StatsCard 
-           title="Total Orders" 
-           value={stats.totalOrders} 
-           icon={ShoppingBag} 
-           color="blue" 
-         />
-         <StatsCard 
-           title="Active Cleaners" 
-           value={stats.activeCleaners} 
-           icon={Users} 
-           color="green" 
-         />
-         <StatsCard 
-           title="Revenue (Est)" 
-           value={formatRupiah(stats.revenue)} 
-           icon={DollarSign} 
-           color="purple" 
-         />
-         <StatsCard 
-           title="System Load" 
-           value="Normal" 
-           icon={Activity} 
-           color="orange" 
-         />
-      </div>
+        <AnimatedCard className="overflow-hidden p-0 shadow-sm border border-slate-100">
+          <div className="flex items-center justify-between gap-2 border-b bg-white px-3 py-2.5 sm:px-4 sm:py-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-50">
+                <MapPin className="h-3.5 w-3.5 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-xs sm:text-sm font-semibold text-slate-800">
+                  Live Map
+                </h2>
+                <p className="text-[10px] sm:text-xs font-medium text-slate-400">
+                  Updates in realtime
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsMapCollapsed((prev) => !prev)}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] sm:text-xs font-semibold text-slate-600 hover:border-indigo-300 hover:text-indigo-700"
+            >
+              <span className="hidden xs:inline">
+                {isMapCollapsed ? "Show map" : "Hide map"}
+              </span>
+              <span className="xs:hidden">
+                {isMapCollapsed ? "Show" : "Hide"}
+              </span>
+            </button>
+          </div>
 
-      {/* Map Section */}
-      <AnimatedCard className="overflow-hidden p-0 shadow-lg border-0 ring-1 ring-slate-900/5">
-         <div className="border-b bg-white px-4 py-3 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-700 flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-blue-500" />
-              Live Map
-            </h2>
-            <div className="text-xs text-slate-400">Updates in realtime</div>
-         </div>
-         <div className="h-[500px] w-full relative z-0 bg-slate-100">
-            {!loading && (
-              <MapContainer 
-                center={[-8.6509, 116.3249]} // Lombok Center
-                zoom={11} 
-                style={{ height: "100%", width: "100%" }}
-              >
-                 <TileLayer 
-                   url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
-                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                 />
-                 {cleaners.map(c => (
-                    <Marker 
-                      key={c.id} 
-                      position={[c.lat, c.lng]}
-                      icon={c.is_active ? activeCleanerIcon : cleanerIcon}
-                    >
-                       <Popup>
-                          <div className="font-semibold">{c.full_name}</div>
-                          <div className="text-xs text-slate-500 flex items-center gap-1">
-                            <span className={`inline-block w-2 h-2 rounded-full ${c.is_active ? 'bg-green-500' : 'bg-slate-300'}`}></span>
-                            {c.is_active ? "Active" : "Inactive"}
-                          </div>
-                       </Popup>
-                    </Marker>
-                 ))}
-              </MapContainer>
+          <div
+            ref={mapSectionRef}
+            className={`w-full bg-slate-50 transition-all duration-300 ${
+              isMapCollapsed
+                ? "h-14 sm:h-16"
+                : "h-64 sm:h-64 md:h-80 lg:h-[420px]"
+            }`}
+          >
+            {isMapCollapsed ? (
+              <div className="flex h-full w-full items-center justify-center px-3 text-[10px] sm:text-xs font-medium text-slate-500">
+                Tap to show live locations of cleaners
+              </div>
+            ) : (
+              <>
+                {(loading || !hasMapBeenVisible) && (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <div className="h-10 w-10 animate-pulse rounded-full border-2 border-slate-200 border-t-indigo-500" />
+                  </div>
+                )}
+                {shouldRenderMap && (
+                  <Suspense
+                    fallback={
+                      <div className="flex h-full w-full items-center justify-center">
+                        <div className="h-10 w-10 animate-pulse rounded-full border-2 border-slate-200 border-t-indigo-500" />
+                      </div>
+                    }
+                  >
+                    <AdminLiveMap cleaners={cleaners} />
+                  </Suspense>
+                )}
+              </>
             )}
-         </div>
-      </AnimatedCard>
-    </div>
+          </div>
+        </AnimatedCard>
+      </section>
+    </DashboardLayout>
   );
 }
 
-function StatsCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: any; color: "blue" | "green" | "purple" | "orange" }) {
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: typeof Users;
+  color: "blue" | "green" | "purple" | "orange";
+}
+
+const StatCard = memo(function StatCard({
+  title,
+  value,
+  icon: Icon,
+  color,
+}: StatCardProps) {
   const colorStyles = {
     blue: "bg-blue-50 text-blue-600 ring-blue-600/20",
     green: "bg-green-50 text-green-600 ring-green-600/20",
@@ -213,16 +283,59 @@ function StatsCard({ title, value, icon: Icon, color }: { title: string; value: 
   };
 
   return (
-    <AnimatedCard className="p-4 flex flex-col justify-between h-full">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{title}</p>
-          <p className="mt-2 text-2xl font-bold text-slate-800">{value}</p>
+    <AnimatedCard className="flex h-full flex-col justify-between rounded-xl border border-slate-100 bg-white px-3 py-3 sm:px-4 sm:py-4 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1.5">
+          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-slate-500">
+            {title}
+          </p>
+          <p className="text-lg sm:text-xl font-extrabold text-slate-900">
+            {value}
+          </p>
         </div>
-        <div className={`rounded-lg p-2 ring-1 ring-inset ${colorStyles[color]}`}>
-          <Icon className="h-5 w-5" />
+        <div
+          className={`flex h-8 w-8 items-center justify-center rounded-lg ring-1 ring-inset ${colorStyles[color]}`}
+        >
+          <Icon className="h-4 w-4" />
         </div>
       </div>
     </AnimatedCard>
+  );
+});
+
+interface DashboardLayoutProps {
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+function DashboardLayout({ title, subtitle, right, children }: DashboardLayoutProps) {
+  return (
+    <div className="space-y-5 pb-24 sm:space-y-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-0.5 text-xs text-slate-500 sm:text-sm">
+              {subtitle}
+            </p>
+          )}
+        </div>
+        {right}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function SystemLiveBadge() {
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold text-emerald-700 sm:text-xs">
+      <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+      <span>Sistem Aktif</span>
+    </div>
   );
 }

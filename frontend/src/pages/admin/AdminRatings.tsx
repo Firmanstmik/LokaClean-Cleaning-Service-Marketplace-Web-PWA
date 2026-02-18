@@ -234,7 +234,7 @@ export function AdminRatingsPage() {
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
-                Ratings & Reviews
+                Rating & Ulasan
               </h1>
               {summary && (
                 <motion.span
@@ -247,7 +247,9 @@ export function AdminRatingsPage() {
                 </motion.span>
               )}
             </div>
-            <p className="mt-2 text-sm text-slate-600 font-medium">Monitor service quality and customer satisfaction</p>
+            <p className="mt-2 text-sm text-slate-600 font-medium">
+              Pantau kualitas layanan dan kepuasan pelanggan
+            </p>
           </div>
         </div>
         <motion.button
@@ -257,7 +259,7 @@ export function AdminRatingsPage() {
           className="flex items-center gap-1.5 rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-md"
         >
           <RefreshCw className="h-4 w-4" />
-          <span className="hidden sm:inline">Refresh</span>
+          <span className="hidden sm:inline">Muat ulang</span>
         </motion.button>
       </motion.div>
 
@@ -492,7 +494,7 @@ export function AdminRatingsPage() {
                   packageFilter ? "border-indigo-500 bg-indigo-50/50" : "border-slate-200 focus:border-indigo-500"
                 ].join(" ")}
               >
-                <option value="">All Packages</option>
+                <option value="">Semua paket</option>
                 {packagesLoading ? (
                   <option value="" disabled>Loading packages...</option>
                 ) : packages.length > 0 ? (
@@ -529,7 +531,7 @@ export function AdminRatingsPage() {
                 onChange={(e) => setRatingFilter(e.target.value)}
                 className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
               >
-                <option value="">All Ratings</option>
+                <option value="">Semua rating</option>
                 {[5, 4, 3, 2, 1].map((val) => (
                   <option key={val} value={val}>
                     {val} Star{val > 1 ? "s" : ""}
@@ -614,8 +616,12 @@ export function AdminRatingsPage() {
           ) : ratings.length === 0 ? (
             <div className="p-8 text-center rounded-xl bg-white border border-slate-200">
               <Star className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm sm:text-base text-slate-600 font-medium">No ratings found</p>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">Try adjusting your filters</p>
+              <p className="text-sm sm:text-base text-slate-600 font-medium">
+                Belum ada rating yang cocok
+              </p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Coba sesuaikan filter yang digunakan
+              </p>
             </div>
           ) : (
             <>
@@ -671,7 +677,7 @@ export function AdminRatingsPage() {
                         </span>
                       </div>
 
-                      {/* Customer Info */}
+          {/* Customer Info */}
                       <div className="mb-3 pb-3 border-b border-slate-100">
                         <div className="flex items-center gap-2 mb-1.5">
                           <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -723,9 +729,19 @@ export function AdminRatingsPage() {
                   className="mt-4 sm:mt-6 p-4 sm:p-5 rounded-xl bg-gradient-to-r from-slate-50/50 to-indigo-50/30 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3"
                 >
                   <div className="text-xs sm:text-sm text-slate-600 font-medium text-center sm:text-left">
-                    Showing <span className="font-bold text-slate-900">{(pagination.page - 1) * pagination.limit + 1}</span> to{" "}
-                    <span className="font-bold text-slate-900">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{" "}
-                    <span className="font-bold text-slate-900">{pagination.total}</span> ratings
+                    Menampilkan{" "}
+                    <span className="font-bold text-slate-900">
+                      {(pagination.page - 1) * pagination.limit + 1}
+                    </span>{" "}
+                    sampai{" "}
+                    <span className="font-bold text-slate-900">
+                      {Math.min(pagination.page * pagination.limit, pagination.total)}
+                    </span>{" "}
+                    dari{" "}
+                    <span className="font-bold text-slate-900">
+                      {pagination.total}
+                    </span>{" "}
+                    ulasan
                   </div>
                   <div className="flex items-center gap-2">
                     <motion.button
@@ -735,10 +751,10 @@ export function AdminRatingsPage() {
                       disabled={!pagination.hasPrev}
                       className="px-3 sm:px-4 py-2 rounded-xl bg-white border-2 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                     >
-                      Previous
+                      Sebelumnya
                     </motion.button>
                     <div className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 bg-white rounded-xl border-2 border-slate-200 shadow-sm">
-                      Page {pagination.page} of {pagination.totalPages}
+                      Halaman {pagination.page} dari {pagination.totalPages}
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -747,7 +763,7 @@ export function AdminRatingsPage() {
                       disabled={!pagination.hasNext}
                       className="px-3 sm:px-4 py-2 rounded-xl bg-white border-2 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                     >
-                      Next
+                      Berikutnya
                     </motion.button>
                   </div>
                 </motion.div>

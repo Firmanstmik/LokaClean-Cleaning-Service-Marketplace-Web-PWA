@@ -249,7 +249,7 @@ export function AdminUsersPage() {
       setFormData({ full_name: "", email: "", phone_number: "", password: "", role: "USER" });
       setShowAddModal(false);
       await refreshUsers();
-      setSuccessMessage(`User "${formData.full_name}" created successfully!`);
+      setSuccessMessage(`Pengguna "${formData.full_name}" berhasil dibuat`);
     } catch (err) {
       const rawMessage = getApiErrorMessage(err);
       if (rawMessage.toLowerCase().includes("email already in use") || rawMessage.toLowerCase().includes("email already registered")) {
@@ -298,7 +298,7 @@ export function AdminUsersPage() {
       setEditingUser(null);
       setShowAddModal(false);
       await refreshUsers();
-      setSuccessMessage(`User "${formData.full_name}" updated successfully!`);
+      setSuccessMessage(`Pengguna "${formData.full_name}" berhasil diperbarui`);
     } catch (err) {
       setError(getApiErrorMessage(err));
     } finally {
@@ -321,7 +321,9 @@ export function AdminUsersPage() {
       const user = users.find(u => u.id === userToDelete);
       await api.delete(`/admin/users/${userToDelete}`);
       await refreshUsers();
-      setSuccessMessage(`User "${user?.full_name || `#${userToDelete}`}" deleted successfully!`);
+      setSuccessMessage(
+        `Pengguna "${user?.full_name || `#${userToDelete}`}" berhasil dihapus`
+      );
       setShowDeleteDialog(false);
       setUserToDelete(null);
     } catch (err) {
@@ -345,7 +347,7 @@ export function AdminUsersPage() {
 
     // Validate custom password if provided
     if (useCustomPassword && customPassword.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError("Password minimal 6 karakter");
       return;
     }
 
@@ -361,7 +363,7 @@ export function AdminUsersPage() {
       
       setResetPasswordResult({
         newPassword: newPassword,
-        userName: user?.full_name || `User #${userToResetPassword}`
+        userName: user?.full_name || `Pengguna #${userToResetPassword}`
       });
       setShowResetPasswordDialog(false);
       setUserToResetPassword(null);
@@ -414,7 +416,7 @@ export function AdminUsersPage() {
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
-                Users
+                Pengguna
               </h1>
               <motion.span
                 initial={{ scale: 0 }}
@@ -425,7 +427,9 @@ export function AdminUsersPage() {
                 {filteredUsers.length}
               </motion.span>
             </div>
-            <p className="mt-2 text-sm text-slate-600 font-medium">Manage user accounts and permissions</p>
+            <p className="mt-2 text-sm text-slate-600 font-medium">
+              Kelola akun dan hak akses pengguna
+            </p>
           </div>
         </div>
         <motion.button
@@ -439,7 +443,7 @@ export function AdminUsersPage() {
           className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-2 text-sm font-black text-white shadow-lg"
         >
           <Plus className="h-4 w-4" />
-          Add
+          Tambah
         </motion.button>
       </motion.div>
 
@@ -815,7 +819,7 @@ export function AdminUsersPage() {
                       whileTap={{ scale: 0.9 }}
                       onClick={() => openEditModal(user)}
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 transition-all hover:bg-indigo-100"
-                      title="Edit User"
+                      title="Edit pengguna"
                     >
                       <Edit2 className="h-3.5 w-3.5" />
                     </motion.button>
@@ -825,7 +829,7 @@ export function AdminUsersPage() {
                       onClick={() => handleResetPassword(user.id)}
                       disabled={busy}
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 transition-all hover:bg-amber-100 disabled:opacity-50"
-                      title="Reset Password"
+                      title="Reset password"
                     >
                       <KeyRound className="h-3.5 w-3.5" />
                     </motion.button>
@@ -835,7 +839,7 @@ export function AdminUsersPage() {
                       onClick={() => handleDeleteUser(user.id)}
                       disabled={busy}
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
-                      title="Delete User"
+                      title="Hapus pengguna"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </motion.button>
@@ -859,7 +863,7 @@ export function AdminUsersPage() {
             {users.length === 0 ? "No users yet" : "No users match your filters"}
           </p>
           <p className="mt-1 text-xs font-semibold text-slate-500">
-            {users.length === 0 ? "Add your first user above" : "Try adjusting your filters"}
+            {users.length === 0 ? "Belum ada pengguna, tambahkan dari tombol di atas" : "Coba sesuaikan filter pencarian"}
           </p>
         </motion.div>
       )}
@@ -872,7 +876,7 @@ export function AdminUsersPage() {
           className="flex items-center justify-between gap-3 rounded-xl border-2 border-slate-200 bg-white p-4"
         >
           <div className="text-sm font-semibold text-slate-600">
-            Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
+            Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} dari {filteredUsers.length} pengguna
           </div>
           <div className="flex items-center gap-2">
             <motion.button
@@ -883,7 +887,7 @@ export function AdminUsersPage() {
               className="flex items-center gap-1.5 rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition-all hover:border-indigo-300 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              Sebelumnya
             </motion.button>
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -892,7 +896,7 @@ export function AdminUsersPage() {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-sm font-bold transition-all ${
+                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-all ${
                     currentPage === page
                       ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -909,7 +913,7 @@ export function AdminUsersPage() {
               disabled={currentPage === totalPages}
               className="flex items-center gap-1.5 rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition-all hover:border-indigo-300 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              Berikutnya
               <ChevronRight className="h-4 w-4" />
             </motion.button>
           </div>
@@ -935,7 +939,7 @@ export function AdminUsersPage() {
             >
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-black text-slate-900">
-                  {editingUser ? "Edit User" : "Add New User"}
+                  {editingUser ? "Edit Pengguna" : "Tambah Pengguna Baru"}
                 </h2>
                 <button onClick={closeModals} className="text-slate-400 hover:text-slate-600" aria-label="Close modal">
                   <X className="h-5 w-5" />
@@ -944,13 +948,13 @@ export function AdminUsersPage() {
 
               <div className="space-y-3">
                 <label className="block">
-                  <div className="mb-1.5 text-xs font-bold text-slate-700">Full Name</div>
+                  <div className="mb-1.5 text-xs font-bold text-slate-700">Nama Lengkap</div>
                   <input
                     type="text"
                     value={formData.full_name}
                     onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                     className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                    placeholder="John Doe"
+                    placeholder="Nama lengkap"
                   />
                 </label>
 
@@ -966,13 +970,13 @@ export function AdminUsersPage() {
                 </label>
 
                 <label className="block">
-                  <div className="mb-1.5 text-xs font-bold text-slate-700">Phone Number</div>
+                  <div className="mb-1.5 text-xs font-bold text-slate-700">Nomor WhatsApp</div>
                   <input
                     type="tel"
                     value={formData.phone_number}
                     onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                     className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                    placeholder="+628123456789"
+                    placeholder="08xxxxxxxxxx"
                   />
                 </label>
 
@@ -984,13 +988,13 @@ export function AdminUsersPage() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                      placeholder="Min. 6 characters"
+                      placeholder="Minimal 6 karakter"
                     />
                   </label>
                 )}
 
                 <label className="block">
-                  <div className="mb-1.5 text-xs font-bold text-slate-700">Role</div>
+                  <div className="mb-1.5 text-xs font-bold text-slate-700">Peran</div>
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as "USER" | "ADMIN" })}
@@ -1009,7 +1013,7 @@ export function AdminUsersPage() {
                   onClick={closeModals}
                   className="flex-1 rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"
                 >
-                  Cancel
+                  Batal
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -1038,12 +1042,12 @@ export function AdminUsersPage() {
                           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                           className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
                         />
-                        {editingUser ? "Saving..." : "Creating..."}
+                        {editingUser ? "Menyimpan..." : "Membuat..."}
                       </>
                     ) : (
                       <>
                         <Save className="h-4 w-4" />
-                        {editingUser ? "Save" : "Create"}
+                        {editingUser ? "Simpan" : "Buat"}
                       </>
                     )}
                   </span>
@@ -1085,8 +1089,10 @@ export function AdminUsersPage() {
                    
                    {/* Content */}
                    <div className="relative p-5 pt-4 pb-14 sm:p-6 sm:pt-6 sm:pb-16 flex items-start justify-between">
-                      <div className="text-white w-full text-center pr-8 pl-8">
-                        <h2 className="text-xl sm:text-2xl font-black tracking-tight mb-1">User Details</h2>
+                     <div className="text-white w-full text-center pr-8 pl-8">
+                        <h2 className="text-xl sm:text-2xl font-black tracking-tight mb-1">
+                          Detail Pengguna
+                        </h2>
                       </div>
                       <motion.button
                         whileHover={{ scale: 1.1, rotate: 90 }}
@@ -1170,14 +1176,14 @@ export function AdminUsersPage() {
                       <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                         <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center gap-2">
                            <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-rose-500" />
-                           <span className="text-[10px] sm:text-xs font-bold text-slate-700 uppercase">Default Location</span>
+                           <span className="text-[10px] sm:text-xs font-bold text-slate-700 uppercase">Lokasi Utama</span>
                         </div>
                         <div className="p-3 sm:p-4 bg-white">
                            <div className="text-xs sm:text-sm font-medium text-slate-800 mb-3 leading-relaxed break-words whitespace-pre-wrap text-left">
                              {isLoadingAddress ? (
                                <div className="flex items-center gap-2 text-slate-400">
                                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="h-3 w-3 rounded-full border-2 border-slate-300 border-t-slate-500" />
-                                  Finding address...
+                                  Mencari alamat...
                                </div>
                              ) : (
                                addressName ? (
@@ -1196,7 +1202,7 @@ export function AdminUsersPage() {
                              className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 border border-slate-200 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold text-slate-700 transition-all hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 hover:shadow-md active:scale-95"
                            >
                              <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                             Open in Google Maps
+                             Buka di Google Maps
                            </a>
                         </div>
                       </div>
@@ -1266,14 +1272,14 @@ export function AdminUsersPage() {
           setUserToDelete(null);
         }}
         onConfirm={confirmDeleteUser}
-        title="Delete User?"
+        title="Hapus Pengguna?"
         message={
           userToDelete
-            ? `Are you sure you want to delete user "${users.find(u => u.id === userToDelete)?.full_name || `#${userToDelete}`}"? This action cannot be undone and all related data will be permanently deleted.`
-            : "Are you sure you want to delete this user? This action cannot be undone."
+            ? `Yakin ingin menghapus pengguna "${users.find(u => u.id === userToDelete)?.full_name || `#${userToDelete}`}"? Tindakan ini tidak dapat dibatalkan dan semua data terkait akan dihapus permanen.`
+            : "Yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan."
         }
-        confirmText="Yes, Delete User"
-        cancelText="Cancel"
+        confirmText="Ya, hapus pengguna"
+        cancelText="Batal"
         variant="danger"
         isLoading={busy}
       />
@@ -1315,7 +1321,7 @@ export function AdminUsersPage() {
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100">
                         <KeyRound className="h-5 w-5 text-amber-600" />
                       </div>
-                      <h2 className="text-lg font-black text-slate-900">Reset Password</h2>
+                      <h2 className="text-lg font-black text-slate-900">Reset password</h2>
                     </div>
                     <button
                       onClick={() => {
@@ -1336,8 +1342,12 @@ export function AdminUsersPage() {
                 {/* Content */}
                 <div className="p-5 space-y-4">
                   <p className="text-sm font-semibold text-slate-700">
-                    Reset password for <span className="font-black text-slate-900">
-                      {userToResetPassword ? users.find(u => u.id === userToResetPassword)?.full_name || `User #${userToResetPassword}` : "this user"}
+                    Reset password untuk{" "}
+                    <span className="font-black text-slate-900">
+                      {userToResetPassword
+                        ? users.find(u => u.id === userToResetPassword)?.full_name ||
+                          `Pengguna #${userToResetPassword}`
+                        : "pengguna ini"}
                     </span>
                   </p>
 
@@ -1356,7 +1366,7 @@ export function AdminUsersPage() {
                         disabled={busy}
                         className="h-4 w-4 rounded border-2 border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-200 disabled:opacity-50"
                       />
-                      <span className="text-sm font-semibold text-slate-700">Use custom password</span>
+                      <span className="text-sm font-semibold text-slate-700">Gunakan password kustom</span>
                     </label>
 
                     {useCustomPassword && (
@@ -1367,18 +1377,18 @@ export function AdminUsersPage() {
                         className="space-y-2"
                       >
                         <label className="block">
-                          <div className="mb-1.5 text-xs font-bold text-slate-700">Custom Password</div>
+                          <div className="mb-1.5 text-xs font-bold text-slate-700">Password kustom</div>
                           <input
                             type="text"
                             value={customPassword}
                             onChange={(e) => setCustomPassword(e.target.value)}
                             disabled={busy}
-                            placeholder="Enter custom password (min. 6 characters)"
+                            placeholder="Masukkan password kustom (min. 6 karakter)"
                             className="w-full rounded-lg border-2 border-amber-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 transition-all focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none disabled:opacity-50"
                           />
                           {customPassword && customPassword.length < 6 && (
                             <p className="mt-1 text-xs text-amber-600 font-medium">
-                              Password must be at least 6 characters
+                              Password minimal 6 karakter
                             </p>
                           )}
                         </label>
@@ -1388,7 +1398,7 @@ export function AdminUsersPage() {
                     {!useCustomPassword && (
                       <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
                         <p className="text-xs font-semibold text-amber-700">
-                          A random 8-character password will be generated automatically.
+                          Sistem akan membuat password acak 8 karakter secara otomatis.
                         </p>
                       </div>
                     )}
@@ -1407,9 +1417,9 @@ export function AdminUsersPage() {
                       setUseCustomPassword(false);
                     }}
                     disabled={busy}
-                    className="flex-1 rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition-all hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    Cancel
+                  className="flex-1 rounded-lg border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 transition-all hover:bg-slate-50 disabled:opacity-50"
+                >
+                    Batal
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -1425,7 +1435,7 @@ export function AdminUsersPage() {
                           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                           className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
                         />
-                        Resetting...
+                        Mengatur ulang...
                       </span>
                     ) : (
                       "Reset Password"
@@ -1460,7 +1470,7 @@ export function AdminUsersPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
                     <KeyRound className="h-5 w-5 text-amber-600" />
                   </div>
-                  <h2 className="text-lg font-black text-slate-900">Password Reset Successful</h2>
+                  <h2 className="text-lg font-black text-slate-900">Reset Password Berhasil</h2>
                 </div>
                 <button 
                   onClick={() => setResetPasswordResult(null)} 
@@ -1473,11 +1483,14 @@ export function AdminUsersPage() {
 
               <div className="space-y-4">
                 <p className="text-sm font-semibold text-slate-700">
-                  Password has been reset for <span className="font-black text-slate-900">{resetPasswordResult.userName}</span>
+                  Password telah direset untuk{" "}
+                  <span className="font-black text-slate-900">
+                    {resetPasswordResult.userName}
+                  </span>
                 </p>
                 
                 <div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-4">
-                  <div className="mb-2 text-xs font-bold text-amber-700 uppercase tracking-wide">New Password</div>
+                  <div className="mb-2 text-xs font-bold text-amber-700 uppercase tracking-wide">Password Baru</div>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 rounded-lg bg-white px-3 py-2 text-base font-black text-slate-900 border border-amber-200">
                       {resetPasswordResult.newPassword}
@@ -1488,13 +1501,13 @@ export function AdminUsersPage() {
                       onClick={async () => {
                         try {
                           await navigator.clipboard.writeText(resetPasswordResult.newPassword);
-                          setSuccessMessage("Password copied to clipboard!");
+                          setSuccessMessage("Password berhasil disalin ke clipboard");
                         } catch (err) {
-                          setError("Failed to copy password to clipboard");
+                          setError("Gagal menyalin password ke clipboard");
                         }
                       }}
                       className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-600 text-white transition-all hover:bg-amber-700"
-                      title="Copy password"
+                      title="Salin password"
                     >
                       <Save className="h-4 w-4" />
                     </motion.button>
@@ -1503,7 +1516,7 @@ export function AdminUsersPage() {
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                   <p className="text-xs font-semibold text-slate-600">
-                    ⚠️ Please share this password with the user securely. They should change it after logging in.
+                    ⚠️ Harap kirimkan password ini ke pengguna dengan cara yang aman. Mereka sebaiknya mengganti password setelah login.
                   </p>
                 </div>
               </div>
@@ -1515,7 +1528,7 @@ export function AdminUsersPage() {
                   onClick={() => setResetPasswordResult(null)}
                   className="w-full rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2.5 text-sm font-black text-white shadow-lg transition-all hover:shadow-xl"
                 >
-                  Close
+                  Tutup
                 </motion.button>
               </div>
             </motion.div>

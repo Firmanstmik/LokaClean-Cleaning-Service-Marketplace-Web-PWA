@@ -287,10 +287,10 @@ export function AdminRevenuePage() {
             >
               <TrendingUp className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-600" />
             </motion.div>
-            Revenue Monitoring
+            Ringkasan Pendapatan
           </h1>
           <p className="mt-2 text-sm text-slate-600 font-medium">
-            Real-time analytics and financial insights
+            Analitik pendapatan dan insight finansial secara real-time
           </p>
         </div>
       </motion.div>
@@ -307,14 +307,14 @@ export function AdminRevenuePage() {
             <div className="relative z-10">
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2">
                 <DollarSign className="h-4 w-4" />
-                Revenue
+                Pendapatan
               </div>
               <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
                 Rp {data.totalRevenue.toLocaleString("id-ID")}
               </div>
               <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
                 <ArrowUp className="h-3 w-3" />
-                All time
+                Sepanjang waktu
               </div>
             </div>
           </AnimatedCard>
@@ -328,7 +328,7 @@ export function AdminRevenuePage() {
             <div className="relative z-10">
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-700 mb-2">
                 <Package className="h-4 w-4" />
-                Orders
+                Pesanan
               </div>
               <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
                 {data.totalOrders}
@@ -349,7 +349,7 @@ export function AdminRevenuePage() {
             <div className="relative z-10">
               <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-purple-700 mb-2">
                 <TrendingUp className="h-4 w-4" />
-                Avg Monthly
+                Rata-rata Bulanan
               </div>
               <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 Rp {avgMonthlyRevenue.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
@@ -389,7 +389,7 @@ export function AdminRevenuePage() {
           <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex-1">
               <h3 className="text-lg sm:text-xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                Monthly Revenue
+                Pendapatan Bulanan
               </h3>
               <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
                 {getSelectedPeriodLabel()}
@@ -409,10 +409,10 @@ export function AdminRevenuePage() {
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
                   className="pl-9 pr-4 py-2 text-xs sm:text-sm font-semibold rounded-lg border-2 border-slate-200 bg-white text-slate-900 transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none appearance-none"
-                  title="Filter by year"
-                  aria-label="Filter monthly revenue by year"
+                  title="Filter berdasarkan tahun"
+                  aria-label="Filter pendapatan bulanan berdasarkan tahun"
                 >
-                  <option value="ALL">All Years</option>
+                  <option value="ALL">Semua tahun</option>
                   {availableYears.map((year) => (
                     <option key={year} value={year}>
                       {year}
@@ -429,10 +429,10 @@ export function AdminRevenuePage() {
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
                   className="pl-9 pr-4 py-2 text-xs sm:text-sm font-semibold rounded-lg border-2 border-slate-200 bg-white text-slate-900 transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none appearance-none"
-                  title="Filter by month"
-                  aria-label="Filter monthly revenue by month"
+                  title="Filter berdasarkan bulan"
+                  aria-label="Filter pendapatan bulanan berdasarkan bulan"
                 >
-                  <option value="ALL">All Months</option>
+                  <option value="ALL">Semua bulan</option>
                   {allMonths.map((month) => (
                     <option key={month.value} value={month.value}>
                       {month.label}
@@ -501,7 +501,7 @@ export function AdminRevenuePage() {
                         <div className="flex items-center gap-2">
                           <div className="h-3 w-3 rounded-full bg-emerald-500" />
                           <p className="text-sm text-slate-900">
-                            <span className="font-semibold">Revenue:</span>{" "}
+                            <span className="font-semibold">Pendapatan:</span>{" "}
                             <span className="font-black text-emerald-600">
                               Rp {value.toLocaleString("id-ID")}
                             </span>
@@ -534,9 +534,11 @@ export function AdminRevenuePage() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="text-lg sm:text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Orders by Status
+                Pesanan berdasarkan status
               </h3>
-              <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">Distribution overview dengan visualisasi 3D</p>
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
+                Ringkasan distribusi dengan visualisasi 3D
+              </p>
             </div>
             <motion.div
               animate={{ rotate: [0, 360] }}
@@ -671,7 +673,7 @@ export function AdminRevenuePage() {
                 className="mt-4 pt-4 border-t-2 border-slate-200 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4"
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-slate-700">Total Orders</p>
+                  <p className="text-sm font-bold text-slate-700">Total Pesanan</p>
                   <p className="text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     {data.statusData.reduce((sum, s) => sum + s.count, 0)}
                   </p>

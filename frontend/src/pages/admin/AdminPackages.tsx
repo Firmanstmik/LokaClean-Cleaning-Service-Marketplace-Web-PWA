@@ -68,7 +68,7 @@ export function AdminPackagesPage() {
         await api.post("/admin/packages", formData, {
             headers: { "Content-Type": "multipart/form-data" }
         });
-        setSuccess("Package created successfully!");
+        setSuccess("Paket berhasil dibuat");
         setShowAddForm(false);
         await refresh();
         setTimeout(() => setSuccess(null), 3000);
@@ -87,7 +87,7 @@ export function AdminPackagesPage() {
         await api.put(`/admin/packages/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" }
         });
-        setSuccess("Package updated successfully!");
+        setSuccess("Paket berhasil diperbarui");
         setEditingId(null);
         await refresh();
         setTimeout(() => setSuccess(null), 3000);
@@ -115,9 +115,11 @@ export function AdminPackagesPage() {
             >
               <Package className="h-7 w-7 sm:h-8 sm:w-8 text-indigo-600" />
             </motion.div>
-            Cleaning Packages
+            Paket Layanan
           </h1>
-          <p className="mt-2 text-sm text-slate-600 font-medium">Manage packages and pricing</p>
+          <p className="mt-2 text-sm text-slate-600 font-medium">
+            Kelola paket layanan dan harga
+          </p>
         </div>
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -128,12 +130,12 @@ export function AdminPackagesPage() {
           {showAddForm ? (
             <>
               <X className="h-4 w-4" />
-              Cancel
+              Batal
             </>
           ) : (
             <>
               <Plus className="h-4 w-4" />
-              Add Package
+              Tambah Paket
             </>
           )}
         </motion.button>
@@ -389,7 +391,7 @@ export function AdminPackagesPage() {
                           {isEditing ? (
                             <>
                               <X className="h-4 w-4" />
-                              Cancel
+                              Batal
                             </>
                           ) : (
                             <>
@@ -409,7 +411,7 @@ export function AdminPackagesPage() {
                           }}
                         >
                           <Trash2 className="h-4 w-4" />
-                          Delete
+                          Hapus
                         </motion.button>
                       </div>
                     </div>
@@ -433,8 +435,8 @@ export function AdminPackagesPage() {
                             onSubmit={(data) => handleUpdate(p.id, data)}
                             onCancel={() => setEditingId(null)}
                             busy={busy}
-                            submitLabel="Save Changes"
-                            loadingLabel="Saving..."
+                            submitLabel="Simpan Perubahan"
+                            loadingLabel="Menyimpan..."
                             isEditing={true}
                           />
                         </motion.div>
@@ -455,8 +457,8 @@ export function AdminPackagesPage() {
             className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-12 text-center"
           >
             <Package className="h-16 w-16 text-slate-300" />
-            <p className="mt-4 text-base font-black text-slate-600">No packages yet</p>
-            <p className="mt-1 text-sm font-semibold text-slate-500">Create your first cleaning package above</p>
+            <p className="mt-4 text-base font-black text-slate-600">Belum ada paket</p>
+            <p className="mt-1 text-sm font-semibold text-slate-500">Buat paket layanan pertama Anda dari tombol di atas</p>
           </motion.div>
         )}
       </div>
