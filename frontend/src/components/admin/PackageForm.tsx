@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   FileText,
   DollarSign,
@@ -86,7 +85,7 @@ export function PackageForm({
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <motion.label whileFocus={{ scale: 1.02 }} className="block">
+      <label className="block">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <FileText className="h-3.5 w-3.5 text-slate-500" />
           Package Name (ID)
@@ -98,9 +97,9 @@ export function PackageForm({
           onBlur={() => handleAutoTranslate(name, "name")}
           placeholder="e.g., Pembersihan Mendalam"
         />
-      </motion.label>
+      </label>
 
-      <motion.label whileFocus={{ scale: 1.02 }} className="block">
+      <label className="block">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <FileText className="h-3.5 w-3.5 text-slate-500" />
           Package Name (EN){" "}
@@ -121,9 +120,9 @@ export function PackageForm({
           onChange={(e) => setNameEn(e.target.value)}
           placeholder="e.g., Deep Clean Premium"
         />
-      </motion.label>
+      </label>
 
-      <motion.label whileFocus={{ scale: 1.02 }} className="block">
+      <label className="block">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
           Price (Rp)
@@ -136,9 +135,9 @@ export function PackageForm({
           onChange={(e) => setPrice(Number(e.target.value))}
           placeholder="500000"
         />
-      </motion.label>
+      </label>
 
-      <motion.label whileFocus={{ scale: 1.02 }} className="block sm:col-span-2">
+      <label className="block sm:col-span-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <FileText className="h-3.5 w-3.5 text-slate-500" />
           Description (ID)
@@ -151,9 +150,9 @@ export function PackageForm({
           onBlur={() => handleAutoTranslate(description, "description")}
           placeholder="Describe what this package includes..."
         />
-      </motion.label>
+      </label>
 
-      <motion.label whileFocus={{ scale: 1.02 }} className="block sm:col-span-2">
+      <label className="block sm:col-span-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <FileText className="h-3.5 w-3.5 text-slate-500" />
           Description (EN){" "}
@@ -175,10 +174,9 @@ export function PackageForm({
           onChange={(e) => setDescriptionEn(e.target.value)}
           placeholder="Description in English..."
         />
-      </motion.label>
+      </label>
 
-      {/* Image Upload */}
-      <motion.label whileFocus={{ scale: 1.02 }} className="block sm:col-span-2">
+      <label className="block sm:col-span-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <ImageIcon className="h-3.5 w-3.5 text-slate-500" />
           Package Image (Optional)
@@ -230,47 +228,26 @@ export function PackageForm({
             </label>
           )}
         </div>
-      </motion.label>
+      </label>
 
       <div className="flex items-end sm:col-span-2 gap-2">
         {isEditing && (
-            <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={onCancel}
-            className="flex-1 rounded-lg border-2 border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-50"
-            >
+            className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+          >
             Cancel
-            </motion.button>
+          </button>
         )}
-        <motion.button
-          whileHover={{ scale: 1.02, y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          className={`group relative flex-1 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-60`}
+        <button
+          className="relative flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
           disabled={busy}
           onClick={handleSubmit}
         >
-          {/* Shimmer effect */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-            animate={{
-              x: ["-100%", "200%"],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              repeatDelay: 1,
-              ease: "linear",
-            }}
-          />
           <span className="relative z-10 flex items-center justify-center gap-2">
             {busy ? (
               <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
-                />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 {loadingLabel}
               </>
             ) : (
@@ -280,7 +257,7 @@ export function PackageForm({
               </>
             )}
           </span>
-        </motion.button>
+        </button>
       </div>
     </div>
   );
