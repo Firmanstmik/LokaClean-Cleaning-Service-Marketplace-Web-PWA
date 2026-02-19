@@ -4,8 +4,8 @@
  * Steps: [ Paket ] -> [ Jadwal ] -> [ Lokasi ]
  * Updated: Bilingual Support & Map Integration (v2)
  */
-
-import { useEffect, useMemo, useState, useRef } from "react";
+ 
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 

@@ -1,4 +1,5 @@
 {
+  "$schema": "../package.schema.json",
   "name": "@lokaclean/backend",
   "private": true,
   "version": "0.1.0",

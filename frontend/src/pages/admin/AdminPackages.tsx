@@ -953,6 +953,7 @@ export function AdminPackagesPage() {
                     Filter
                   </span>
                   <select
+                    aria-label="Filter status paket"
                     value={statusFilter}
                     onChange={(e) =>
                       setStatusFilter(e.target.value as "ALL" | PackageStatus)
@@ -964,6 +965,7 @@ export function AdminPackagesPage() {
                     <option value="INACTIVE">Status: Tidak aktif</option>
                   </select>
                   <select
+                    aria-label="Filter harga paket"
                     value={priceFilter}
                     onChange={(e) =>
                       setPriceFilter(e.target.value as "ALL" | "LOW" | "MID" | "HIGH")
@@ -976,6 +978,7 @@ export function AdminPackagesPage() {
                     <option value="HIGH">Harga: &gt; 300K</option>
                   </select>
                   <select
+                    aria-label="Filter revenue paket"
                     value={revenueFilter}
                     onChange={(e) =>
                       setRevenueFilter(
@@ -1627,6 +1630,7 @@ export function AdminPackagesPage() {
                   Status
                 </div>
                 <select
+                  aria-label="Filter status paket"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as "ALL" | PackageStatus)}
                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
@@ -1641,6 +1645,7 @@ export function AdminPackagesPage() {
                   Harga
                 </div>
                 <select
+                  aria-label="Filter harga paket"
                   value={priceFilter}
                   onChange={(e) =>
                     setPriceFilter(e.target.value as "ALL" | "LOW" | "MID" | "HIGH")
@@ -1658,6 +1663,7 @@ export function AdminPackagesPage() {
                   Revenue
                 </div>
                 <select
+                  aria-label="Filter revenue paket"
                   value={revenueFilter}
                   onChange={(e) =>
                     setRevenueFilter(e.target.value as "ALL" | "HAS_REVENUE" | "NO_REVENUE")

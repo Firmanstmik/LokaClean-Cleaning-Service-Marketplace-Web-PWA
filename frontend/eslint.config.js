@@ -10,6 +10,15 @@ export default [
   { ignores: ["dist/**", "node_modules/**"] },
   js.configs.recommended,
   {
+    files: ["public/sw.js"],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        ...globals.browser
+      }
+    }
+  },
+  {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parser: tsParser,
@@ -19,7 +28,8 @@ export default [
         project: ["./tsconfig.json", "./tsconfig.node.json"]
       },
       globals: {
-        ...globals.browser
+        ...globals.browser,
+        ...globals.serviceworker
       }
     },
     plugins: {

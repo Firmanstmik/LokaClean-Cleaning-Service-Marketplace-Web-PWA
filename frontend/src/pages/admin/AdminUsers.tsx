@@ -40,6 +40,8 @@ import { formatDateOnlyWITA } from "../../utils/date";
 import { SuccessAlert } from "../../components/SuccessAlert";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 
+type UserStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | string;
+
 interface UserData {
   id: number;
   full_name: string;
@@ -50,6 +52,29 @@ interface UserData {
   created_at: string;
   default_latitude?: number | null;
   default_longitude?: number | null;
+  status?: UserStatus;
+}
+
+type SortField = "name" | "email" | "role" | "created_at";
+
+function getUserStatusDisplay(user: UserData) {
+  const raw = (user.status || "ACTIVE").toString().toUpperCase();
+  if (raw === "INACTIVE") {
+    return {
+      label: "Inactive",
+      className: "border-slate-300 text-slate-600 bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300",
+    };
+  }
+  if (raw === "SUSPENDED") {
+    return {
+      label: "Suspended",
+      className: "border-red-300 text-red-700 bg-transparent dark:border-red-500 dark:text-red-400",
+    };
+  }
+  return {
+    label: "Active",
+    className: "border-emerald-300 text-emerald-700 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-900/20 dark:text-emerald-300",
+  };
 }
 
 export function AdminUsersPage() {
@@ -80,6 +105,21 @@ export function AdminUsersPage() {
   const [resetPasswordResult, setResetPasswordResult] = useState<{ newPassword: string; userName: string } | null>(null);
   const [customPassword, setCustomPassword] = useState("");
   const [useCustomPassword, setUseCustomPassword] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<SortField>("created_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+
+  const totalUsers = users.length;
+  const totalAdmins = users.filter(user => user.role === "ADMIN").length;
+  const totalRegularUsers = users.filter(user => user.role === "USER").length;
+  const usersActiveThisMonth = users.filter(user => {
+    const created = new Date(user.created_at);
+    const now = new Date();
+    return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+  }).length;
+
+  const hasSelection = selectedUserIds.length > 0;
 
   // Address state for detail modal
   const [addressName, setAddressName] = useState<string | null>(null);
@@ -144,6 +184,8 @@ export function AdminUsersPage() {
       user.phone_number.includes(searchQuery);
     
     const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
+    const userStatus = (user.status || "ACTIVE").toString().toUpperCase();
+    const matchesStatus = statusFilter === "ALL" || userStatus === statusFilter;
     
     // Date filters
     const userDate = new Date(user.created_at);
@@ -188,7 +230,27 @@ export function AdminUsersPage() {
       if (userTime > toTime) matchesDate = false;
     }
     
-    return matchesSearch && matchesRole && matchesDate;
+    return matchesSearch && matchesRole && matchesStatus && matchesDate;
+  });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const direction = sortDirection === "asc" ? 1 : -1;
+
+    if (sortBy === "name") {
+      return a.full_name.localeCompare(b.full_name) * direction;
+    }
+
+    if (sortBy === "email") {
+      return a.email.localeCompare(b.email) * direction;
+    }
+
+    if (sortBy === "role") {
+      return (a.role || "").localeCompare(b.role || "") * direction;
+    }
+
+    const aDate = new Date(a.created_at).getTime();
+    const bDate = new Date(b.created_at).getTime();
+    return (aDate - bDate) * direction;
   });
 
   // Get unique years from users
@@ -212,15 +274,15 @@ export function AdminUsersPage() {
   ];
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  const paginatedUsers = sortedUsers.slice(startIndex, endIndex);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, roleFilter, dateFrom, dateTo, monthFilter, yearFilter, timeFrom, timeTo]);
+  }, [searchQuery, roleFilter, statusFilter, dateFrom, dateTo, monthFilter, yearFilter, timeFrom, timeTo]);
 
   const handleAddUser = async () => {
     if (!formData.full_name || !formData.email || !formData.phone_number || !formData.password) {

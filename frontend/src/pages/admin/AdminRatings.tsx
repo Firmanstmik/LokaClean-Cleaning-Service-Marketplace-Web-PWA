@@ -12,7 +12,28 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, TrendingUp, BarChart3, Filter, Calendar, Package as PackageIcon, RefreshCw, Eye, AlertCircle, CheckCircle2, X, User, ChevronRight } from "lucide-react";
+import {
+  Star,
+  TrendingUp,
+  BarChart3,
+  Filter,
+  RefreshCw,
+  AlertCircle,
+  X,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  BarChart,
+  Bar,
+} from "recharts";
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { formatDateTimeWITA } from "../../utils/date";
@@ -22,7 +43,6 @@ function formatOrderNumber(orderNumber: number | null | undefined): string {
   return `LC-${orderNumber.toString().padStart(4, "0")}`;
 }
 import { StarRating } from "../../components/StarRating";
-import { AnimatedCard } from "../../components/AnimatedCard";
 import type { Rating } from "../../types/api";
 
 interface RatingWithOrder extends Rating {
@@ -62,6 +82,15 @@ interface Pagination {
   hasPrev: boolean;
 }
 
+type Sentiment = "positive" | "neutral" | "negative";
+
+interface MonthlyTrendPoint {
+  key: string;
+  label: string;
+  averageRating: number | null;
+  totalRatings: number;
+}
+
 export function AdminRatingsPage() {
   const [ratings, setRatings] = useState<RatingWithOrder[]>([]);
   const [summary, setSummary] = useState<RatingSummary | null>(null);
@@ -69,17 +98,21 @@ export function AdminRatingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination | null>(null);
 
-  // Filters
   const [packageFilter, setPackageFilter] = useState<string>("");
   const [ratingFilter, setRatingFilter] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<"highest" | "lowest" | "recent">("recent");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
-  // Fetch packages for filter
   const [packages, setPackages] = useState<Array<{ id: number; name: string }>>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
+  const [monthTotalRatings, setMonthTotalRatings] = useState<number | null>(null);
+  const [trendRange, setTrendRange] = useState<3 | 6 | 12>(6);
+  const [trendData, setTrendData] = useState<MonthlyTrendPoint[]>([]);
+  const [trendLoading, setTrendLoading] = useState(false);
 
   useEffect(() => {
     const fetchPackages = async () => {
@@ -155,16 +188,275 @@ export function AdminRatingsPage() {
     fetchData();
   }, [packageFilter, ratingFilter, startDate, endDate, sortBy, currentPage]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [packageFilter, ratingFilter, startDate, endDate, sortBy]);
 
-  // Calculate max count for distribution chart
-  const maxDistributionCount = useMemo(() => {
-    if (!summary) return 1;
-    return Math.max(...Object.values(summary.distribution));
+  useEffect(() => {
+    const fetchCurrentMonthSummary = async () => {
+      try {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
+        const params = new URLSearchParams();
+        params.append("start_date", toIsoDate(start));
+        params.append("end_date", toIsoDate(end));
+        const resp = await api.get(`/admin/ratings/summary?${params.toString()}`);
+        const data: RatingSummary | null = resp.data.data || null;
+        if (data) {
+          setMonthTotalRatings(data.total_ratings);
+        }
+      } catch (err) {
+        console.error("Failed to fetch monthly ratings summary", err);
+      }
+    };
+    fetchCurrentMonthSummary();
+  }, []);
+
+  useEffect(() => {
+    const fetchTrend = async () => {
+      setTrendLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.append("sort", "recent");
+        params.append("page", "1");
+        params.append("limit", "500");
+        const resp = await api.get(`/admin/ratings?${params.toString()}`);
+        const data: RatingWithOrder[] = resp.data.data.ratings || [];
+
+        const now = new Date();
+        const months: MonthlyTrendPoint[] = [];
+        const bucketMap = new Map<
+          string,
+          { sum: number; count: number; label: string }
+        >();
+
+        for (let i = trendRange - 1; i >= 0; i -= 1) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+            2,
+            "0",
+          )}`;
+          const label = d.toLocaleDateString("id-ID", {
+            month: "short",
+            year: "2-digit",
+          });
+          bucketMap.set(key, { sum: 0, count: 0, label });
+        }
+
+        data.forEach((rating) => {
+          const d = new Date(rating.created_at);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+            2,
+            "0",
+          )}`;
+          const bucket = bucketMap.get(key);
+          if (bucket) {
+            bucket.sum += rating.rating_value;
+            bucket.count += 1;
+          }
+        });
+
+        bucketMap.forEach((value, key) => {
+          months.push({
+            key,
+            label: value.label,
+            averageRating:
+              value.count > 0 ? value.sum / value.count : null,
+            totalRatings: value.count,
+          });
+        });
+
+        months.sort((a, b) => (a.key < b.key ? -1 : 1));
+        setTrendData(months);
+      } catch (err) {
+        console.error("Failed to fetch rating trend data", err);
+        setTrendData([]);
+      } finally {
+        setTrendLoading(false);
+      }
+    };
+
+    fetchTrend();
+  }, [trendRange]);
+
+  const distributionTotal = useMemo(() => {
+    if (!summary) return 0;
+    return Object.values(summary.distribution).reduce((acc, value) => acc + value, 0);
   }, [summary]);
+
+  const thisMonthFromPage = useMemo(() => {
+    if (ratings.length === 0) return 0;
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    return ratings.filter((rating) => {
+      const date = new Date(rating.created_at);
+      return date.getMonth() === month && date.getFullYear() === year;
+    }).length;
+  }, [ratings]);
+
+  const ratingsThisMonth = monthTotalRatings ?? thisMonthFromPage;
+
+  const sentimentCounts = useMemo(() => {
+    const base = {
+      positive: 0,
+      neutral: 0,
+      negative: 0,
+    };
+    if (!ratings.length) return base;
+    ratings.forEach((rating) => {
+      if (rating.rating_value >= 4) {
+        base.positive += 1;
+      } else if (rating.rating_value === 3) {
+        base.neutral += 1;
+      } else {
+        base.negative += 1;
+      }
+    });
+    return base;
+  }, [ratings]);
+
+  const totalSentiment = sentimentCounts.positive + sentimentCounts.neutral + sentimentCounts.negative;
+
+  const sentimentPercentages = {
+    positive:
+      totalSentiment > 0
+        ? (sentimentCounts.positive / totalSentiment) * 100
+        : 0,
+    neutral:
+      totalSentiment > 0
+        ? (sentimentCounts.neutral / totalSentiment) * 100
+        : 0,
+    negative:
+      totalSentiment > 0
+        ? (sentimentCounts.negative / totalSentiment) * 100
+        : 0,
+  };
+
+  function getSentiment(rating: RatingWithOrder): Sentiment {
+    if (rating.rating_value >= 4) return "positive";
+    if (rating.rating_value === 3) return "neutral";
+    return "negative";
+  }
+
+  const insights = useMemo(() => {
+    const items: string[] = [];
+    if (!summary || summary.total_ratings === 0) return items;
+
+    if (totalSentiment > 0) {
+      items.push(
+        `${sentimentPercentages.positive.toFixed(
+          1,
+        )}% ulasan bernada positif berdasarkan analisis AI.`,
+      );
+    } else {
+      items.push(
+        `${summary.five_star_percentage.toFixed(
+          1,
+        )}% ulasan memberikan rating 5 bintang.`,
+      );
+    }
+
+    const entries = Object.entries(summary.distribution) as Array<
+      [string, number]
+    >;
+    if (entries.length > 0 && distributionTotal > 0) {
+      const [topRatingValue] = entries.reduce<[string, number]>(
+        (best, current) => (current[1] > best[1] ? current : best),
+        entries[0],
+      );
+      const topValueNumber = Number(topRatingValue) as 1 | 2 | 3 | 4 | 5;
+      const share =
+        (summary.distribution[topValueNumber] / distributionTotal) * 100;
+      items.push(
+        `Rating ${topRatingValue} bintang menyumbang ${share.toFixed(
+          1,
+        )}% dari semua ulasan.`,
+      );
+    }
+
+    const negativeReviews = ratings.filter(
+      (rating) => getSentiment(rating) === "negative" && rating.review,
+    );
+    if (negativeReviews.length > 0) {
+      const keywords = [
+        {
+          id: "keterlambatan",
+          label: "keterlambatan kedatangan petugas",
+          tokens: ["telat", "terlambat", "lama datang", "delay"],
+        },
+        {
+          id: "kebersihan",
+          label: "kualitas kebersihan hasil akhir",
+          tokens: ["kurang bersih", "tidak bersih", "masih kotor", "kurang rapi"],
+        },
+        {
+          id: "komunikasi",
+          label: "komunikasi dengan petugas",
+          tokens: ["sulit dihubungi", "komunikasi", "balas pesan lama"],
+        },
+      ] as const;
+
+      const counters: Record<(typeof keywords)[number]["id"], number> = {
+        keterlambatan: 0,
+        kebersihan: 0,
+        komunikasi: 0,
+      };
+
+      negativeReviews.forEach((rating) => {
+        const text = (rating.review || "").toLowerCase();
+        keywords.forEach((kw) => {
+          if (kw.tokens.some((token) => text.includes(token))) {
+            counters[kw.id] += 1;
+          }
+        });
+      });
+
+      const sorted = keywords
+        .map((kw) => ({ kw, count: counters[kw.id] }))
+        .filter((item) => item.count > 0)
+        .sort((a, b) => b.count - a.count);
+
+      if (sorted.length > 0) {
+        items.push(
+          `Keluhan terbanyak terkait ${sorted[0].kw.label}.`,
+        );
+      }
+    }
+
+    const nonEmptyTrend = trendData.filter((point) => point.totalRatings > 0);
+    if (nonEmptyTrend.length >= 2) {
+      const latest = nonEmptyTrend[nonEmptyTrend.length - 1];
+      const previous = nonEmptyTrend[nonEmptyTrend.length - 2];
+      if (
+        latest.averageRating !== null &&
+        previous.averageRating !== null &&
+        previous.averageRating > 0
+      ) {
+        const diffPercent =
+          ((latest.averageRating - previous.averageRating) /
+            previous.averageRating) *
+          100;
+        const sign = diffPercent >= 0 ? "meningkat" : "menurun";
+        items.push(
+          `Kepuasan pelanggan ${sign} ${Math.abs(diffPercent).toFixed(
+            1,
+          )}% dibanding bulan sebelumnya.`,
+        );
+      }
+    }
+
+    return items;
+  }, [
+    summary,
+    ratings,
+    distributionTotal,
+    totalSentiment,
+    sentimentPercentages.positive,
+    trendData,
+  ]);
 
   const handleClearFilters = () => {
     setPackageFilter("");
@@ -174,6 +466,65 @@ export function AdminRatingsPage() {
     setSortBy("recent");
     setCurrentPage(1);
   };
+
+  const isFilterActive =
+    !!packageFilter ||
+    !!ratingFilter ||
+    !!startDate ||
+    !!endDate ||
+    sortBy !== "recent";
+
+  const activeFilterCount =
+    (packageFilter ? 1 : 0) +
+    (ratingFilter ? 1 : 0) +
+    (startDate ? 1 : 0) +
+    (endDate ? 1 : 0) +
+    (sortBy !== "recent" ? 1 : 0);
+
+  function handleExport() {
+    if (!ratings.length) return;
+    const header = [
+      "Order ID",
+      "Nama Paket",
+      "Nama Pelanggan",
+      "Email",
+      "Rating",
+      "Review",
+      "Tanggal",
+    ];
+    const rows = ratings.map((rating) => [
+      formatOrderNumber(rating.pesanan.id),
+      rating.pesanan.paket.name,
+      rating.pesanan.user.full_name,
+      rating.pesanan.user.email,
+      rating.rating_value.toString(),
+      rating.review?.replace(/"/g, '""') ?? "",
+      formatDateTimeWITA(rating.created_at),
+    ]);
+    const csvContent =
+      header.join(",") +
+      "\n" +
+      rows
+        .map((row) =>
+          row
+            .map((cell) => `"${cell.replace(/\r?\n/g, " ")}"`)
+            .join(","),
+        )
+        .join("\n");
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ratings-report-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 
   async function refresh() {
     setLoading(true);
@@ -211,566 +562,873 @@ export function AdminRatingsPage() {
 
   if (loading && !summary) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full"
+          className="h-10 w-10 rounded-full border-4 border-slate-300 border-t-blue-500"
         />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      {/* Compact Header - Consistent with other pages */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between gap-3"
-      >
-        <div className="flex items-center gap-3">
-          <Star className="h-7 w-7 sm:h-8 sm:w-8 text-indigo-600" />
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
+    <div className="space-y-6 pb-24 sm:pb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+            <Star className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-50">
                 Rating & Ulasan
               </h1>
               {summary && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="inline-flex items-center justify-center min-w-[28px] h-7 px-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-black shadow-md shadow-indigo-500/30"
-                >
-                  {summary.total_ratings}
-                </motion.span>
+                <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200">
+                  {summary.total_ratings.toLocaleString()} ulasan
+                </span>
               )}
             </div>
-            <p className="mt-2 text-sm text-slate-600 font-medium">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Pantau kualitas layanan dan kepuasan pelanggan
             </p>
           </div>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05, rotate: 180 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={refresh}
-          className="flex items-center gap-1.5 rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-50 hover:shadow-md"
-        >
-          <RefreshCw className="h-4 w-4" />
-          <span className="hidden sm:inline">Muat ulang</span>
-        </motion.button>
-      </motion.div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={refresh}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-500"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Muat ulang</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={!ratings.length}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-500"
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span>Export laporan</span>
+          </button>
+        </div>
+      </div>
 
-      {/* Error message */}
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+            exit={{ opacity: 0, y: -4 }}
+            className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700/60 dark:bg-red-900/20 dark:text-red-200"
           >
-            <AlertCircle className="h-5 w-5 flex-shrink-0" />
-            <span>{error}</span>
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span className="flex-1">{error}</span>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="rounded-full p-1 hover:bg-red-100/60 dark:hover:bg-red-800/40"
+            >
+              <X className="h-3 w-3" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-        {/* Summary Cards - Horizontal Scrollable Layout */}
-        {summary && (
-          <div className="relative">
-            {/* Scrollable container */}
-            <div className="overflow-x-auto scrollbar-hide -mx-2 px-2 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div className="flex gap-3 sm:gap-4 min-w-max">
-                {/* Average Rating */}
-                <AnimatedCard delay={0.1} className="card-lombok relative overflow-hidden p-4 sm:p-6 backdrop-blur-sm bg-white/90 border border-teal-100 shadow-lg shadow-teal-500/5 flex-shrink-0 w-[280px] sm:w-[300px]">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-teal-50 to-emerald-50">
-                  <Star className="h-5 w-5 text-teal-600 fill-teal-600" />
-                </div>
-                <div className="flex items-center gap-2">
-                  {packageFilter && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold"
-                    >
-                      Filtered
-                    </motion.div>
-                  )}
-                  <TrendingUp className="h-4 w-4 text-teal-500" />
-                </div>
-              </div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-1.5">
-                {summary.average_rating.toFixed(1)}
-              </div>
-              <div className="text-xs sm:text-sm font-medium text-slate-500 mb-3">
-                Average Rating
-                {packageFilter && (
-                  <span className="ml-1.5 text-indigo-600 font-semibold">
-                    ({packages.find(p => p.id.toString() === packageFilter)?.name || "Selected Package"})
-                  </span>
-                )}
-              </div>
-              <div>
-                <StarRating
-                  value={Math.round(summary.average_rating)}
-                  readOnly={true}
-                  size="sm"
-                />
-              </div>
-            </AnimatedCard>
-
-                {/* Total Ratings */}
-                <AnimatedCard delay={0.15} className="card-lombok relative overflow-hidden p-4 sm:p-6 backdrop-blur-sm bg-white/90 border border-blue-100 shadow-lg shadow-blue-500/5 flex-shrink-0 w-[280px] sm:w-[300px]">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
-                </div>
-                {packageFilter && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold"
-                  >
-                    Filtered
-                  </motion.div>
-                )}
-              </div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-1.5">
-                {summary.total_ratings.toLocaleString()}
-              </div>
-              <div className="text-xs sm:text-sm font-medium text-slate-500">
-                Total Ratings
-                {packageFilter && (
-                  <span className="ml-1.5 text-indigo-600 font-semibold">
-                    (Filtered)
-                  </span>
-                )}
-              </div>
-            </AnimatedCard>
-
-                {/* 5-Star Percentage */}
-                <AnimatedCard delay={0.2} className="card-lombok relative overflow-hidden p-4 sm:p-6 backdrop-blur-sm bg-white/90 border border-amber-100 shadow-lg shadow-amber-500/5 flex-shrink-0 w-[280px] sm:w-[300px]">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50">
-                  <Star className="h-5 w-5 text-amber-600 fill-amber-600" />
-                </div>
-                {packageFilter && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold"
-                  >
-                    Filtered
-                  </motion.div>
-                )}
-              </div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-1.5">
-                {summary.five_star_percentage.toFixed(1)}%
-              </div>
-              <div className="text-xs sm:text-sm font-medium text-slate-500">
-                5-Star Ratings
-                {packageFilter && (
-                  <span className="ml-1.5 text-indigo-600 font-semibold">
-                    (Filtered)
-                  </span>
-                )}
-              </div>
-                </AnimatedCard>
-              </div>
+      {summary && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Rata-rata Rating
             </div>
-            
-            {/* Scroll indicator - subtle hint */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none opacity-30 hidden sm:block">
-              <motion.div
-                animate={{ x: [0, 5, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg"
-              >
-                <ChevronRight className="h-4 w-4 text-white" />
-              </motion.div>
+            <div className="mt-3 flex items-end justify-between gap-2">
+              <div className="text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-50">
+                {summary.average_rating.toFixed(2)}
+              </div>
+              <StarRating
+                value={Math.round(summary.average_rating)}
+                readOnly={true}
+                size="sm"
+              />
             </div>
           </div>
-        )}
 
-        {/* Rating Distribution Chart - Using AnimatedCard */}
-        {summary && (
-          <AnimatedCard delay={0.25} className="card-lombok p-4 sm:p-6 backdrop-blur-sm bg-white/90 border border-indigo-100/50 shadow-xl shadow-indigo-500/5">
-            <div className="flex items-center gap-2 mb-5">
-              <BarChart3 className="h-5 w-5 text-indigo-600" />
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                Rating Distribution
-              </h2>
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Total Rating
             </div>
-            <div className="space-y-3 sm:space-y-3.5">
+            <div className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-50">
+              {summary.total_ratings.toLocaleString()}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              5 Bintang
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <div className="text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-50">
+                {summary.five_star_percentage.toFixed(1)}%
+              </div>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                dari semua ulasan
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Rating Bulan Ini
+            </div>
+            <div className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-50">
+              {ratingsThisMonth.toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {summary && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  Distribusi Rating
+                </h2>
+              </div>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Total {summary.total_ratings.toLocaleString()} ulasan
+              </span>
+            </div>
+            <div className="space-y-2.5">
               {[5, 4, 3, 2, 1].map((starValue) => {
-                const count = summary.distribution[starValue as keyof typeof summary.distribution];
-                const percentage = summary.total_ratings > 0
-                  ? (count / summary.total_ratings) * 100
-                  : 0;
+                const count =
+                  summary.distribution[
+                    starValue as keyof typeof summary.distribution
+                  ];
+                const percentage =
+                  summary.total_ratings > 0
+                    ? (count / summary.total_ratings) * 100
+                    : 0;
 
                 return (
-                  <div key={starValue} className="flex items-center gap-3 sm:gap-4">
-                    <div className="flex items-center gap-2 min-w-[70px] sm:min-w-[80px]">
-                      <span className="text-sm font-semibold text-slate-700 w-4">
-                        {starValue}
-                      </span>
-                      <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500 fill-amber-500" />
+                  <div
+                    key={starValue}
+                    className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-300"
+                  >
+                    <div className="flex w-16 items-center justify-between">
+                      <span className="font-medium">{starValue}</span>
+                      <Star className="h-3.5 w-3.5 text-amber-500" />
                     </div>
                     <div className="flex-1">
-                      <div className="h-5 sm:h-6 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percentage}%` }}
-                          transition={{ duration: 0.5, delay: 0.3 + starValue * 0.05 }}
-                          className="h-full bg-gradient-to-r from-teal-500 to-blue-500 rounded-full flex items-center justify-end pr-2"
-                        >
-                          {count > 0 && (
-                            <span className="text-[10px] sm:text-xs font-semibold text-white">
-                              {count}
-                            </span>
-                          )}
-                        </motion.div>
+                      <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div
+                          className="h-3 rounded-full bg-blue-500"
+                          style={{ width: `${percentage}%` }}
+                        />
                       </div>
                     </div>
-                    <div className="text-xs font-medium text-slate-600 min-w-[45px] text-right">
-                      {percentage.toFixed(1)}%
+                    <div className="w-16 text-right">
+                      <span className="tabular-nums">
+                        {percentage.toFixed(1)}%
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </AnimatedCard>
-        )}
+          </div>
 
-        {/* Filters and Sort - Using AnimatedCard */}
-        <AnimatedCard delay={0.3} className="card-lombok p-4 sm:p-5 backdrop-blur-sm bg-white/90 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-indigo-600" />
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">Filters & Sort</h2>
-            </div>
-            {(packageFilter || ratingFilter || startDate || endDate || sortBy !== "recent") && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleClearFilters}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm transition-colors"
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  Insight AI Kualitas Layanan
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
               >
-                <X className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Clear</span>
-              </motion.button>
+                Lihat Analisis Detail
+              </button>
+            </div>
+            {insights.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Belum cukup data untuk menampilkan insight yang bermakna.
+              </p>
+            ) : (
+              <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-200">
+                {insights.map((item, index) => (
+                  <li key={index} className="flex gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-400 dark:bg-slate-500" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Package Filter */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
-                <div className="flex items-center gap-1.5">
-                  <PackageIcon className="h-4 w-4 text-indigo-600" />
-                  <span>Package</span>
-                  {packageFilter && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-indigo-500 text-white text-[8px] font-bold"
-                    >
-                      1
-                    </motion.span>
-                  )}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+              Ringkasan Sentimen AI
+            </h2>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              Berdasarkan ulasan yang tampil
+            </span>
+          </div>
+          {ratings.length === 0 ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Belum ada ulasan untuk dianalisis.
+            </p>
+          ) : (
+            <div className="space-y-3 text-xs text-slate-700 dark:text-slate-200">
+              {([
+                {
+                  key: "positive" as const,
+                  label: "Sentimen Positif",
+                  color: "bg-emerald-500",
+                  bg: "bg-emerald-50 dark:bg-emerald-900/20",
+                  value: sentimentPercentages.positive,
+                  count: sentimentCounts.positive,
+                },
+                {
+                  key: "neutral" as const,
+                  label: "Sentimen Netral",
+                  color: "bg-slate-400",
+                  bg: "bg-slate-100 dark:bg-slate-800",
+                  value: sentimentPercentages.neutral,
+                  count: sentimentCounts.neutral,
+                },
+                {
+                  key: "negative" as const,
+                  label: "Sentimen Negatif",
+                  color: "bg-rose-500",
+                  bg: "bg-rose-50 dark:bg-rose-900/20",
+                  value: sentimentPercentages.negative,
+                  count: sentimentCounts.negative,
+                },
+              ] as const).map((item) => (
+                <div key={item.key} className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-medium">
+                        {item.label}
+                      </span>
+                    </div>
+                    <span className="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                      {item.value.toFixed(1)}% · {item.count} ulasan
+                    </span>
+                  </div>
+                  <div className={`h-3 rounded-full ${item.bg}`}>
+                    <div
+                      className={`h-3 rounded-full ${item.color}`}
+                      style={{ width: `${item.value}%` }}
+                    />
+                  </div>
                 </div>
-              </label>
-              <select
-                title="Select package filter"
-                value={packageFilter}
-                onChange={(e) => setPackageFilter(e.target.value)}
-                disabled={packagesLoading}
-                className={[
-                  "w-full rounded-xl border-2 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:ring-2 focus:ring-indigo-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
-                  packageFilter ? "border-indigo-500 bg-indigo-50/50" : "border-slate-200 focus:border-indigo-500"
-                ].join(" ")}
-              >
-                <option value="">Semua paket</option>
-                {packagesLoading ? (
-                  <option value="" disabled>Loading packages...</option>
-                ) : packages.length > 0 ? (
-                  packages.map((pkg) => (
-                    <option key={pkg.id} value={pkg.id.toString()}>
-                      {pkg.name}
-                    </option>
-                  ))
-                ) : (
-                  <option value="" disabled>No packages available</option>
-                )}
-              </select>
-              {packageFilter && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-1.5 flex items-center gap-1.5 text-xs text-indigo-600"
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+              Tren Rating Bulanan
+            </h2>
+            <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              {[3, 6, 12].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTrendRange(value as 3 | 6 | 12)}
+                  className={`px-2.5 py-1 rounded-full ${
+                    trendRange === value
+                      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-50"
+                      : "bg-transparent"
+                  }`}
                 >
-                  <CheckCircle2 className="h-3 w-3" />
-                  <span>Filtered by package</span>
-                </motion.div>
+                  {value} bln
+                </button>
+              ))}
+            </div>
+          </div>
+          {trendLoading ? (
+            <div className="flex h-40 items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+              Memuat tren rating...
+            </div>
+          ) : trendData.every((point) => point.totalRatings === 0) ? (
+            <div className="flex h-40 items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+              Belum ada data tren rating.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={trendData}>
+                    <CartesianGrid
+                      stroke="#e5e7eb"
+                      strokeDasharray="3 3"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={{ stroke: "#e5e7eb" }}
+                      tick={{ fontSize: 10, fill: "#6b7280" }}
+                    />
+                    <YAxis
+                      domain={[1, 5]}
+                      allowDecimals={false}
+                      tickLine={false}
+                      axisLine={{ stroke: "#e5e7eb" }}
+                      tick={{ fontSize: 10, fill: "#6b7280" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 8,
+                        borderColor: "#e5e7eb",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="averageRating"
+                      stroke="#2563eb"
+                      strokeWidth={2}
+                      dot={{ r: 3, strokeWidth: 1, stroke: "#2563eb" }}
+                      activeDot={{
+                        r: 4,
+                        strokeWidth: 1,
+                        stroke: "#1d4ed8",
+                        fill: "#ffffff",
+                      }}
+                      connectNulls
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="h-24">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={trendData}>
+                    <CartesianGrid
+                      stroke="#e5e7eb"
+                      strokeDasharray="3 3"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={{ stroke: "#e5e7eb" }}
+                      tick={{ fontSize: 10, fill: "#6b7280" }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tickLine={false}
+                      axisLine={{ stroke: "#e5e7eb" }}
+                      tick={{ fontSize: 10, fill: "#6b7280" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 8,
+                        borderColor: "#e5e7eb",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Bar
+                      dataKey="totalRatings"
+                      fill="#0f172a"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="sm:hidden">
+          <button
+            type="button"
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          >
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              <span>Filter & Sort</span>
+              {isFilterActive && (
+                <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-100 px-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  {activeFilterCount}
+                </span>
               )}
             </div>
+            <ChevronDown className="h-4 w-4 text-slate-400" />
+          </button>
+        </div>
 
-            {/* Rating Filter */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
-                <Star className="h-4 w-4 inline mr-1" />
-                Rating
-              </label>
-              <select
-                title="Select rating filter"
-                value={ratingFilter}
-                onChange={(e) => setRatingFilter(e.target.value)}
-                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
+        <div className="hidden sm:block">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <button
+              type="button"
+              onClick={() => setIsFilterPanelOpen((open) => !open)}
+              className="flex w-full items-center justify-between text-sm font-medium text-slate-700 dark:text-slate-100"
+            >
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <span>Filter & Sort</span>
+                {isFilterActive && (
+                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-100 px-1 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 text-slate-400 transition-transform ${
+                  isFilterPanelOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            <AnimatePresence initial={false}>
+              {isFilterPanelOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-4 grid gap-4 md:grid-cols-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                        Paket
+                      </label>
+                      <select
+                        title="Filter paket"
+                        value={packageFilter}
+                        onChange={(e) => setPackageFilter(e.target.value)}
+                        disabled={packagesLoading}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">Semua paket</option>
+                        {packagesLoading ? (
+                          <option value="" disabled>
+                            Memuat paket...
+                          </option>
+                        ) : packages.length > 0 ? (
+                          packages.map((pkg) => (
+                            <option
+                              key={pkg.id}
+                              value={pkg.id.toString()}
+                            >
+                              {pkg.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="" disabled>
+                            Tidak ada paket
+                          </option>
+                        )}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                        Rating
+                      </label>
+                      <select
+                        title="Filter rating"
+                        value={ratingFilter}
+                        onChange={(e) => setRatingFilter(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="">Semua rating</option>
+                        {[5, 4, 3, 2, 1].map((val) => (
+                          <option key={val} value={val}>
+                            {val} bintang
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                        Tanggal mulai
+                      </label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                        Tanggal akhir
+                      </label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        min={startDate || undefined}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <div className="min-w-[200px] flex-1 space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                        Urutkan
+                      </label>
+                      <select
+                        title="Opsi urutan"
+                        value={sortBy}
+                        onChange={(e) =>
+                          setSortBy(
+                            e.target.value as "highest" | "lowest" | "recent",
+                          )
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <option value="recent">Terbaru</option>
+                        <option value="highest">Rating tertinggi</option>
+                        <option value="lowest">Rating terendah</option>
+                      </select>
+                    </div>
+                    {isFilterActive && (
+                      <button
+                        type="button"
+                        onClick={handleClearFilters}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <X className="h-3 w-3" />
+                        <span>Reset filter</span>
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      {isMobileFiltersOpen && (
+        <div className="fixed inset-0 z-40 flex flex-col bg-black/40 sm:hidden">
+          <div className="mt-auto rounded-t-2xl bg-white p-4 pb-6 shadow-xl dark:bg-slate-900">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-slate-600 dark:text-slate-200" />
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  Filter & Sort
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileFiltersOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
-                <option value="">Semua rating</option>
-                {[5, 4, 3, 2, 1].map((val) => (
-                  <option key={val} value={val}>
-                    {val} Star{val > 1 ? "s" : ""}
-                  </option>
-                ))}
-              </select>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  Paket
+                </label>
+                <select
+                  title="Filter paket"
+                  value={packageFilter}
+                  onChange={(e) => setPackageFilter(e.target.value)}
+                  disabled={packagesLoading}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                >
+                  <option value="">Semua paket</option>
+                  {packagesLoading ? (
+                    <option value="" disabled>
+                      Memuat paket...
+                    </option>
+                  ) : packages.length > 0 ? (
+                    packages.map((pkg) => (
+                      <option key={pkg.id} value={pkg.id.toString()}>
+                        {pkg.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      Tidak ada paket
+                    </option>
+                  )}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  Rating
+                </label>
+                <select
+                  title="Filter rating"
+                  value={ratingFilter}
+                  onChange={(e) => setRatingFilter(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                >
+                  <option value="">Semua rating</option>
+                  {[5, 4, 3, 2, 1].map((val) => (
+                    <option key={val} value={val}>
+                      {val} bintang
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  Tanggal mulai
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  Tanggal akhir
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate || undefined}
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  Urutkan
+                </label>
+                <select
+                  title="Opsi urutan"
+                  value={sortBy}
+                  onChange={(e) =>
+                    setSortBy(
+                      e.target.value as "highest" | "lowest" | "recent",
+                    )
+                  }
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                >
+                  <option value="recent">Terbaru</option>
+                  <option value="highest">Rating tertinggi</option>
+                  <option value="lowest">Rating terendah</option>
+                </select>
+              </div>
             </div>
 
-            {/* Start Date */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
-                <Calendar className="h-4 w-4 inline mr-1" />
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-              />
-            </div>
-
-            {/* End Date */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
-                <Calendar className="h-4 w-4 inline mr-1" />
-                End Date
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                min={startDate || undefined}
-                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-              />
+            <div className="mt-4 flex gap-2">
+              {isFilterActive && (
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                >
+                  Reset
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsMobileFiltersOpen(false)}
+                className="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                Terapkan
+              </button>
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-4">
-            {/* Sort */}
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
-                Sort By
-              </label>
-              <select
-                title="Select sort option"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "highest" | "lowest" | "recent")}
-                className="w-full rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-              >
-                <option value="recent">Most Recent</option>
-                <option value="highest">Highest Rating</option>
-                <option value="lowest">Lowest Rating</option>
-              </select>
-            </div>
-
-          </div>
-        </AnimatedCard>
-
-        {/* Ratings Cards - Mobile-friendly card layout */}
-        <div className="space-y-3 sm:space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Star className="h-5 w-5 text-indigo-600" />
-            <h2 className="text-base sm:text-lg font-bold text-slate-900">
-              Recent Ratings
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Star className="h-5 w-5 text-blue-600" />
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">
+              Daftar Ulasan
             </h2>
             {pagination && (
-              <span className="text-xs sm:text-sm text-slate-500 font-medium">
-                ({pagination.total} total)
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {pagination.total.toLocaleString()} ulasan
               </span>
             )}
           </div>
+        </div>
 
-          {loading ? (
-            <div className="p-8 text-center">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto"
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-20 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40"
               />
-            </div>
-          ) : ratings.length === 0 ? (
-            <div className="p-8 text-center rounded-xl bg-white border border-slate-200">
-              <Star className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm sm:text-base text-slate-600 font-medium">
-                Belum ada rating yang cocok
-              </p>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Coba sesuaikan filter yang digunakan
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Card Grid - Mobile-first responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {ratings.map((rating, index) => (
-                  <motion.div
-                    key={rating.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-slate-50/50 to-white border-2 border-slate-200/60 hover:border-indigo-300/60 shadow-sm hover:shadow-lg transition-all duration-300"
-                  >
-                    {/* Rating badge - top right */}
-                    <div className="absolute top-3 right-3 z-10">
-                      <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shadow-md ${
-                        rating.rating_value === 5 ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-white" :
-                        rating.rating_value === 4 ? "bg-gradient-to-r from-blue-400 to-cyan-500 text-white" :
-                        rating.rating_value === 3 ? "bg-gradient-to-r from-purple-400 to-pink-500 text-white" :
-                        rating.rating_value === 2 ? "bg-gradient-to-r from-orange-400 to-red-500 text-white" :
-                        "bg-gradient-to-r from-red-400 to-rose-500 text-white"
-                      }`}>
-                        <Star className="h-3 w-3 fill-current" />
-                        <span>{rating.rating_value}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-3 sm:p-4">
-                      {/* Order ID & Date Row */}
-                      <div className="flex items-center justify-between mb-3">
-                        <Link
-                          to={`/admin/orders/${rating.pesanan.id}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline transition-colors group-hover:scale-105"
-                        >
-                          <Eye className="h-3.5 w-3.5 flex-shrink-0" />
-                          <span>{formatOrderNumber(rating.pesanan.id)}</span>
-                        </Link>
-                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                          <Calendar className="h-3 w-3 flex-shrink-0" />
-                          <span className="hidden sm:inline">{formatDateTimeWITA(rating.created_at)}</span>
-                          <span className="sm:hidden">{formatDateTimeWITA(rating.created_at).split(' ')[0]}</span>
-                        </div>
-                      </div>
-
-                      {/* Package */}
-                      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">
-                        <div className="p-1.5 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50">
-                          <PackageIcon className="h-3.5 w-3.5 text-indigo-600 flex-shrink-0" />
-                        </div>
-                        <span className="text-xs sm:text-sm font-semibold text-slate-700 truncate flex-1">
+            ))}
+          </div>
+        ) : ratings.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <Star className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
+            <p className="mt-3 text-sm font-medium text-slate-700 dark:text-slate-200">
+              Belum ada rating yang masuk.
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Rating baru akan muncul di sini setelah pelanggan memberikan
+              penilaian.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-3">
+              {ratings.map((rating) => (
+                <div
+                  key={rating.id}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+                          {rating.pesanan.user.full_name}
+                        </span>
+                        <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300">
                           {rating.pesanan.paket.name}
                         </span>
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                            getSentiment(rating) === "positive"
+                              ? "border-emerald-500 text-emerald-700 bg-emerald-50 dark:border-emerald-400 dark:text-emerald-200 dark:bg-emerald-900/20"
+                              : getSentiment(rating) === "neutral"
+                              ? "border-slate-300 text-slate-600 bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:bg-slate-800"
+                              : "border-rose-500 text-rose-600 bg-rose-50 dark:border-rose-400 dark:text-rose-200 dark:bg-rose-900/10"
+                          }`}
+                        >
+                          {getSentiment(rating) === "positive"
+                            ? "Sentimen: Positif"
+                            : getSentiment(rating) === "neutral"
+                            ? "Sentimen: Netral"
+                            : "Sentimen: Negatif"}
+                        </span>
                       </div>
-
-          {/* Customer Info */}
-                      <div className="mb-3 pb-3 border-b border-slate-100">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50">
-                            <User className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">
-                              {rating.pesanan.user.full_name}
-                            </div>
-                            <div className="text-[10px] sm:text-xs text-slate-500 truncate mt-0.5">
-                              {rating.pesanan.user.email}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Star Rating */}
-                      <div className="mb-3 pb-3 border-b border-slate-100">
-                        <StarRating
-                          value={rating.rating_value}
-                          readOnly={true}
-                          size="sm"
-                        />
-                      </div>
-
-                      {/* Review */}
-                      <div className="min-h-[40px]">
-                        {rating.review ? (
-                          <div className="text-xs sm:text-sm text-slate-600 line-clamp-3 break-words leading-relaxed">
-                            "{rating.review}"
-                          </div>
-                        ) : (
-                          <span className="text-[10px] sm:text-xs text-slate-400 italic">No review provided</span>
-                        )}
+                      <div className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                        {rating.pesanan.user.email}
                       </div>
                     </div>
+                    <div className="flex items-center gap-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
+                      <Star className="h-4 w-4 text-amber-500" />
+                      <span>{rating.rating_value.toFixed(1)}</span>
+                    </div>
+                  </div>
 
-                    {/* Hover gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none rounded-xl sm:rounded-2xl" />
-                  </motion.div>
-                ))}
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span>
+                      {formatDateTimeWITA(rating.created_at)}
+                    </span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      ID Pesanan {formatOrderNumber(rating.pesanan.id)}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 text-sm text-slate-700 line-clamp-3 dark:text-slate-200">
+                    {rating.review
+                      ? rating.review
+                      : "Tidak ada ulasan tertulis dari pelanggan ini."}
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.open(
+                          `mailto:${rating.pesanan.user.email}`,
+                          "_blank",
+                        )
+                      }
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    >
+                      Balas
+                    </button>
+                    <Link
+                      to={`/admin/orders/${rating.pesanan.id}`}
+                      className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                    >
+                      Lihat detail
+                      <ChevronRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {pagination && pagination.totalPages > 1 && (
+              <div className="mt-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 shadow-sm sm:flex-row dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                <div className="text-center sm:text-left">
+                  Menampilkan{" "}
+                  <span className="font-semibold text-slate-900 dark:text-slate-50">
+                    {(pagination.page - 1) * pagination.limit + 1}
+                  </span>{" "}
+                  sampai{" "}
+                  <span className="font-semibold text-slate-900 dark:text-slate-50">
+                    {Math.min(
+                      pagination.page * pagination.limit,
+                      pagination.total,
+                    )}
+                  </span>{" "}
+                  dari{" "}
+                  <span className="font-semibold text-slate-900 dark:text-slate-50">
+                    {pagination.total}
+                  </span>{" "}
+                  ulasan
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((p) => Math.max(1, p - 1))
+                    }
+                    disabled={!pagination.hasPrev}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  >
+                    Sebelumnya
+                  </button>
+                  <span className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                    Halaman {pagination.page} dari {pagination.totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((p) =>
+                        Math.min(pagination.totalPages, p + 1),
+                      )
+                    }
+                    disabled={!pagination.hasNext}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  >
+                    Berikutnya
+                  </button>
+                </div>
               </div>
-
-              {/* Pagination */}
-              {pagination && pagination.totalPages > 1 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 sm:mt-6 p-4 sm:p-5 rounded-xl bg-gradient-to-r from-slate-50/50 to-indigo-50/30 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3"
-                >
-                  <div className="text-xs sm:text-sm text-slate-600 font-medium text-center sm:text-left">
-                    Menampilkan{" "}
-                    <span className="font-bold text-slate-900">
-                      {(pagination.page - 1) * pagination.limit + 1}
-                    </span>{" "}
-                    sampai{" "}
-                    <span className="font-bold text-slate-900">
-                      {Math.min(pagination.page * pagination.limit, pagination.total)}
-                    </span>{" "}
-                    dari{" "}
-                    <span className="font-bold text-slate-900">
-                      {pagination.total}
-                    </span>{" "}
-                    ulasan
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={!pagination.hasPrev}
-                      className="px-3 sm:px-4 py-2 rounded-xl bg-white border-2 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                    >
-                      Sebelumnya
-                    </motion.button>
-                    <div className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 bg-white rounded-xl border-2 border-slate-200 shadow-sm">
-                      Halaman {pagination.page} dari {pagination.totalPages}
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
-                      disabled={!pagination.hasNext}
-                      className="px-3 sm:px-4 py-2 rounded-xl bg-white border-2 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-semibold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                    >
-                      Berikutnya
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
-            </>
-          )}
-        </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

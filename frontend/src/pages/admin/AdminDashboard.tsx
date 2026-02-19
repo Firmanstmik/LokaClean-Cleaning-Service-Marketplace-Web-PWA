@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, memo } from "react";
-import { Users, ShoppingBag, DollarSign, Activity, MapPin } from "lucide-react";
+import type { ReactNode } from "react";
+import { Users, ShoppingBag, DollarSign, Activity, MapPin, Package as PackageIcon } from "lucide-react";
 
 import { api } from "../../lib/api";
 import { getSocket, connectSocket } from "../../lib/socket";
@@ -20,12 +21,24 @@ interface CleanerLocation {
   lng: number;
 }
 
+type DashboardOrder = {
+  pembayaran?: {
+    status?: string;
+    amount?: number | null;
+  } | null;
+};
+
+type CleanerApi = CleanerLocation & {
+  is_active: boolean;
+};
+
 export function AdminDashboardPage() {
   const [cleaners, setCleaners] = useState<CleanerLocation[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
     activeCleaners: 0,
     revenue: 0,
+    packagesCount: 0,
   });
   const [loading, setLoading] = useState(true);
   const [isMapCollapsed, setIsMapCollapsed] = useState(true);
@@ -34,23 +47,36 @@ export function AdminDashboardPage() {
 
   useEffect(() => {
     const socket = connectSocket();
-    
-    // Fetch initial data
+
     const fetchData = async () => {
       try {
-        const [cleanersRes, ordersRes] = await Promise.all([
+        const [cleanersRes, ordersRes, packagesRes] = await Promise.all([
           api.get("/geo/cleaners-locations"),
-          api.get("/admin/orders?limit=1") // Just to get total count if available in metadata
+          api.get("/admin/orders"),
+          api.get("/admin/packages"),
         ]);
 
-        setCleaners(cleanersRes.data.data.cleaners);
-        // Assuming we can get some stats from orders endpoint or a dedicated stats endpoint
-        // For now, we simulate stats or use available data
+        const cleanersRaw = (cleanersRes.data.data.cleaners || []) as CleanerApi[];
+        setCleaners(cleanersRaw);
+
+        const orders = (ordersRes.data.data.items || []) as DashboardOrder[];
+        const totalOrders = orders.length;
+        const totalRevenue = orders.reduce((sum, order) => {
+          const payment = order.pembayaran;
+          if (payment && payment.status === "PAID") {
+            return sum + (payment.amount || 0);
+          }
+          return sum;
+        }, 0);
+
+        const packagesCount = (packagesRes.data.data.items?.length as number) || 0;
+
         setStats(prev => ({
           ...prev,
-          activeCleaners: cleanersRes.data.data.cleaners.filter((c: any) => c.is_active).length,
-          // totalOrders would come from ordersRes.data.data.pagination.total if available
-          totalOrders: ordersRes.data.data.pagination?.total || 0
+          activeCleaners: cleanersRaw.filter(c => c.is_active).length,
+          totalOrders,
+          revenue: totalRevenue,
+          packagesCount,
         }));
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);
@@ -134,10 +160,10 @@ export function AdminDashboardPage() {
         color: "blue" as const,
       },
       {
-        id: "active-cleaners",
-        title: "Cleaner Aktif",
-        value: stats.activeCleaners,
-        icon: Users,
+        id: "total-packages",
+        title: "Jumlah Paket",
+        value: stats.packagesCount,
+        icon: PackageIcon,
         color: "green" as const,
       },
       {
@@ -306,8 +332,8 @@ const StatCard = memo(function StatCard({
 interface DashboardLayoutProps {
   title: string;
   subtitle?: string;
-  right?: React.ReactNode;
-  children: React.ReactNode;
+  right?: ReactNode;
+  children: ReactNode;
 }
 
 function DashboardLayout({ title, subtitle, right, children }: DashboardLayoutProps) {

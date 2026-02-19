@@ -1,8 +1,15 @@
-// @ts-nocheck
 /// <reference lib="webworker" />
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 
-declare let self: ServiceWorkerGlobalScope;
+interface BadgeCapableNavigatorLike {
+  setAppBadge?(count?: number): Promise<void>;
+}
+
+interface ServiceWorkerGlobalScopeWithManifest extends ServiceWorkerGlobalScope {
+  __WB_MANIFEST: Array<string | { url: string; revision?: string }>;
+}
+
+declare const self: ServiceWorkerGlobalScopeWithManifest;
 
 self.skipWaiting();
 self.addEventListener('activate', () => self.clients.claim());
@@ -10,26 +17,31 @@ self.addEventListener('activate', () => self.clients.claim());
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Helper to set app badge (if supported)
 function setAppBadge(count?: number): Promise<void> {
-  if ('setAppBadge' in self.navigator) {
-    try {
-      if (count !== undefined) {
-        return (self.navigator as any).setAppBadge(count);
-      } else {
-        return (self.navigator as any).setAppBadge(); // Shows a dot or default
-      }
-    } catch (e) {
-      console.error('Failed to set app badge', e);
-      return Promise.resolve();
-    }
+  const navigatorWithBadge = (self as unknown as { navigator?: BadgeCapableNavigatorLike }).navigator;
+
+  if (!navigatorWithBadge || typeof navigatorWithBadge.setAppBadge !== 'function') {
+    return Promise.resolve();
   }
-  return Promise.resolve();
+
+  try {
+    return navigatorWithBadge.setAppBadge(count);
+  } catch (error) {
+    console.error('Failed to set app badge', error);
+    return Promise.resolve();
+  }
 }
 
-// Handle push notifications
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
+  const raw = event.data?.json() as
+    | {
+        title?: string;
+        message?: string;
+        tag?: string;
+        url?: string;
+      }
+    | undefined;
+  const data = raw ?? {};
   const title = data.title || 'LokaClean';
   const options = {
     body: data.message || 'You have a new notification',
@@ -59,13 +71,28 @@ self.addEventListener('push', (event) => {
   event.waitUntil(promiseChain);
 });
 
-// Handle notification click
 self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
+  const notificationEvent = event as Event & {
+    notification: {
+      close(): void;
+      data?: {
+        url?: string;
+      };
+    };
+    waitUntil(promise: Promise<unknown>): void;
+  };
 
-  const urlToOpen = event.notification.data?.url || '/';
+  notificationEvent.notification.close();
 
-  event.waitUntil(
+  const payload =
+    (notificationEvent.notification.data as
+      | {
+          url?: string;
+        }
+      | undefined) ?? {};
+  const urlToOpen = payload.url || '/';
+
+  notificationEvent.waitUntil(
     self.clients.matchAll({
       type: 'window',
       includeUncontrolled: true
@@ -74,12 +101,13 @@ self.addEventListener('notificationclick', (event) => {
       for (let i = 0; i < windowClients.length; i++) {
         const client = windowClients[i];
         if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
+          client.focus();
+          return;
         }
       }
       // If not, open a new window
       if (self.clients.openWindow) {
-        return self.clients.openWindow(urlToOpen);
+        void self.clients.openWindow(urlToOpen);
       }
     })
   );

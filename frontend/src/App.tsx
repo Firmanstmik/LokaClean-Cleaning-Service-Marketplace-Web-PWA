@@ -8,13 +8,17 @@ import { AppRoutes } from "./routes";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { UserProvider } from "./components/UserGlobalData";
 
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean;
+}
+
 export function App() {
   const [showSplash, setShowSplash] = useState(false);
 
   useEffect(() => {
-    // Check if PWA (Standalone) or Mobile App Wrapper
-    // This ensures the splash screen only shows for installed/standalone usage as requested
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    const nav = window.navigator as NavigatorWithStandalone;
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches || !!nav.standalone;
     
     if (isStandalone) {
       setShowSplash(true);
