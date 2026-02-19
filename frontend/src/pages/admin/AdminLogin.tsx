@@ -6,7 +6,6 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { IOSInstallPrompt } from "../../components/IOSInstallPrompt";
-import { AndroidInstallPrompt } from "../../components/AndroidInstallPrompt";
 
 export function AdminLogin() {
   const { token, actor, setAuth } = useAuth();
@@ -15,7 +14,6 @@ export function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showAndroidPrompt, setShowAndroidPrompt] = useState(false);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
   useEffect(() => {
@@ -175,12 +173,9 @@ export function AdminLogin() {
                   } else {
                     const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
                     const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
-                    const isAndroid = /android/i.test(userAgent);
 
                     if (isIOS) {
                       setShowIOSPrompt(true);
-                    } else if (isAndroid) {
-                      setShowAndroidPrompt(true);
                     } else {
                       alert("Silakan gunakan menu browser untuk 'Install app' atau 'Add to Home Screen'.");
                     }
@@ -210,7 +205,6 @@ export function AdminLogin() {
         </div>
       </div>
       <IOSInstallPrompt isOpen={showIOSPrompt} onClose={() => setShowIOSPrompt(false)} />
-      <AndroidInstallPrompt isOpen={showAndroidPrompt} onClose={() => setShowAndroidPrompt(false)} />
     </div>
   );
 }
