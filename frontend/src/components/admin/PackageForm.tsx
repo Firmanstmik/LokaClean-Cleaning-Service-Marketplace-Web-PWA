@@ -10,6 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { simpleTranslate } from "../../utils/translateHelper";
+import { toAbsoluteUrl } from "../../lib/urls";
 import type { PaketCleaning } from "../../types/api";
 
 interface PackageFormProps {
@@ -37,11 +38,14 @@ export function PackageForm({
   const [descriptionEn, setDescriptionEn] = useState(initialValues?.description_en || "");
   const [price, setPrice] = useState<number>(initialValues?.price || 0);
   const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialValues?.image
-      ? `${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}${initialValues.image}`
-      : null
-  );
+
+  const initialPreview = (() => {
+    if (!initialValues?.image) return null;
+    const absolute = toAbsoluteUrl(initialValues.image);
+    return absolute || initialValues.image;
+  })();
+
+  const [imagePreview, setImagePreview] = useState<string | null>(initialPreview);
 
   const [isTranslatingName, setIsTranslatingName] = useState(false);
   const [isTranslatingDesc, setIsTranslatingDesc] = useState(false);
@@ -184,11 +188,36 @@ export function PackageForm({
         <div className="space-y-2">
           {imagePreview ? (
             <div className="relative">
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-full h-48 object-cover rounded-lg border-2 border-slate-200"
-              />
+              <label className="block cursor-pointer">
+                <div className="relative w-full h-40 overflow-hidden rounded-lg border-2 border-slate-200">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                    <span className="rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-slate-50">
+                      klik untuk ubah gambar
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImage(file);
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setImagePreview(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
               <button
                 type="button"
                 onClick={() => {

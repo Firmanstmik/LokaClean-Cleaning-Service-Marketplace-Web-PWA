@@ -352,27 +352,205 @@ export function AdminRevenuePage() {
 
   const totalStatusOrders = data.statusData.reduce((sum, s) => sum + s.count, 0);
 
-  const handleExportCsv = () => {
-    if (!data) return;
-    const header = ["Bulan", "Pendapatan", "PendapatanTip", "JumlahPesanan"];
-    const rows = data.monthlyData.map((month) => [
-      month.month,
-      month.revenue.toString(),
-      month.tipRevenue.toString(),
-      month.orders.toString(),
-    ]);
-    const csv = [header, ...rows]
-      .map((row) => row.join(","))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "lokaclean-revenue.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleExportPdf = () => {
+    if (typeof window === "undefined") return;
+
+    const nowWita = new Date().toLocaleString("id-ID", {
+      timeZone: "Asia/Makassar",
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+
+    const periodLabel = getSelectedPeriodLabel();
+
+    const rowsHtml =
+      filteredMonthlyData.length > 0
+        ? filteredMonthlyData
+            .map((month, index) => {
+              const rowClass = index % 2 === 0 ? "row-even" : "row-odd";
+              return `
+                <tr class="${rowClass}">
+                  <td class="text-left">${month.month}</td>
+                  <td>Rp ${month.revenue.toLocaleString("id-ID")}</td>
+                  <td>Rp ${month.tipRevenue.toLocaleString("id-ID")}</td>
+                  <td>${month.orders.toLocaleString("id-ID")}</td>
+                </tr>
+              `;
+            })
+            .join("")
+        : `<tr><td colspan="4" class="text-left">Belum ada data pendapatan untuk periode ini.</td></tr>`;
+
+    const html = `
+      <!doctype html>
+      <html lang="id">
+        <head>
+          <meta charset="utf-8" />
+          <title>Laporan Pendapatan - LokaClean</title>
+          <style>
+            :root {
+              color-scheme: light;
+            }
+            * {
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            body {
+              margin: 24px;
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              font-size: 12px;
+              color: #0f172a;
+              background-color: #f9fafb;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 16px;
+            }
+            .title-block h1 {
+              margin: 0;
+              font-size: 18px;
+              font-weight: 700;
+              letter-spacing: 0.02em;
+              color: #0f172a;
+            }
+            .title-block p {
+              margin: 4px 0 0;
+              font-size: 11px;
+              color: #6b7280;
+            }
+            .meta {
+              margin-bottom: 12px;
+              font-size: 11px;
+              color: #6b7280;
+            }
+            .summary {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 16px;
+              margin-bottom: 16px;
+              padding: 10px 12px;
+              border-radius: 10px;
+              background: #0f172a;
+              color: #e5e7eb;
+            }
+            .summary-item {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              min-width: 120px;
+            }
+            .summary-item span {
+              font-size: 10px;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              opacity: 0.8;
+            }
+            .summary-item strong {
+              font-size: 12px;
+              font-weight: 600;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 4px;
+            }
+            thead {
+              background: #0f172a;
+              color: #e5e7eb;
+            }
+            th, td {
+              padding: 8px 10px;
+              text-align: right;
+              border-bottom: 1px solid #e5e7eb;
+              vertical-align: top;
+            }
+            th.text-left, td.text-left {
+              text-align: left;
+            }
+            th {
+              font-size: 11px;
+              font-weight: 600;
+            }
+            td {
+              font-size: 11px;
+              color: #111827;
+            }
+            .row-even {
+              background-color: #f9fafb;
+            }
+            .footer {
+              margin-top: 16px;
+              font-size: 10px;
+              color: #9ca3af;
+              display: flex;
+              justify-content: space-between;
+            }
+            @page {
+              margin: 18mm 14mm 18mm;
+            }
+          </style>
+        </head>
+        <body>
+          <header class="header">
+            <div class="title-block">
+              <h1>Laporan Pendapatan</h1>
+              <p>LokaClean · Ringkasan revenue dan tip</p>
+            </div>
+          </header>
+          <div class="meta">
+            Dibuat pada ${nowWita} (WITA) · Periode: ${periodLabel}
+          </div>
+          <section class="summary">
+            <div class="summary-item">
+              <span>Total pendapatan</span>
+              <strong>Rp ${data.totalRevenue.toLocaleString("id-ID")}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Pendapatan tip</span>
+              <strong>Rp ${data.totalTipRevenue.toLocaleString("id-ID")}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Total pesanan</span>
+              <strong>${data.totalOrders.toLocaleString("id-ID")} pesanan</strong>
+            </div>
+            <div class="summary-item">
+              <span>Pesanan terbayar</span>
+              <strong>${data.paidOrders.toLocaleString("id-ID")} pesanan</strong>
+            </div>
+            <div class="summary-item">
+              <span>Pesanan pending</span>
+              <strong>${data.pendingOrders.toLocaleString("id-ID")} pesanan</strong>
+            </div>
+          </section>
+          <table>
+            <thead>
+              <tr>
+                <th class="text-left">Bulan</th>
+                <th>Pendapatan</th>
+                <th>Pendapatan Tip</th>
+                <th>Jumlah Pesanan</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+          <div class="footer">
+            <span>LokaClean Admin · Panel Pendapatan</span>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
   };
 
   return (
@@ -439,11 +617,11 @@ export function AdminRevenuePage() {
             </button>
             <button
               type="button"
-              onClick={handleExportCsv}
+              onClick={handleExportPdf}
               className="inline-flex items-center gap-1.5 rounded-full border border-blue-600 bg-white px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50"
             >
               <Download className="h-4 w-4" />
-              <span>Export CSV</span>
+              <span>Export PDF</span>
             </button>
           </div>
         </div>

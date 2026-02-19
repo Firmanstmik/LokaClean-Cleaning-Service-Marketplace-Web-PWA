@@ -65,6 +65,8 @@ export function AdminPackagesPage() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [showMobileInsights, setShowMobileInsights] = useState(false);
 
   async function refresh() {
     const resp = await api.get("/admin/packages");
@@ -255,6 +257,12 @@ export function AdminPackagesPage() {
     }
   };
 
+  const handleResetFilters = () => {
+    setStatusFilter("ALL");
+    setPriceFilter("ALL");
+    setRevenueFilter("ALL");
+  };
+
   const handleBulkDelete = async () => {
     if (!selectedIds.length) return;
     const confirmed = window.confirm(
@@ -279,99 +287,317 @@ export function AdminPackagesPage() {
     }
   };
 
-  const handleExportCsv = () => {
-    const header = [
-      "ID",
-      "Nama",
-      "Harga",
-      "Pesanan",
-      "Pendapatan",
-      "Konversi",
-      "Status",
-    ].join(",");
-    const rows = packagesWithMetrics.map((pkg) =>
-      [
-        pkg.id,
-        `"${pkg.name.replace(/"/g, '""')}"`,
-        pkg.price,
-        pkg.orders,
-        pkg.revenue,
-        `${pkg.conversionRate}%`,
-        pkg.status,
-      ].join(","),
-    );
-    const csv = [header, ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "packages.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleExportPdf = () => {
+    if (typeof window === "undefined") return;
+
+    const nowWita = new Date().toLocaleString("id-ID", {
+      timeZone: "Asia/Makassar",
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+
+    const rowsHtml = packagesWithMetrics
+      .map((pkg, index) => {
+        const statusLabel = pkg.status === "ACTIVE" ? "Aktif" : "Non-aktif";
+        const rowClass = index % 2 === 0 ? "row-even" : "row-odd";
+        return `
+          <tr class="${rowClass}">
+            <td>${pkg.id}</td>
+            <td class="text-left">
+              <div class="pkg-name">${pkg.name}</div>
+              ${
+                pkg.description
+                  ? `<div class="pkg-desc">${pkg.description}</div>`
+                  : ""
+              }
+            </td>
+            <td>Rp ${pkg.price.toLocaleString("id-ID")}</td>
+            <td>${pkg.orders.toLocaleString("id-ID")}</td>
+            <td>Rp ${pkg.revenue.toLocaleString("id-ID")}</td>
+            <td>${pkg.conversionRate}%</td>
+            <td>${statusLabel}</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    const totalKanan = `
+      <div class="summary">
+        <div><span>Total paket</span><strong>${totalPackages.toLocaleString(
+          "id-ID",
+        )}</strong></div>
+        <div><span>Total orders</span><strong>${totalOrdersAll.toLocaleString(
+          "id-ID",
+        )}</strong></div>
+        <div><span>Total revenue</span><strong>Rp ${totalRevenueAll.toLocaleString(
+          "id-ID",
+        )}</strong></div>
+      </div>
+    `;
+
+    const html = `
+      <!doctype html>
+      <html lang="id">
+        <head>
+          <meta charset="utf-8" />
+          <title>Laporan Paket Layanan - LokaClean</title>
+          <style>
+            :root {
+              color-scheme: light;
+            }
+            * {
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            body {
+              margin: 24px;
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              font-size: 12px;
+              color: #0f172a;
+              background-color: #f9fafb;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 16px;
+            }
+            .title-block h1 {
+              margin: 0;
+              font-size: 18px;
+              font-weight: 700;
+              letter-spacing: 0.02em;
+              color: #0f172a;
+            }
+            .title-block p {
+              margin: 4px 0 0;
+              font-size: 11px;
+              color: #6b7280;
+            }
+            .meta {
+              margin-bottom: 12px;
+              font-size: 11px;
+              color: #6b7280;
+            }
+            .summary {
+              display: flex;
+              gap: 16px;
+              margin-bottom: 16px;
+              padding: 10px 12px;
+              border-radius: 10px;
+              background: #0f172a;
+              color: #e5e7eb;
+            }
+            .summary div {
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+            }
+            .summary span {
+              font-size: 10px;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              opacity: 0.8;
+            }
+            .summary strong {
+              font-size: 12px;
+              font-weight: 600;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 4px;
+              table-layout: fixed;
+            }
+            thead {
+              background: #0f172a;
+              color: #e5e7eb;
+            }
+            th, td {
+              padding: 8px 10px;
+              text-align: right;
+              border-bottom: 1px solid #e5e7eb;
+              vertical-align: top;
+              word-break: break-word;
+            }
+            th.text-left, td.text-left {
+              text-align: left;
+            }
+            th {
+              font-size: 11px;
+              font-weight: 600;
+            }
+            td {
+              font-size: 11px;
+              color: #111827;
+            }
+            .row-even {
+              background-color: #f9fafb;
+            }
+            .pkg-name {
+              font-weight: 600;
+              margin-bottom: 2px;
+            }
+            .pkg-desc {
+              font-size: 10px;
+              color: #6b7280;
+            }
+            .footer {
+              margin-top: 16px;
+              font-size: 10px;
+              color: #9ca3af;
+              display: flex;
+              justify-content: space-between;
+            }
+            @page {
+              margin: 18mm 14mm 18mm;
+            }
+          </style>
+        </head>
+        <body>
+          <header class="header">
+            <div class="title-block">
+              <h1>Laporan Paket Layanan</h1>
+              <p>LokaClean · Ringkasan paket, harga, dan performa</p>
+            </div>
+          </header>
+          <div class="meta">Dibuat pada ${nowWita} (WITA)</div>
+          ${totalKanan}
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px;">ID</th>
+                <th class="text-left" style="width:28%;">Paket</th>
+                <th>Harga</th>
+                <th>Orders</th>
+                <th>Revenue</th>
+                <th>Konversi</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml || `<tr><td colspan="7" class="text-left">Belum ada paket terdaftar.</td></tr>`}
+            </tbody>
+          </table>
+          <div class="footer">
+            <span>LokaClean Admin · Panel Operasional</span>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
   };
 
   const editingPackage = editingId ? items.find((pkg) => pkg.id === editingId) : null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
-              <Package className="h-5 w-5" />
-            </div>
+    <div className="space-y-6 pb-24 md:pb-8">
+      <div className="space-y-4">
+        <div className="md:hidden space-y-3">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
-                Service Packages
+              <h1 className="text-base font-semibold text-slate-900 dark:text-slate-50">
+                Paket Layanan
               </h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Manage pricing, revenue, and performance
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                Kelola harga dan performa
               </p>
             </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(true)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm active:scale-95 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+              >
+                <Filter className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleExportPdf}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm active:scale-95 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-full sm:w-56">
-            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search packages..."
-              className="w-full rounded-full border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm outline-none ring-0 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-          </button>
           <button
             type="button"
             onClick={() => {
               setShowAddForm(true);
               setEditingId(null);
             }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+            className="h-11 w-full rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition active:scale-[0.99] disabled:opacity-60"
             disabled={busy}
           >
-            <Plus className="h-4 w-4" />
-            Add Package
+            + Tambah Paket
           </button>
+        </div>
+
+        <div className="hidden flex-col gap-3 md:flex md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+                <Package className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
+                  Paket Layanan
+                </h1>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                  Kelola harga, revenue, dan performa paket
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative w-full sm:w-56">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                <Search className="h-4 w-4" />
+              </span>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari paket..."
+                className="w-full rounded-full border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 shadow-sm outline-none ring-0 transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            >
+              <Download className="h-4 w-4" />
+              Ekspor PDF
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            >
+              <Filter className="h-4 w-4" />
+              Filter
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowAddForm(true);
+                setEditingId(null);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+              disabled={busy}
+            >
+              <Plus className="h-4 w-4" />
+              Tambah Paket
+            </button>
+          </div>
         </div>
       </div>
 
@@ -410,7 +636,7 @@ export function AdminPackagesPage() {
       )}
 
       {selectedIds.length > 0 && (
-        <div className="sticky top-0 z-20 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+        <div className="sticky top-0 z-20 hidden items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 md:flex">
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[11px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
               {selectedIds.length} selected
@@ -479,12 +705,171 @@ export function AdminPackagesPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:hidden">
+            <div className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Total Paket
+              </div>
+              <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                {totalPackages}
+              </div>
+              <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                Aktif di katalog
+              </div>
+            </div>
+            <div className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Total Revenue
+              </div>
+              <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                {formatCurrency(totalRevenueAll)}
+              </div>
+              <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                Perkiraan dari semua paket
+              </div>
+            </div>
+            <div className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Paket Terlaris
+              </div>
+              <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
+                {topPackage ? topPackage.name : "Belum ada data"}
+              </div>
+              <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                Berdasarkan estimasi revenue
+              </div>
+            </div>
+            <div className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Rata-rata Order
+              </div>
+              <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                {formatCurrency(Number.isFinite(averageOrderValue) ? averageOrderValue : 0)}
+              </div>
+              <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                Berdasarkan level paket
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-1 space-y-3 md:hidden">
+            {paginatedPackages.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                Belum ada paket yang terdaftar. Tambahkan paket baru untuk mulai menjual layanan.
+              </div>
+            ) : (
+              paginatedPackages.map((pkg) => {
+                const isSelected = selectedIds.includes(pkg.id);
+                const statusLabel = pkg.status === "ACTIVE" ? "Active" : "Inactive";
+                const statusClasses =
+                  pkg.status === "ACTIVE"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800"
+                    : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+                const conversionColor =
+                  pkg.conversionRate >= 50
+                    ? "text-emerald-600 dark:text-emerald-300"
+                    : pkg.conversionRate > 0
+                    ? "text-amber-600 dark:text-amber-300"
+                    : "text-slate-400 dark:text-slate-500";
+
+                return (
+                  <div
+                    key={pkg.id}
+                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                        <img
+                          src={getPackageImage(pkg.name, pkg.image)}
+                          alt={getPackageImageAlt(pkg.name)}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = getPackageImage(pkg.name);
+                          }}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+                              {pkg.name}
+                            </div>
+                            <div className="mt-0.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                              {formatCurrency(pkg.price)}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium ${statusClasses}`}
+                            >
+                              {statusLabel}
+                            </span>
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
+                              checked={isSelected}
+                              onChange={() => toggleSelect(pkg.id)}
+                              aria-label={`Pilih paket ${pkg.name}`}
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+                          {pkg.description}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                      <span>
+                        Orders{" "}
+                        <span className="font-semibold text-slate-700 dark:text-slate-100">
+                          {pkg.orders}
+                        </span>
+                      </span>
+                      <span>
+                        Revenue{" "}
+                        <span className="font-semibold text-slate-700 dark:text-slate-100">
+                          {formatCurrency(pkg.revenue)}
+                        </span>
+                      </span>
+                      <span className={conversionColor}>
+                        Conv <span className="font-semibold">{pkg.conversionRate}%</span>
+                      </span>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingId(pkg.id);
+                          setShowAddForm(false);
+                        }}
+                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition active:scale-[0.99] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setDeleteConfirm({ show: true, package: pkg })}
+                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-medium text-red-700 shadow-sm transition active:scale-[0.99] disabled:opacity-60 dark:border-red-700 dark:bg-slate-900 dark:text-red-300"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-4">
             <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Total Packages
+                    Total Paket
                   </div>
                   <div className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-50">
                     {totalPackages}
@@ -523,7 +908,7 @@ export function AdminPackagesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Top Package
+                    Paket Teratas
                   </div>
                   <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-50">
                     {topPackage ? topPackage.name : "No data yet"}
@@ -544,7 +929,7 @@ export function AdminPackagesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Average Order Value
+                    Rata-rata Order
                   </div>
                   <div className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-50">
                     {formatCurrency(Number.isFinite(averageOrderValue) ? averageOrderValue : 0)}
@@ -562,10 +947,10 @@ export function AdminPackagesPage() {
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-4 lg:col-span-2">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <div className="hidden flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs shadow-sm dark:border-slate-700 dark:bg-slate-900 md:flex">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Filters
+                    Filter
                   </span>
                   <select
                     value={statusFilter}
@@ -574,9 +959,9 @@ export function AdminPackagesPage() {
                     }
                     className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                   >
-                    <option value="ALL">Status: All</option>
-                    <option value="ACTIVE">Status: Active</option>
-                    <option value="INACTIVE">Status: Inactive</option>
+                    <option value="ALL">Status: Semua</option>
+                    <option value="ACTIVE">Status: Aktif</option>
+                    <option value="INACTIVE">Status: Tidak aktif</option>
                   </select>
                   <select
                     value={priceFilter}
@@ -585,10 +970,10 @@ export function AdminPackagesPage() {
                     }
                     className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                   >
-                    <option value="ALL">Price: All</option>
-                    <option value="LOW">Price: &lt; 100K</option>
-                    <option value="MID">Price: 100K - 300K</option>
-                    <option value="HIGH">Price: &gt; 300K</option>
+                    <option value="ALL">Harga: Semua</option>
+                    <option value="LOW">Harga: &lt; 100K</option>
+                    <option value="MID">Harga: 100K - 300K</option>
+                    <option value="HIGH">Harga: &gt; 300K</option>
                   </select>
                   <select
                     value={revenueFilter}
@@ -599,21 +984,21 @@ export function AdminPackagesPage() {
                     }
                     className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                   >
-                    <option value="ALL">Revenue: All</option>
+                    <option value="ALL">Revenue: Semua</option>
                     <option value="HAS_REVENUE">Revenue: &gt; 0</option>
                     <option value="NO_REVENUE">Revenue: 0</option>
                   </select>
                 </div>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Showing {paginatedPackages.length} of {sortedPackages.length} packages
+                  Menampilkan {paginatedPackages.length} dari {sortedPackages.length} paket
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 md:block">
                 <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
                   <div className="font-medium uppercase tracking-wide">Packages</div>
                   <div>
-                    Page {currentPage} of {totalPages}
+                    Halaman {currentPage} dari {totalPages}
                   </div>
                 </div>
                 <div className="overflow-x-auto">
@@ -760,7 +1145,7 @@ export function AdminPackagesPage() {
                               <td className="whitespace-nowrap px-4 py-3 text-right align-top text-sm text-slate-900 dark:text-slate-50">
                                 {formatCurrency(pkg.revenue)}
                                 <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                                  This month
+                                  Bulan ini
                                 </div>
                               </td>
                               <td className="whitespace-nowrap px-4 py-3 text-right align-top text-sm">
@@ -804,7 +1189,7 @@ export function AdminPackagesPage() {
                                     className="inline-flex items-center gap-1 rounded-full border border-red-300 bg-white px-2.5 py-1.5 text-[11px] font-medium text-red-700 shadow-sm transition hover:border-red-400 hover:bg-red-50 disabled:opacity-60 dark:border-red-700 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/30"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
-                                    Delete
+                                    Hapus
                                   </button>
                                 </div>
                               </td>
@@ -817,8 +1202,8 @@ export function AdminPackagesPage() {
                 </div>
                 <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-400">
                   <div>
-                    Showing {(currentPage - 1) * pageSize + 1}-
-                    {(currentPage - 1) * pageSize + paginatedPackages.length} of{" "}
+                    Menampilkan {(currentPage - 1) * pageSize + 1}-
+                    {(currentPage - 1) * pageSize + paginatedPackages.length} dari{" "}
                     {sortedPackages.length}
                   </div>
                   <div className="inline-flex items-center gap-2">
@@ -838,29 +1223,29 @@ export function AdminPackagesPage() {
                       disabled={currentPage === totalPages}
                       className="inline-flex items-center rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
-                      Next
+                          Next
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <div className="hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:block">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <BarChart3 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       <h2 className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                        Revenue by Package
+                        Revenue per Paket
                       </h2>
                     </div>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      Estimated revenue distribution across active packages
+                      Distribusi estimasi revenue di semua paket aktif
                     </p>
                   </div>
                 </div>
                 {packagesWithMetrics.length === 0 || totalRevenueAll === 0 ? (
                   <div className="flex h-32 items-center justify-center text-xs text-slate-500 dark:text-slate-400">
-                    No revenue data available yet.
+                    Belum ada data revenue.
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -898,7 +1283,69 @@ export function AdminPackagesPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+              <div className="md:hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <button
+                  type="button"
+                  onClick={() => setShowMobileInsights((prev) => !prev)}
+                  className="flex w-full items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                      <span className="flex h-3 w-3 items-center justify-center rounded-full bg-blue-500 text-white">
+                        <Brain className="h-2 w-2" />
+                      </span>
+                      Insight AI
+                    </div>
+                  </div>
+                  <ArrowDown
+                    className={`h-4 w-4 text-slate-500 transition-transform dark:text-slate-400 ${
+                      showMobileInsights ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {showMobileInsights && (
+                  <div className="mt-4 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                    {topPackage ? (
+                      <>
+                        <p>
+                          Paket{" "}
+                          <span className="font-semibold text-slate-900 dark:text-slate-50">
+                            {topPackage.name}
+                          </span>{" "}
+                          menyumbang sekitar{" "}
+                          <span className="font-semibold">
+                            {Math.round(
+                              (topPackage.revenue / (totalRevenueAll || 1)) * 100,
+                            )}
+                            %
+                          </span>{" "}
+                          dari total estimasi revenue paket.
+                        </p>
+                        <p>
+                          Rata-rata nilai order saat ini sekitar{" "}
+                          <span className="font-semibold">
+                            {formatCurrency(
+                              Number.isFinite(averageOrderValue) ? averageOrderValue : 0,
+                            )}
+                          </span>
+                          .
+                        </p>
+                      </>
+                    ) : (
+                      <p>
+                        Saat pesanan mulai masuk, Insight AI akan merangkum paket dengan
+                        performa terbaik dan peluang optimasi harga di sini.
+                      </p>
+                    )}
+                    <p>
+                      Gunakan data Orders, Revenue, dan Conversion untuk menentukan paket
+                      mana yang perlu dipromosikan atau disesuaikan harganya.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:block">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -908,7 +1355,7 @@ export function AdminPackagesPage() {
                       AI Insights
                     </div>
                     <h2 className="mt-2 text-sm font-medium text-slate-900 dark:text-slate-50">
-                      Pricing and performance overview
+                      Ringkasan harga dan performa
                     </h2>
                   </div>
                 </div>
@@ -916,38 +1363,38 @@ export function AdminPackagesPage() {
                   {topPackage ? (
                     <>
                       <p>
-                        Your{" "}
+                        Paket{" "}
                         <span className="font-semibold text-slate-900 dark:text-slate-50">
                           {topPackage.name}
                         </span>{" "}
-                        package generates approximately{" "}
+                        menyumbang sekitar{" "}
                         <span className="font-semibold">
                           {Math.round(
                             (topPackage.revenue / (totalRevenueAll || 1)) * 100,
                           )}
                           %
                         </span>{" "}
-                        of total package revenue.
+                        dari total estimasi revenue paket.
                       </p>
                       <p>
-                        Average order value across all packages is{" "}
+                        Rata-rata nilai order dari semua paket adalah{" "}
                         <span className="font-semibold">
                           {formatCurrency(
                             Number.isFinite(averageOrderValue) ? averageOrderValue : 0,
                           )}
                         </span>
-                        , indicating current price positioning.
+                        , sebagai referensi posisi harga saat ini.
                       </p>
                     </>
                   ) : (
                     <p>
-                      Once orders start coming in, you will see AI-style pricing insights
-                      and performance highlights here.
+                        Saat pesanan mulai masuk, Insight AI akan menampilkan ringkasan
+                        harga dan performa paket di sini.
                     </p>
                   )}
                   <p>
-                    Use revenue and conversion columns to identify which packages deserve
-                    promotion, pricing adjustments, or bundling strategies.
+                      Gunakan data revenue dan conversion untuk menentukan paket yang
+                      perlu promosi, penyesuaian harga, atau strategi bundling.
                   </p>
                 </div>
                 <button
@@ -965,46 +1412,121 @@ export function AdminPackagesPage() {
           </div>
 
           {(showAddForm || editingPackage) && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-medium text-slate-900 dark:text-slate-50">
-                    {editingPackage ? "Edit Package" : "Add New Package"}
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    {editingPackage
-                      ? "Update pricing, description, and image for this package."
-                      : "Create a new package to offer in your catalog."}
-                  </p>
+            <>
+              <div className="hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:block">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                      {editingPackage ? "Edit Paket" : "Tambah Paket Baru"}
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      {editingPackage
+                        ? "Perbarui harga, deskripsi, dan gambar untuk paket ini."
+                        : "Buat paket baru untuk ditampilkan di katalog."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setEditingId(null);
+                    }}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-100"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
+                <PackageForm
+                  initialValues={editingPackage ?? undefined}
+                  onSubmit={(data) =>
+                    editingPackage ? handleUpdate(editingPackage.id, data) : handleCreate(data)
+                  }
+                  onCancel={() => {
                     setShowAddForm(false);
                     setEditingId(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-100"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
+                  busy={busy}
+                  submitLabel={editingPackage ? "Simpan Perubahan" : "Buat Paket"}
+                  loadingLabel={editingPackage ? "Menyimpan..." : "Membuat..."}
+                  isEditing={Boolean(editingPackage)}
+                />
               </div>
-              <PackageForm
-                initialValues={editingPackage ?? undefined}
-                onSubmit={(data) =>
-                  editingPackage ? handleUpdate(editingPackage.id, data) : handleCreate(data)
-                }
-                onCancel={() => {
-                  setShowAddForm(false);
-                  setEditingId(null);
-                }}
-                busy={busy}
-                submitLabel={editingPackage ? "Save Changes" : "Create Package"}
-                loadingLabel={editingPackage ? "Saving..." : "Creating..."}
-                isEditing={Boolean(editingPackage)}
-              />
-            </div>
+
+              <div className="fixed inset-x-0 top-0 bottom-0 z-40 flex items-start justify-center bg-black/40 px-3 pt-16 pb-24 md:hidden">
+                <div className="flex w-full max-w-md max-h-full flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-sm font-semibold leading-snug text-slate-900 dark:text-slate-50">
+                        {editingPackage ? "Edit Paket" : "Tambah Paket"}
+                      </h2>
+                      <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+                        {editingPackage
+                          ? "Sesuaikan detail paket lalu simpan perubahan."
+                          : "Lengkapi detail paket baru untuk katalog."}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setEditingId(null);
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-100"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto pb-3">
+                    <PackageForm
+                      initialValues={editingPackage ?? undefined}
+                      onSubmit={(data) =>
+                        editingPackage ? handleUpdate(editingPackage.id, data) : handleCreate(data)
+                      }
+                      onCancel={() => {
+                        setShowAddForm(false);
+                        setEditingId(null);
+                      }}
+                      busy={busy}
+                      submitLabel={editingPackage ? "Simpan Perubahan" : "Buat Paket"}
+                      loadingLabel={editingPackage ? "Menyimpan..." : "Membuat..."}
+                      isEditing={Boolean(editingPackage)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </>
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="fixed inset-x-0 bottom-16 z-30 md:hidden">
+          <div className="mx-4 flex items-center justify-between gap-3 rounded-full bg-slate-900 px-4 py-2.5 text-xs text-slate-50 shadow-lg dark:bg-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-slate-700 px-2 py-0.5 text-[11px] font-semibold">
+                {selectedIds.length} dipilih
+              </span>
+              <span className="text-[11px] text-slate-300">Aksi cepat paket</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                disabled={busy}
+                className="rounded-full bg-red-500 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm transition active:scale-95 disabled:opacity-60"
+              >
+                Hapus
+              </button>
+              <button
+                type="button"
+                disabled
+                className="rounded-full border border-slate-500 bg-transparent px-3 py-1.5 text-[11px] font-medium text-slate-100 opacity-60"
+              >
+                Nonaktifkan
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {deleteConfirm.show && deleteConfirm.package && (
@@ -1067,6 +1589,101 @@ export function AdminPackagesPage() {
                 className="flex-1 rounded-full bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60"
               >
                 Hapus Paket
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isMobileFilterOpen && (
+        <div
+          className="fixed inset-0 z-40 flex items-end bg-black/40 md:hidden"
+          onClick={() => setIsMobileFilterOpen(false)}
+        >
+          <div
+            className="w-full rounded-t-2xl border-t border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  Filter Paket
+                </h2>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  Sesuaikan tampilan berdasarkan status, harga, dan revenue.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Status
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as "ALL" | PackageStatus)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                >
+                  <option value="ALL">Semua</option>
+                  <option value="ACTIVE">Aktif</option>
+                  <option value="INACTIVE">Tidak aktif</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Harga
+                </div>
+                <select
+                  value={priceFilter}
+                  onChange={(e) =>
+                    setPriceFilter(e.target.value as "ALL" | "LOW" | "MID" | "HIGH")
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                >
+                  <option value="ALL">Semua</option>
+                  <option value="LOW">&lt; 100K</option>
+                  <option value="MID">100K - 300K</option>
+                  <option value="HIGH">&gt; 300K</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Revenue
+                </div>
+                <select
+                  value={revenueFilter}
+                  onChange={(e) =>
+                    setRevenueFilter(e.target.value as "ALL" | "HAS_REVENUE" | "NO_REVENUE")
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 shadow-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                >
+                  <option value="ALL">Semua</option>
+                  <option value="HAS_REVENUE">&gt; 0</option>
+                  <option value="NO_REVENUE">0</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                Terapkan Filter
               </button>
             </div>
           </div>
