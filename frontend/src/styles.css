@@ -30,11 +30,23 @@
 }
 
 @layer base {
+  :root {
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-primary-soft: rgba(37, 99, 235, 0.08);
+  }
+
+  :root.dark {
+    --color-primary: #60a5fa;
+    --color-primary-hover: #3b82f6;
+    --color-primary-soft: rgba(37, 99, 235, 0.24);
+  }
   /* Removed universal transition as it causes performance issues on mobile */
   /* * { @apply transition-colors duration-200; } */
 
   body {
-    @apply antialiased scrollbar-hide;
+    @apply antialiased scrollbar-hide bg-slate-50 text-slate-900 transition-colors duration-200;
+    @apply dark:bg-slate-900 dark:text-slate-50;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
     letter-spacing: -0.01em;
@@ -59,6 +71,21 @@
 }
 
 @layer components {
+  .btn-admin-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors;
+    background-color: var(--color-primary);
+  }
+
+  .btn-admin-primary:hover {
+    background-color: var(--color-primary-hover);
+  }
+
+  .badge-admin-primary {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold;
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+
   /* Lombok-themed buttons with innovative liquid hover effects */
   .btn-lombok {
     @apply relative overflow-hidden rounded-xl bg-lombok-gradient px-6 py-3 font-semibold text-white shadow-lombok-md transition-all duration-700 hover:scale-[1.04] hover:shadow-[0_16px_48px_rgba(26,188,156,0.5),0_8px_20px_rgba(52,152,219,0.4)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed;
@@ -618,5 +645,3 @@
     transform: perspective(1000px) rotateY(5deg);
   }
 }
-
-

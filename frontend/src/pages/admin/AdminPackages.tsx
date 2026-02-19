@@ -503,13 +503,18 @@ export function AdminPackagesPage() {
       <div className="space-y-4">
         <div className="md:hidden space-y-3">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-base font-semibold text-slate-900 dark:text-slate-50">
-                Paket Layanan
-              </h1>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                Kelola harga dan performa
-              </p>
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+                <Package className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+                  Paket Layanan
+                </h1>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                  Kelola harga dan performa
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -1687,7 +1692,7 @@ export function AdminPackagesPage() {
               <button
                 type="button"
                 onClick={() => setIsMobileFilterOpen(false)}
-                className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                className="btn-admin-primary flex-1 rounded-lg px-4 py-2.5 text-xs"
               >
                 Terapkan Filter
               </button>

@@ -29,6 +29,8 @@ import {
   ChevronUp,
   KeyRound,
   ExternalLink,
+  ArrowUpDown,
+  MoreVertical,
 } from "lucide-react";
 
 import { api } from "../../lib/api";
@@ -109,6 +111,9 @@ export function AdminUsersPage() {
   const [sortBy, setSortBy] = useState<SortField>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [bulkRole, setBulkRole] = useState<"USER" | "ADMIN">("USER");
+  const [openActionUserId, setOpenActionUserId] = useState<number | null>(null);
 
   const totalUsers = users.length;
   const totalAdmins = users.filter(user => user.role === "ADMIN").length;
@@ -273,7 +278,6 @@ export function AdminUsersPage() {
     { value: "11", label: "December" },
   ];
 
-  // Pagination logic
   const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -283,6 +287,31 @@ export function AdminUsersPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, roleFilter, statusFilter, dateFrom, dateTo, monthFilter, yearFilter, timeFrom, timeTo]);
+
+  const handleSort = (field: SortField) => {
+    if (sortBy === field) {
+      setSortDirection(prev => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const toggleSelectUser = (id: number) => {
+    setSelectedUserIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id],
+    );
+  };
+
+  const toggleSelectAllCurrentPage = () => {
+    const pageIds = paginatedUsers.map(user => user.id);
+    const allSelected = pageIds.every(id => selectedUserIds.includes(id));
+    if (allSelected) {
+      setSelectedUserIds(prev => prev.filter(id => !pageIds.includes(id)));
+    } else {
+      setSelectedUserIds(prev => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
 
   const handleAddUser = async () => {
     if (!formData.full_name || !formData.email || !formData.phone_number || !formData.password) {
@@ -439,6 +468,92 @@ export function AdminUsersPage() {
     }
   };
 
+  const handleBulkChangeRole = async () => {
+    if (!selectedUserIds.length) return;
+
+    setBusy(true);
+    setError(null);
+    try {
+      await Promise.all(
+        selectedUserIds.map(id =>
+          api.put(`/admin/users/${id}`, {
+            role: bulkRole,
+          }),
+        ),
+      );
+      await refreshUsers();
+      setSuccessMessage(
+        `Berhasil mengubah role ${selectedUserIds.length} pengguna menjadi ${bulkRole}`,
+      );
+      setSelectedUserIds([]);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedUserIds.length) return;
+    const confirm = window.confirm(
+      `Yakin ingin menghapus ${selectedUserIds.length} pengguna terpilih? Tindakan ini tidak dapat dibatalkan.`,
+    );
+    if (!confirm) return;
+
+    setBusy(true);
+    setError(null);
+    try {
+      for (const id of selectedUserIds) {
+        await api.delete(`/admin/users/${id}`);
+      }
+      await refreshUsers();
+      setSuccessMessage(
+        `Berhasil menghapus ${selectedUserIds.length} pengguna`,
+      );
+      setSelectedUserIds([]);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleExport = () => {
+    if (!sortedUsers.length) return;
+    const header = ["Nama", "Email", "No HP", "Role", "Tanggal Daftar"];
+    const rows = sortedUsers.map(user => [
+      user.full_name,
+      user.email,
+      user.phone_number,
+      user.role,
+      formatDateOnlyWITA(user.created_at),
+    ]);
+
+    const csv = [header, ...rows]
+      .map(row =>
+        row
+          .map(value => {
+            const str = String(value ?? "");
+            const escaped = str.replace(/"/g, '""');
+            return `"${escaped}"`;
+          })
+          .join(","),
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `lokaclean-users-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const openEditModal = (user: UserData) => {
     setEditingUser(user);
     setFormData({
@@ -466,287 +581,382 @@ export function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      {/* Compact Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between gap-3"
-      >
-        <div className="flex items-center gap-3">
-          <Users className="h-7 w-7 sm:h-8 sm:w-8 text-indigo-600" />
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
-                Pengguna
-              </h1>
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="inline-flex items-center justify-center min-w-[28px] h-7 px-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-black shadow-md shadow-indigo-500/30"
-              >
-                {filteredUsers.length}
-              </motion.span>
-            </div>
-            <p className="mt-2 text-sm text-slate-600 font-medium">
-              Kelola akun dan hak akses pengguna
+    <div className="space-y-5 sm:space-y-6 pb-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+            <Users className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-50">
+              Manajemen Pengguna
+            </h1>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Kelola akun, peran, dan akses sistem
             </p>
           </div>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            setEditingUser(null);
-            setFormData({ full_name: "", email: "", phone_number: "", password: "", role: "USER" });
-            setShowAddModal(true);
-          }}
-          className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-2 text-sm font-black text-white shadow-lg"
-        >
-          <Plus className="h-4 w-4" />
-          Tambah
-        </motion.button>
-      </motion.div>
-
-      {/* Search and Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-3"
-      >
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by name, email, or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border-2 border-slate-200 bg-white pl-10 pr-10 py-2.5 text-sm font-semibold text-slate-900 placeholder-slate-400 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              aria-label="Clear search"
-              title="Clear search"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Role Filter */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+          <button
+            type="button"
+            onClick={handleExport}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          >
+            <Save className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
+            <span className="sm:hidden">Export</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(prev => !prev)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          >
             <Filter className="h-4 w-4" />
-            Role:
-          </div>
-          {["ALL", "USER", "ADMIN"].map((role) => (
-            <motion.button
-              key={role}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setRoleFilter(role)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                roleFilter === role
-                  ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              {role}
-            </motion.button>
-          ))}
+            <span className="hidden sm:inline">Filter</span>
+            <span className="sm:hidden">Filter</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingUser(null);
+              setFormData({
+                full_name: "",
+                email: "",
+                phone_number: "",
+                password: "",
+                role: "USER",
+              });
+              setShowAddModal(true);
+            }}
+            className="btn-admin-primary"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Tambah Pengguna</span>
+          </button>
         </div>
+      </div>
 
-        {/* Date/Time Filter Toggle Button - Mobile Friendly */}
-        <motion.button
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => setShowDateFilters(!showDateFilters)}
-          className={`w-full flex items-center justify-between rounded-xl border-2 px-4 py-3 text-sm font-bold transition-all ${
-            showDateFilters || dateFrom || dateTo || monthFilter !== "ALL" || yearFilter !== "ALL" || timeFrom || timeTo
-              ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span>Date & Time Filters</span>
-            {(dateFrom || dateTo || monthFilter !== "ALL" || yearFilter !== "ALL" || timeFrom || timeTo) && (
-              <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-xs font-black text-white">
-                {(dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (monthFilter !== "ALL" ? 1 : 0) + (yearFilter !== "ALL" ? 1 : 0) + (timeFrom ? 1 : 0) + (timeTo ? 1 : 0)}
-              </span>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Total Pengguna
+          </div>
+          <div className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-50">
+            {totalUsers.toLocaleString()}
+          </div>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Admin
+          </div>
+          <div className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-50">
+            {totalAdmins.toLocaleString()}
+          </div>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            User
+          </div>
+          <div className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-50">
+            {totalRegularUsers.toLocaleString()}
+          </div>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Pengguna Aktif Bulan Ini
+          </div>
+          <div className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-50">
+            {usersActiveThisMonth.toLocaleString()}
+          </div>
+        </div>
+      </div>
+
+      {hasSelection && (
+        <div className="sticky top-0 z-10 flex flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-700 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:text-sm dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-100">
+          <div className="font-medium">
+            {selectedUserIds.length.toLocaleString()} pengguna dipilih
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-300">
+              <span>Ubah role ke</span>
+              <select
+                value={bulkRole}
+                onChange={e =>
+                  setBulkRole(e.target.value as "USER" | "ADMIN")
+                }
+                aria-label="Ubah role pengguna terpilih"
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              >
+                <option value="USER">USER</option>
+                <option value="ADMIN">ADMIN</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={handleBulkChangeRole}
+              disabled={busy}
+              className="btn-admin-primary disabled:opacity-60 rounded-md px-2.5 py-1.5 text-[11px]"
+            >
+              <Shield className="h-3 w-3" />
+              Ubah Role
+            </button>
+            <button
+              type="button"
+              disabled
+              title="Nonaktifkan akan ditambahkan setelah dukungan backend siap"
+              className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-medium text-slate-500 shadow-sm opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400"
+            >
+              <Clock className="h-3 w-3" />
+              Nonaktifkan
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={busy}
+              className="inline-flex items-center gap-1 rounded-md border border-red-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-red-600 shadow-sm transition hover:bg-red-50 disabled:opacity-60 dark:border-red-500 dark:bg-slate-900 dark:text-red-400"
+            >
+              <Trash2 className="h-3 w-3" />
+              Hapus
+            </button>
+          </div>
+        </div>
+      )}
+
+      {filtersOpen && (
+        <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari nama, email, atau nomor HP..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-9 py-2.5 text-sm font-medium text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                aria-label="Bersihkan pencarian"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
-          {showDateFilters ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-        </motion.button>
 
-        {/* Date and Time Filters - Collapsible */}
-        <AnimatePresence>
-          {showDateFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <div className="space-y-3 pt-3 border-t border-slate-200">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {/* Date From */}
-                  <div>
-                    <label htmlFor="user-date-from" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
-                      Date From
-                    </label>
-                    <input
-                      id="user-date-from"
-                      type="date"
-                      value={dateFrom}
-                      onChange={(e) => setDateFrom(e.target.value)}
-                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                    />
-                    {dateFrom && (
-                      <button
-                        onClick={() => setDateFrom("")}
-                        className="mt-1 text-xs text-slate-500 hover:text-slate-700"
-                        aria-label="Clear date from"
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <span className="uppercase tracking-wide">Role</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {["ALL", "USER", "ADMIN"].map(role => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setRoleFilter(role)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    roleFilter === role
+                      ? "bg-blue-600 text-white"
+                      : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  }`}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <span className="uppercase tracking-wide">Status</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { value: "ALL", label: "Semua" },
+                { value: "ACTIVE", label: "Active" },
+                { value: "INACTIVE", label: "Inactive" },
+                { value: "SUSPENDED", label: "Suspended" },
+              ].map(item => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setStatusFilter(item.value)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    statusFilter === item.value
+                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                      : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowDateFilters(prev => !prev)}
+            className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>Filter tanggal dan waktu</span>
+            </span>
+            <span className="inline-flex items-center gap-2">
+              {(dateFrom ||
+                dateTo ||
+                monthFilter !== "ALL" ||
+                yearFilter !== "ALL" ||
+                timeFrom ||
+                timeTo) && (
+                <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
+                  Aktif
+                </span>
+              )}
+              {showDateFilters ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </span>
+          </button>
+
+          <AnimatePresence>
+            {showDateFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <label
+                        htmlFor="user-date-from"
+                        className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200"
                       >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Date To */}
-                  <div>
-                    <label htmlFor="user-date-to" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
-                      Date To
-                    </label>
-                    <input
-                      id="user-date-to"
-                      type="date"
-                      value={dateTo}
-                      onChange={(e) => setDateTo(e.target.value)}
-                      min={dateFrom || undefined}
-                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                    />
-                    {dateTo && (
-                      <button
-                        onClick={() => setDateTo("")}
-                        className="mt-1 text-xs text-slate-500 hover:text-slate-700"
-                        aria-label="Clear date to"
+                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                        Date From
+                      </label>
+                      <input
+                        id="user-date-from"
+                        type="date"
+                        value={dateFrom}
+                        onChange={e => setDateFrom(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="user-date-to"
+                        className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200"
                       >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Month Filter */}
-                  <div>
-                    <label htmlFor="user-month-filter" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
-                      Month
-                    </label>
-                    <select
-                      id="user-month-filter"
-                      value={monthFilter}
-                      onChange={(e) => setMonthFilter(e.target.value)}
-                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                    >
-                      <option value="ALL">All Months</option>
-                      {months.map((month) => (
-                        <option key={month.value} value={month.value}>
-                          {month.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Year Filter */}
-                  <div>
-                    <label htmlFor="user-year-filter" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
-                      Year
-                    </label>
-                    <select
-                      id="user-year-filter"
-                      value={yearFilter}
-                      onChange={(e) => setYearFilter(e.target.value)}
-                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                    >
-                      <option value="ALL">All Years</option>
-                      {availableYears.map((year) => (
-                        <option key={year} value={year.toString()}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Time Range */}
-                <div className="grid gap-3 sm:grid-cols-2 sm:col-span-2 lg:col-span-4">
-                  <div>
-                    <label htmlFor="user-time-from" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                      <Clock className="h-3.5 w-3.5 text-slate-500" />
-                      Time From
-                    </label>
-                    <input
-                      id="user-time-from"
-                      type="time"
-                      value={timeFrom}
-                      onChange={(e) => setTimeFrom(e.target.value)}
-                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                    />
-                    {timeFrom && (
-                      <button
-                        onClick={() => setTimeFrom("")}
-                        className="mt-1 text-xs text-slate-500 hover:text-slate-700"
-                        aria-label="Clear time from"
+                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                        Date To
+                      </label>
+                      <input
+                        id="user-date-to"
+                        type="date"
+                        value={dateTo}
+                        onChange={e => setDateTo(e.target.value)}
+                        min={dateFrom || undefined}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="user-month-filter"
+                        className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200"
                       >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="user-time-to" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                      <Clock className="h-3.5 w-3.5 text-slate-500" />
-                      Time To
-                    </label>
-                    <input
-                      id="user-time-to"
-                      type="time"
-                      value={timeTo}
-                      onChange={(e) => setTimeTo(e.target.value)}
-                      min={timeFrom || undefined}
-                      className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-                    />
-                    {timeTo && (
-                      <button
-                        onClick={() => setTimeTo("")}
-                        className="mt-1 text-xs text-slate-500 hover:text-slate-700"
-                        aria-label="Clear time to"
+                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                        Month
+                      </label>
+                      <select
+                        id="user-month-filter"
+                        value={monthFilter}
+                        onChange={e => setMonthFilter(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
                       >
-                        Clear
-                      </button>
-                    )}
+                        <option value="ALL">All Months</option>
+                        {months.map(month => (
+                          <option key={month.value} value={month.value}>
+                            {month.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="user-year-filter"
+                        className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200"
+                      >
+                        <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                        Year
+                      </label>
+                      <select
+                        id="user-year-filter"
+                        value={yearFilter}
+                        onChange={e => setYearFilter(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
+                      >
+                        <option value="ALL">All Years</option>
+                        {availableYears.map(year => (
+                          <option key={year} value={year.toString()}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                </div>
 
-                {/* Clear All Date/Time Filters Button */}
-                  {(dateFrom || dateTo || monthFilter !== "ALL" || yearFilter !== "ALL" || timeFrom || timeTo) && (
-                    <div className="sm:col-span-2 lg:col-span-4 pt-2">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <label
+                        htmlFor="user-time-from"
+                        className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200"
+                      >
+                        <Clock className="h-3.5 w-3.5 text-slate-500" />
+                        Time From
+                      </label>
+                      <input
+                        id="user-time-from"
+                        type="time"
+                        value={timeFrom}
+                        onChange={e => setTimeFrom(e.target.value)}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="user-time-to"
+                        className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-200"
+                      >
+                        <Clock className="h-3.5 w-3.5 text-slate-500" />
+                        Time To
+                      </label>
+                      <input
+                        id="user-time-to"
+                        type="time"
+                        value={timeTo}
+                        onChange={e => setTimeTo(e.target.value)}
+                        min={timeFrom || undefined}
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
+                      />
+                    </div>
+                  </div>
+
+                  {(dateFrom ||
+                    dateTo ||
+                    monthFilter !== "ALL" ||
+                    yearFilter !== "ALL" ||
+                    timeFrom ||
+                    timeTo) && (
+                    <div className="pt-1">
+                      <button
+                        type="button"
                         onClick={() => {
                           setDateFrom("");
                           setDateTo("");
@@ -755,18 +965,19 @@ export function AdminUsersPage() {
                           setTimeFrom("");
                           setTimeTo("");
                         }}
-                        className="w-full flex items-center justify-center gap-2 rounded-lg border-2 border-slate-300 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-700 transition-all hover:border-slate-400 hover:bg-slate-100"
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                       >
-                        <X className="h-4 w-4" />
-                        Clear All Date/Time Filters
-                      </motion.button>
+                        <X className="h-3 w-3" />
+                        Reset filter tanggal
+                      </button>
                     </div>
                   )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Error Message */}
       <AnimatePresence>
@@ -786,131 +997,323 @@ export function AdminUsersPage() {
         )}
       </AnimatePresence>
 
-      {/* Compact User Cards - Mobile Friendly */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 rounded-xl bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 animate-shimmer" />
+          {[1, 2, 3].map(i => (
+            <div
+              key={i}
+              className="h-12 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
+            />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 sm:gap-5">
-          <AnimatePresence mode="wait">
-            {paginatedUsers.map((user, index) => (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: index * 0.03 }}
-                className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white/90 backdrop-blur-sm p-3 shadow-sm transition-all hover:border-indigo-300/60 hover:shadow-md hover:bg-white"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Profile Photo - Compact and Professional */}
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => openDetailModal(user)}
-                    className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-indigo-50 to-purple-50 cursor-pointer shadow-sm hover:shadow-md transition-all"
-                  >
-                    {user.profile_photo ? (
-                      <img
-                        src={toAbsoluteUrl(user.profile_photo) || undefined}
-                        alt={user.full_name}
-                        className="h-full w-full object-cover"
-                        crossOrigin="anonymous"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
-                          const parent = target.parentElement;
-                          if (parent && !parent.querySelector(".photo-placeholder")) {
-                            const placeholder = document.createElement("div");
-                            placeholder.className = "photo-placeholder flex h-full w-full items-center justify-center";
-                            placeholder.innerHTML = `<div class="text-lg sm:text-xl font-black text-indigo-600">${user.full_name[0]?.toUpperCase() || "?"}</div>`;
-                            parent.appendChild(placeholder);
-                          }
-                        }}
+        <>
+          <div className="hidden md:block rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="max-h-[540px] overflow-auto">
+              <table className="min-w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <th className="w-10 px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
+                        checked={
+                          paginatedUsers.length > 0 &&
+                          paginatedUsers.every(user =>
+                            selectedUserIds.includes(user.id),
+                          )
+                        }
+                        onChange={toggleSelectAllCurrentPage}
                       />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <User className="h-6 w-6 sm:h-7 sm:w-7 text-indigo-500" />
-                      </div>
-                    )}
-                    {user.role === "ADMIN" && (
-                      <div className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-sm border border-white">
-                        <Shield className="h-2.5 w-2.5 text-white" />
-                      </div>
-                    )}
-                  </motion.div>
-
-                  {/* User Info - Compact and Professional */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 truncate">{user.full_name}</h3>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        user.role === "ADMIN" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
-                      }`}>
-                        {user.role}
+                    </th>
+                    <th className="px-4 py-3 text-left align-middle">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("name")}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+                      >
+                        <span>Nama</span>
+                        <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 text-left align-middle">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("email")}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+                      >
+                        <span>Email</span>
+                        <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 text-left align-middle">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-200">
+                        No HP
                       </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-                        <Mail className="h-3 w-3 text-indigo-500 flex-shrink-0" />
-                        <span className="truncate">{user.email}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
-                        <Phone className="h-3 w-3 text-blue-500 flex-shrink-0" />
-                        <span className="truncate">{user.phone_number}</span>
+                    </th>
+                    <th className="px-4 py-3 text-left align-middle">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("role")}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+                      >
+                        <span>Role</span>
+                        <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 text-left align-middle">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-200">
+                        Status
+                      </span>
+                    </th>
+                    <th className="px-4 py-3 text-left align-middle">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("created_at")}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+                      >
+                        <span>Tanggal Daftar</span>
+                        <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </th>
+                    <th className="w-32 px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-200">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedUsers.map(user => {
+                    const statusInfo = getUserStatusDisplay(user);
+                    return (
+                      <tr
+                        key={user.id}
+                        className="border-b border-slate-100 text-xs text-slate-700 last:border-b-0 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800/60"
+                      >
+                        <td className="px-4 py-2.5 align-middle">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
+                            checked={selectedUserIds.includes(user.id)}
+                            onChange={() => toggleSelectUser(user.id)}
+                          />
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                              {user.full_name[0]?.toUpperCase() || "?"}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="truncate text-xs font-semibold text-slate-900 dark:text-slate-50">
+                                {user.full_name}
+                              </div>
+                              <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                ID {user.id}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <div className="truncate text-xs text-slate-700 dark:text-slate-100">
+                            {user.email}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <div className="truncate text-xs text-slate-700 dark:text-slate-100">
+                            {user.phone_number}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              user.role === "ADMIN"
+                                ? "border border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500 dark:bg-amber-900/30 dark:text-amber-200"
+                                : "border border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-200"
+                            }`}
+                          >
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${statusInfo.className}`}
+                          >
+                            {statusInfo.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <div className="text-xs text-slate-700 dark:text-slate-100">
+                            {formatDateOnlyWITA(user.created_at)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 text-right align-middle">
+                          <div className="flex justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openDetailModal(user)}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                              title="Lihat detail"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(user)}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                              title="Edit"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleResetPassword(user.id)}
+                              disabled={busy}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
+                              title="Reset password"
+                            >
+                              <KeyRound className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(user.id)}
+                              disabled={busy}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 hover:bg-red-50 disabled:opacity-60 dark:border-red-500 dark:bg-slate-900 dark:text-red-400"
+                              title="Hapus"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:hidden">
+            {paginatedUsers.map(user => {
+              const statusInfo = getUserStatusDisplay(user);
+              const isOpen = openActionUserId === user.id;
+              return (
+                <div
+                  key={user.id}
+                  className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 flex-shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
+                      checked={selectedUserIds.includes(user.id)}
+                      onChange={() => toggleSelectUser(user.id)}
+                    />
+                    <div className="flex flex-1 items-start gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openDetailModal(user)}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                      >
+                        {user.full_name[0]?.toUpperCase() || "?"}
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+                              {user.full_name}
+                            </div>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                              <span
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                  user.role === "ADMIN"
+                                    ? "border border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500 dark:bg-amber-900/30 dark:text-amber-200"
+                                    : "border border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-200"
+                                }`}
+                              >
+                                {user.role}
+                              </span>
+                              <span
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${statusInfo.className}`}
+                              >
+                                {statusInfo.label}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenActionUserId(isOpen ? null : user.id)
+                            }
+                            className="ml-2 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                            aria-label="Tindakan lainnya"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <div className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                          <div className="flex items-center gap-1.5">
+                            <Mail className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="truncate">{user.email}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Phone className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="truncate">{user.phone_number}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="truncate">
+                              Terdaftar {formatDateOnlyWITA(user.created_at)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Action Buttons - Compact */}
-                  <div className="flex items-center gap-1.5">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => openDetailModal(user)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-all hover:bg-blue-100"
-                      title="View Details"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => openEditModal(user)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 transition-all hover:bg-indigo-100"
-                      title="Edit pengguna"
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleResetPassword(user.id)}
-                      disabled={busy}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 transition-all hover:bg-amber-100 disabled:opacity-50"
-                      title="Reset password"
-                    >
-                      <KeyRound className="h-3.5 w-3.5" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleDeleteUser(user.id)}
-                      disabled={busy}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
-                      title="Hapus pengguna"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </motion.button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openDetailModal(user)}
+                    className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    Lihat detail
+                  </button>
+
+                  {isOpen && (
+                    <div className="mt-2 flex flex-wrap gap-2 border-t border-slate-100 pt-2 dark:border-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(user)}
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleResetPassword(user.id)}
+                        disabled={busy}
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      >
+                        <KeyRound className="h-3.5 w-3.5" />
+                        Reset password
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUser(user.id)}
+                        disabled={busy}
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60 dark:border-red-500 dark:bg-slate-900 dark:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Hapus
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Empty State */}
@@ -952,16 +1355,16 @@ export function AdminUsersPage() {
               Sebelumnya
             </motion.button>
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                 <motion.button
                   key={page}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setCurrentPage(page)}
-                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-all ${
+                  className={`h-8 w-8 rounded-lg text-sm font-bold transition-colors ${
                     currentPage === page
-                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                   }`}
                 >
                   {page}
@@ -1082,21 +1485,9 @@ export function AdminUsersPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={editingUser ? handleEditUser : handleAddUser}
                   disabled={busy}
-                  className="group relative flex-1 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2.5 text-sm font-black text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
                 >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                    animate={{
-                      x: ["-100%", "200%"],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatDelay: 1,
-                      ease: "linear",
-                    }}
-                  />
-                  <span className="relative z-10 flex items-center justify-center gap-2">
+                  <span className="flex items-center justify-center gap-2">
                     {busy ? (
                       <>
                         <motion.div
@@ -1139,141 +1530,112 @@ export function AdminUsersPage() {
                 initial={{ y: "100%", opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border-t sm:border border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl pointer-events-auto overflow-hidden max-h-[85vh] sm:max-h-[85vh] flex flex-col sm:mt-10"
+                transition={{ type: "spring", stiffness: 260, damping: 26 }}
+                onClick={e => e.stopPropagation()}
+                className="pointer-events-auto flex max-h-[85vh] w-full flex-col rounded-t-3xl border-t bg-white shadow-xl sm:max-w-lg sm:rounded-2xl sm:border sm:bg-slate-950/95 sm:text-slate-50"
               >
-                {/* Premium Header */}
-                <div className="relative shrink-0">
-                   {/* Decorative background pattern */}
-                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 opacity-100" />
-                   <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-20" />
-                   
-                   {/* Content */}
-                   <div className="relative p-5 pt-4 pb-14 sm:p-6 sm:pt-6 sm:pb-16 flex items-start justify-between">
-                     <div className="text-white w-full text-center pr-8 pl-8">
-                        <h2 className="text-xl sm:text-2xl font-black tracking-tight mb-1">
-                          Detail Pengguna
-                        </h2>
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.1, rotate: 90 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={closeModals}
-                        className="absolute right-5 top-4 sm:right-6 sm:top-6 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors backdrop-blur-md"
-                      >
-                        <X className="h-5 w-5" />
-                      </motion.button>
-                   </div>
-
-                   {/* Profile Photo - Centered Floating Overlap */}
-                   <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full border-4 border-white bg-white shadow-xl overflow-hidden cursor-pointer group"
-                        onClick={() => selectedUser.profile_photo && window.open(toAbsoluteUrl(selectedUser.profile_photo) || "", "_blank")}
-                      >
-                        {selectedUser.profile_photo ? (
-                          <img
-                            src={toAbsoluteUrl(selectedUser.profile_photo) || undefined}
-                            alt={selectedUser.full_name}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            crossOrigin="anonymous"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-indigo-50 text-indigo-500">
-                            <User className="h-10 w-10 sm:h-12 sm:w-12" />
-                          </div>
-                        )}
-                        
-                        {/* Status Indicator */}
-                        <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-sm py-1 text-center">
-                           <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-wider block">
-                             {selectedUser.role}
-                           </span>
-                        </div>
-                      </motion.div>
-                   </div>
+                <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3 sm:px-6 sm:py-4 sm:border-slate-800">
+                  <div>
+                    <h2 className="text-sm font-semibold text-slate-900 sm:text-base sm:text-slate-50">
+                      Detail Pengguna
+                    </h2>
+                    <p className="mt-0.5 text-[11px] text-slate-500 sm:text-xs sm:text-slate-400">
+                      Informasi akun dan aktivitas dasar
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeModals}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-50 sm:border-slate-600 sm:text-slate-300 sm:hover:bg-slate-800"
+                    aria-label="Tutup detail pengguna"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
 
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-5 pt-12 sm:p-6 sm:pt-14 pb-2 scrollbar-thin scrollbar-thumb-slate-200">
+                <div className="flex-1 overflow-y-auto px-5 pt-4 pb-2 sm:px-6 sm:pt-5 sm:pb-3 scrollbar-thin scrollbar-thumb-slate-200 sm:scrollbar-thumb-slate-700">
                   <div className="space-y-3">
-                    {/* Name & Contact Section - Centered */}
-                    <div className="space-y-1 mb-4 sm:mb-5 text-center">
-                      <h3 className="text-lg sm:text-xl font-black text-slate-900">{selectedUser.full_name}</h3>
-                      <div className="flex flex-col items-center gap-0.5">
-                        <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
-                          <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-500" />
-                          {selectedUser.email}
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700 sm:bg-slate-800 sm:text-slate-100">
+                        {selectedUser.full_name[0]?.toUpperCase() || "?"}
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <div className="text-sm font-semibold text-slate-900 sm:text-slate-50">
+                          {selectedUser.full_name}
                         </div>
-                        <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
-                          <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500" />
-                          {selectedUser.phone_number}
+                        <div className="space-y-1 text-xs text-slate-600 sm:text-slate-300">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-3.5 w-3.5" />
+                            <span className="truncate">{selectedUser.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3.5 w-3.5" />
+                            <span className="truncate">
+                              {selectedUser.phone_number}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Stats Grid */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center text-center">
-                        <div className="p-1.5 sm:p-2 rounded-lg bg-amber-100 text-amber-600 mb-1">
-                          <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs sm:border-slate-700 sm:bg-slate-900">
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-slate-400">
+                          Role
                         </div>
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-0.5">Role Access</span>
-                        <div className="text-xs sm:text-sm font-black text-slate-900">{selectedUser.role}</div>
+                        <div className="mt-1 text-sm font-semibold text-slate-900 sm:text-slate-50">
+                          {selectedUser.role}
+                        </div>
                       </div>
-                      
-                      <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center text-center">
-                        <div className="p-1.5 sm:p-2 rounded-lg bg-purple-100 text-purple-600 mb-1">
-                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs sm:border-slate-700 sm:bg-slate-900">
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-slate-400">
+                          Tanggal daftar
                         </div>
-                        <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase mb-0.5">Joined Date</span>
-                        <div className="text-xs sm:text-sm font-black text-slate-900">{formatDateOnlyWITA(selectedUser.created_at)}</div>
+                        <div className="mt-1 text-sm font-semibold text-slate-900 sm:text-slate-50">
+                          {formatDateOnlyWITA(selectedUser.created_at)}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Location Card */}
                     {(selectedUser.default_latitude && selectedUser.default_longitude) && (
-                      <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center gap-2">
-                           <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-rose-500" />
-                           <span className="text-[10px] sm:text-xs font-bold text-slate-700 uppercase">Lokasi Utama</span>
+                      <div className="rounded-lg border border-slate-200 bg-white text-xs sm:border-slate-700 sm:bg-slate-900 sm:text-slate-100">
+                        <div className="flex items-center gap-2 border-b border-slate-200 px-3 py-2 sm:border-slate-700">
+                          <MapPin className="h-3.5 w-3.5 text-slate-500" />
+                          <span className="text-[11px] font-semibold text-slate-700 sm:text-slate-200">
+                            Lokasi utama
+                          </span>
                         </div>
-                        <div className="p-3 sm:p-4 bg-white">
-                           <div className="text-xs sm:text-sm font-medium text-slate-800 mb-3 leading-relaxed break-words whitespace-pre-wrap text-left">
-                             {isLoadingAddress ? (
-                               <div className="flex items-center gap-2 text-slate-400">
-                                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="h-3 w-3 rounded-full border-2 border-slate-300 border-t-slate-500" />
-                                  Mencari alamat...
-                               </div>
-                             ) : (
-                               addressName ? (
-                                 <span>{addressName}</span>
-                               ) : (
-                                 <span className="font-mono text-slate-500 text-[10px] sm:text-xs">
-                                   {selectedUser.default_latitude.toFixed(6)}, {selectedUser.default_longitude.toFixed(6)}
-                                 </span>
-                               )
-                             )}
-                           </div>
-                           <a
-                             href={`https://www.google.com/maps/search/?api=1&query=${selectedUser.default_latitude},${selectedUser.default_longitude}`}
-                             target="_blank"
-                             rel="noopener noreferrer"
-                             className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 border border-slate-200 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold text-slate-700 transition-all hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 hover:shadow-md active:scale-95"
-                           >
-                             <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                             Buka di Google Maps
-                           </a>
+                        <div className="space-y-3 px-3 py-3">
+                          <div className="text-xs leading-relaxed text-slate-700 sm:text-slate-200">
+                            {isLoadingAddress ? (
+                              <span className="text-slate-400">
+                                Mencari alamat lokasi...
+                              </span>
+                            ) : addressName ? (
+                              <span>{addressName}</span>
+                            ) : (
+                              <span className="font-mono text-[11px] text-slate-500 sm:text-slate-400">
+                                {selectedUser.default_latitude.toFixed(6)},{" "}
+                                {selectedUser.default_longitude.toFixed(6)}
+                              </span>
+                            )}
+                          </div>
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${selectedUser.default_latitude},${selectedUser.default_longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 sm:border-slate-600 sm:bg-slate-800 sm:text-slate-100 sm:hover:bg-slate-700"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Buka di Google Maps
+                          </a>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Footer Actions - Sticky Bottom */}
-                <div className="p-3 sm:p-4 bg-white border-t border-slate-100 flex gap-2 sm:gap-3 shrink-0 pb-6 sm:pb-4 safe-area-bottom">
+                <div className="safe-area-bottom flex shrink-0 gap-2 border-t border-slate-200 bg-white px-3 pb-5 pt-3 sm:gap-3 sm:border-slate-800 sm:bg-slate-950 sm:px-4 sm:pb-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -1281,10 +1643,10 @@ export function AdminUsersPage() {
                       closeModals();
                       openEditModal(selectedUser);
                     }}
-                    className="flex-1 flex flex-col items-center justify-center gap-0.5 sm:gap-1 rounded-xl bg-indigo-50 py-2.5 sm:py-3 text-indigo-700 transition-all hover:bg-indigo-100 active:bg-indigo-200"
+                    className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-lg bg-slate-900 py-2.5 text-[11px] font-semibold text-white hover:bg-slate-800 sm:text-xs"
                   >
-                    <Edit2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Edit</span>
+                    <Edit2 className="h-4 w-4" />
+                    <span className="tracking-wide">Edit</span>
                   </motion.button>
                   
                   <motion.button
@@ -1295,20 +1657,20 @@ export function AdminUsersPage() {
                       handleResetPassword(selectedUser.id);
                     }}
                     disabled={busy}
-                    className="flex-1 flex flex-col items-center justify-center gap-0.5 sm:gap-1 rounded-xl bg-amber-50 py-2.5 sm:py-3 text-amber-700 transition-all hover:bg-amber-100 active:bg-amber-200 disabled:opacity-50"
+                    className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-white py-2.5 text-[11px] font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50 sm:text-xs sm:border-slate-600 sm:bg-slate-900 sm:text-slate-50 sm:hover:bg-slate-800"
                   >
-                    <KeyRound className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Reset Pass</span>
+                    <KeyRound className="h-4 w-4" />
+                    <span className="tracking-wide">Reset password</span>
                   </motion.button>
 
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={closeModals}
-                    className="flex-1 flex flex-col items-center justify-center gap-0.5 sm:gap-1 rounded-xl bg-slate-50 py-2.5 sm:py-3 text-slate-700 transition-all hover:bg-slate-100 active:bg-slate-200"
+                    className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-lg border border-slate-200 bg-white py-2.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 sm:text-xs sm:border-slate-600 sm:bg-slate-900 sm:text-slate-100 sm:hover:bg-slate-800"
                   >
-                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide">Close</span>
+                    <X className="h-4 w-4" />
+                    <span className="tracking-wide">Tutup</span>
                   </motion.button>
                 </div>
               </motion.div>
@@ -1377,13 +1739,15 @@ export function AdminUsersPage() {
                 className="w-full max-w-md pointer-events-auto bg-white rounded-2xl shadow-2xl overflow-hidden"
               >
                 {/* Header */}
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-5 border-b border-amber-200/50">
+                <div className="border-b border-slate-200 bg-slate-50 p-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-orange-100">
-                        <KeyRound className="h-5 w-5 text-amber-600" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white">
+                        <KeyRound className="h-5 w-5" />
                       </div>
-                      <h2 className="text-lg font-black text-slate-900">Reset password</h2>
+                      <h2 className="text-lg font-black text-slate-900">
+                        Reset password
+                      </h2>
                     </div>
                     <button
                       onClick={() => {
@@ -1426,7 +1790,7 @@ export function AdminUsersPage() {
                           }
                         }}
                         disabled={busy}
-                        className="h-4 w-4 rounded border-2 border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-200 disabled:opacity-50"
+                        className="h-4 w-4 rounded border-2 border-slate-300 text-slate-700 focus:ring-2 focus:ring-slate-200 disabled:opacity-50"
                       />
                       <span className="text-sm font-semibold text-slate-700">Gunakan password kustom</span>
                     </label>
@@ -1458,8 +1822,8 @@ export function AdminUsersPage() {
                     )}
 
                     {!useCustomPassword && (
-                      <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3">
-                        <p className="text-xs font-semibold text-amber-700">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs font-semibold text-slate-700">
                           Sistem akan membuat password acak 8 karakter secara otomatis.
                         </p>
                       </div>
@@ -1468,7 +1832,7 @@ export function AdminUsersPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="p-5 pt-0 flex gap-2 border-t border-slate-200/50">
+                <div className="flex gap-2 border-t border-slate-200 p-5 pt-0">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -1488,13 +1852,17 @@ export function AdminUsersPage() {
                     whileTap={{ scale: 0.98 }}
                     onClick={confirmResetPassword}
                     disabled={busy || (useCustomPassword && customPassword.length < 6)}
-                    className="flex-1 rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2.5 text-sm font-black text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {busy ? (
                       <span className="flex items-center justify-center gap-2">
                         <motion.div
                           animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
                           className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
                         />
                         Mengatur ulang...
@@ -1520,13 +1888,13 @@ export function AdminUsersPage() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
             onClick={() => setResetPasswordResult(null)}
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-2xl border-2 border-amber-200 bg-white p-5 shadow-2xl"
-            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
+              >
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
@@ -1551,10 +1919,12 @@ export function AdminUsersPage() {
                   </span>
                 </p>
                 
-                <div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-4">
-                  <div className="mb-2 text-xs font-bold text-amber-700 uppercase tracking-wide">Password Baru</div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-600">
+                    Password baru
+                  </div>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 rounded-lg bg-white px-3 py-2 text-base font-black text-slate-900 border border-amber-200">
+                    <code className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-base font-black text-slate-900">
                       {resetPasswordResult.newPassword}
                     </code>
                     <motion.button
@@ -1568,7 +1938,7 @@ export function AdminUsersPage() {
                           setError("Gagal menyalin password ke clipboard");
                         }
                       }}
-                      className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-600 text-white transition-all hover:bg-amber-700"
+                      className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-900 text-white transition-colors hover:bg-slate-800"
                       title="Salin password"
                     >
                       <Save className="h-4 w-4" />
@@ -1576,23 +1946,22 @@ export function AdminUsersPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-xs font-semibold text-slate-600">
-                    ⚠️ Harap kirimkan password ini ke pengguna dengan cara yang aman. Mereka sebaiknya mengganti password setelah login.
-                  </p>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs font-semibold text-slate-600">
+                  Harap kirimkan password ini ke pengguna dengan cara yang aman.
+                  Mereka sebaiknya mengganti password setelah login.
                 </div>
               </div>
 
-              <div className="mt-5">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setResetPasswordResult(null)}
-                  className="w-full rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2.5 text-sm font-black text-white shadow-lg transition-all hover:shadow-xl"
-                >
-                  Tutup
-                </motion.button>
-              </div>
+                <div className="mt-5">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setResetPasswordResult(null)}
+                    className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700"
+                  >
+                    Tutup
+                  </motion.button>
+                </div>
             </motion.div>
           </motion.div>
         )}

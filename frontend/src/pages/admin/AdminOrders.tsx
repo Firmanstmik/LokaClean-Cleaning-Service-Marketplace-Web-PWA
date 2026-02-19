@@ -367,7 +367,7 @@ export function AdminOrdersPage() {
   }, [deleteConfirm, fetchOrders]);
 
   return (
-    <div className="space-y-4 bg-slate-50 px-0 pb-8 pt-0 sm:space-y-5 sm:pb-8">
+    <div className="space-y-4 bg-slate-50 px-0 pb-8 pt-0 sm:space-y-5 sm:pb-8 dark:bg-slate-950">
       <OrdersHeader
         visibleCount={filteredItems.length}
         totalCount={items.length}
@@ -378,13 +378,13 @@ export function AdminOrdersPage() {
       />
 
       {successMessage && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 sm:text-sm">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 sm:text-sm dark:border-emerald-500/60 dark:bg-emerald-500/10 dark:text-emerald-100">
           {successMessage}
         </div>
       )}
 
       {error && (
-        <div className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 sm:text-sm">
+        <div className="flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 sm:text-sm dark:border-rose-500/60 dark:bg-rose-500/10 dark:text-rose-100">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -413,14 +413,14 @@ export function AdminOrdersPage() {
       {loading && items.length === 0 && <OrdersSkeleton />}
 
       {!loading && filteredItems.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center">
-          <Package className="h-10 w-10 text-slate-300" />
-          <p className="mt-3 text-sm font-semibold text-slate-700">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900">
+          <Package className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-100">
             {items.length === 0
               ? "Belum ada pesanan"
               : "Tidak ada pesanan yang cocok dengan filter"}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             {items.length === 0
               ? "Pesanan baru akan muncul di sini"
               : "Coba ubah filter atau kata kunci pencarian"}
@@ -430,7 +430,7 @@ export function AdminOrdersPage() {
 
       {!loading && paginatedItems.length > 0 && (
         <div className="space-y-2.5">
-          <div className="flex items-center justify-between text-[11px] text-slate-500">
+          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
             <span>
               Menampilkan {paginatedItems.length} dari {filteredItems.length}{" "}
               pesanan
@@ -497,21 +497,21 @@ function OrdersHeader({
   onPerformanceChange,
 }: OrdersHeaderProps) {
   return (
-    <div className="flex h-[60px] items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-100">
-          <Package className="h-5 w-5 text-slate-700" />
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-sm ring-1 ring-slate-100 dark:bg-slate-800 dark:text-blue-400 dark:ring-slate-700">
+          <Package className="h-6 w-6" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="truncate text-base font-semibold text-slate-900">
+            <h1 className="truncate text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-50">
               Pesanan
             </h1>
-            <span className="inline-flex h-5 min-w-[22px] items-center justify-center rounded-full bg-slate-900 px-1.5 text-[11px] font-semibold text-white">
+            <span className="inline-flex h-5 min-w-[22px] items-center justify-center rounded-full bg-slate-900 px-1.5 text-[11px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
               {visibleCount}
             </span>
           </div>
-          <p className="mt-0.5 text-[11px] text-slate-500">
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Kelola dan pantau pesanan pelanggan · {totalCount} pesanan
           </p>
         </div>
@@ -522,7 +522,7 @@ function OrdersHeader({
           type="button"
           onClick={onRefresh}
           disabled={loading}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 disabled:opacity-60"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
           <RefreshCw className="h-4 w-4" />
         </button>
@@ -540,13 +540,13 @@ function OrdersSearch({ value, onChange }: OrdersSearchProps) {
         onChange={(e) => onChange(e.target.value)}
         type="text"
         placeholder="Cari nama pelanggan, alamat, atau nomor pesanan..."
-        className="h-10 w-full rounded-full border border-slate-200 bg-slate-50 pl-9 pr-9 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-0 sm:text-sm"
+        className="h-10 w-full rounded-full border border-slate-200 bg-slate-50 pl-9 pr-9 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-0 sm:text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
           aria-label="Clear search"
         >
           <X className="h-4 w-4" />
@@ -578,7 +578,7 @@ function OrdersFilterBar({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500">
+      <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
         <Filter className="h-3.5 w-3.5" />
         <span>Filter cepat</span>
       </div>
@@ -590,11 +590,11 @@ function OrdersFilterBar({
               key={option.value}
               type="button"
               onClick={() => onStatusChange(option.value)}
-              className={`whitespace-nowrap rounded-full px-3 text-[11px] font-medium transition-colors ${
+              className={`whitespace-nowrap rounded-full px-3 text-[11px] font-medium transition-colors h-8 ${
                 active
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              } h-8`}
+                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              }`}
             >
               {option.label}
             </button>
@@ -609,11 +609,11 @@ function OrdersFilterBar({
               key={option.value}
               type="button"
               onClick={() => onPaymentChange(option.value)}
-              className={`whitespace-nowrap rounded-full px-3 text-[11px] font-medium transition-colors ${
+              className={`whitespace-nowrap rounded-full px-3 text-[11px] font-medium transition-colors h-8 ${
                 active
-                  ? "bg-emerald-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              } h-8`}
+                  ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-900"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              }`}
             >
               {option.label}
             </button>
@@ -635,49 +635,49 @@ function OrdersDateFilter({
   const hasActive = Boolean(dateFrom || dateTo);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white">
+    <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between px-3 py-2.5 text-xs font-medium text-slate-700"
+        className="flex w-full items-center justify-between px-3 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-100"
       >
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-slate-500" />
+          <Calendar className="h-4 w-4 text-slate-500 dark:text-slate-400" />
           <span>Filter tanggal</span>
           {hasActive && (
-            <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white">
+            <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
               Aktif
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1 text-[11px] text-slate-500">
+        <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
           <span>{open ? "Tutup" : "Buka"}</span>
           <ChevronIcon open={open} />
         </div>
       </button>
       {open && (
-        <div className="border-t border-slate-100 px-3 py-3 text-xs text-slate-700">
+        <div className="border-t border-slate-100 px-3 py-3 text-xs text-slate-700 dark:border-slate-800 dark:text-slate-100">
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="flex-1">
-              <label className="mb-1 block text-[11px] font-medium text-slate-500">
+              <label className="mb-1 block text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 Dari tanggal
               </label>
               <input
                 type="date"
                 value={dateFrom}
                 onChange={(e) => onDateFromChange(e.target.value)}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-0"
+                className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-0 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>
             <div className="flex-1">
-              <label className="mb-1 block text-[11px] font-medium text-slate-500">
+              <label className="mb-1 block text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 Sampai tanggal
               </label>
               <input
                 type="date"
                 value={dateTo}
                 onChange={(e) => onDateToChange(e.target.value)}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-0"
+                className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-0 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>
           </div>
@@ -688,7 +688,7 @@ function OrdersDateFilter({
                 onDateFromChange("");
                 onDateToChange("");
               }}
-              className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700"
+              className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             >
               <X className="h-3 w-3" />
               <span>Reset tanggal</span>
@@ -705,12 +705,12 @@ function PerformanceToggle({ value, onChange }: PerformanceToggleProps) {
     <button
       type="button"
       onClick={() => onChange(!value)}
-      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600"
+      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
     >
       <span className="text-[11px]">⚡ Mode ringan</span>
       <span
         className={`flex h-4 w-8 items-center rounded-full ${
-          value ? "bg-emerald-500" : "bg-slate-300"
+          value ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
         }`}
       >
         <span
@@ -719,7 +719,7 @@ function PerformanceToggle({ value, onChange }: PerformanceToggleProps) {
           }`}
         />
       </span>
-      <span className="text-[10px] font-semibold text-slate-500">
+      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
         {value ? "Aktif" : "Mati"}
       </span>
     </button>
@@ -740,8 +740,8 @@ const OrderCard = memo(function OrderCard({
   const cardBase =
     "group relative overflow-hidden rounded-[14px] border px-3 py-3 sm:px-4 sm:py-3.5 transition-colors";
   const cardTone = performanceMode
-    ? "border-slate-200 bg-white"
-    : "border-slate-200 bg-white";
+    ? "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+    : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900";
 
   return (
     <div className={`${cardBase} ${cardTone}`}>
@@ -750,16 +750,16 @@ const OrderCard = memo(function OrderCard({
           type="button"
           onClick={() => onSelectToggle(order.id)}
           aria-label={selected ? "Batalkan pilih pesanan" : "Pilih pesanan"}
-          className="mt-1 flex-shrink-0 text-slate-500"
+          className="mt-1 flex-shrink-0 text-slate-500 dark:text-slate-400"
         >
           {selected ? (
-            <CheckSquare className="h-5 w-5 text-slate-900" />
+            <CheckSquare className="h-5 w-5 text-slate-900 dark:text-slate-50" />
           ) : (
             <Square className="h-5 w-5" />
           )}
         </button>
 
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
+        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
           <img
             src={getPackageImage(order.paket.name, order.paket.image)}
             alt={getPackageImageAlt(order.paket.name)}
@@ -771,19 +771,19 @@ const OrderCard = memo(function OrderCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 ORDER {formatOrderNumber(order.order_number)}
               </div>
-              <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-[15px]">
+              <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-[15px] dark:text-slate-50">
                 {order.paket.name}
               </h3>
               <div className="mt-1.5 space-y-1">
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-600 sm:text-xs">
-                  <User className="h-3 w-3 flex-shrink-0 text-slate-400" />
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-600 sm:text-xs dark:text-slate-300">
+                  <User className="h-3 w-3 flex-shrink-0 text-slate-400 dark:text-slate-500" />
                   <span className="truncate">{order.user.full_name}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-600 sm:text-xs">
-                  <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400" />
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-600 sm:text-xs dark:text-slate-300">
+                  <MapPin className="h-3 w-3 flex-shrink-0 text-slate-400 dark:text-slate-500" />
                   <span className="truncate">{order.address}</span>
                 </div>
               </div>
@@ -792,27 +792,27 @@ const OrderCard = memo(function OrderCard({
               <StatusBadge status={order.status} />
               <PaymentBadge status={paymentStatus} />
               {!performanceMode && (
-                <button
-                  type="button"
-                  onClick={() => onDeleteClick(order)}
-                  disabled={busy}
-                  className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100 disabled:opacity-60"
-                  aria-label="Hapus pesanan"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteClick(order)}
+                      disabled={busy}
+                      className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100 disabled:opacity-60 dark:border-rose-500/60 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                      aria-label="Hapus pesanan"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
               )}
             </div>
           </div>
 
-          <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-2.5">
+          <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-2.5 dark:border-slate-800">
             <Link to={`/admin/orders/${order.id}`} className="flex-1">
               <button
                 type="button"
                 className={`flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold sm:text-sm ${
                   performanceMode
-                    ? "border-slate-300 bg-white text-slate-900"
-                    : "border-slate-200 bg-slate-50 text-slate-900 hover:bg-white"
+                    ? "border-slate-300 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    : "border-slate-200 bg-slate-50 text-slate-900 hover:bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                 }`}
               >
                 <Eye className="h-3.5 w-3.5" />
@@ -827,8 +827,8 @@ const OrderCard = memo(function OrderCard({
                 disabled={busy}
                 className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white sm:text-sm ${
                   performanceMode
-                    ? "bg-slate-900 disabled:opacity-60"
-                    : "bg-slate-900 hover:bg-black disabled:opacity-60"
+                    ? "bg-slate-900 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900"
+                    : "bg-slate-900 hover:bg-black disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                 }`}
               >
                 {busy ? (
@@ -858,12 +858,12 @@ function OrdersPagination({
   const canNext = currentPage < totalPages;
 
   return (
-    <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600">
+    <div className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-400">
       <button
         type="button"
         onClick={() => canPrev && onPageChange(currentPage - 1)}
         disabled={!canPrev}
-        className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 disabled:opacity-50"
+        className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900"
       >
         Sebelumnya
       </button>
@@ -874,7 +874,7 @@ function OrdersPagination({
         type="button"
         onClick={() => canNext && onPageChange(currentPage + 1)}
         disabled={!canNext}
-        className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 disabled:opacity-50"
+        className="inline-flex h-8 items-center rounded-full border border-slate-200 bg-white px-3 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900"
       >
         Berikutnya
       </button>

@@ -30,7 +30,6 @@ import {
 
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
-import { AnimatedCard } from "../../components/AnimatedCard";
 import { formatDateWITA } from "../../utils/date";
 import type { Pesanan } from "../../types/api";
 
@@ -220,14 +219,14 @@ export function AdminRevenuePage() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-          <AlertCircle className="h-6 w-6 text-red-600" />
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-rose-500/40 dark:bg-rose-500/5">
+        <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-rose-500/20">
+          <AlertCircle className="h-6 w-6 text-red-600 dark:text-rose-200" />
         </div>
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
           Gagal memuat data pendapatan
         </h2>
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <p className="mt-2 text-sm text-red-600 dark:text-rose-200">{error}</p>
       </div>
     );
   }
@@ -554,16 +553,21 @@ export function AdminRevenuePage() {
   };
 
   return (
-    <div className="space-y-8 pb-8">
-      <div className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 pb-3 pt-1">
+    <div className="space-y-8 pb-8 bg-slate-50 dark:bg-slate-950">
+      <div className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 pb-3 pt-1 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">
-              Ringkasan Pendapatan
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Analitik performa finansial
-            </p>
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-50">
+                Ringkasan Pendapatan
+              </h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                Analitik performa finansial
+              </p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
@@ -575,7 +579,7 @@ export function AdminRevenuePage() {
                   id="year-filter-revenue"
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
-                  className="h-9 rounded-full border border-slate-300 bg-white pl-9 pr-4 text-xs font-medium text-slate-900 focus:border-blue-600 focus:outline-none"
+                  className="h-9 rounded-full border border-slate-300 bg-white pl-9 pr-4 text-xs font-medium text-slate-900 focus:border-blue-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   title="Filter berdasarkan tahun"
                   aria-label="Filter pendapatan berdasarkan tahun"
                 >
@@ -595,7 +599,7 @@ export function AdminRevenuePage() {
                   id="month-filter-revenue"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="h-9 rounded-full border border-slate-300 bg-white pl-9 pr-4 text-xs font-medium text-slate-900 focus:border-blue-600 focus:outline-none"
+                  className="h-9 rounded-full border border-slate-300 bg-white pl-9 pr-4 text-xs font-medium text-slate-900 focus:border-blue-600 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   title="Filter berdasarkan bulan"
                   aria-label="Filter pendapatan berdasarkan bulan"
                 >
@@ -610,7 +614,7 @@ export function AdminRevenuePage() {
             </div>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             >
               <Filter className="h-4 w-4" />
               <span>Filter</span>
@@ -618,7 +622,7 @@ export function AdminRevenuePage() {
             <button
               type="button"
               onClick={handleExportPdf}
-              className="inline-flex items-center gap-1.5 rounded-full border border-blue-600 bg-white px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--color-primary)] bg-white px-3 py-1.5 text-xs font-medium text-[color:var(--color-primary)] hover:bg-[color:var(--color-primary-soft)] dark:border-[color:var(--color-primary)]/70 dark:bg-slate-950 dark:text-[color:var(--color-primary)]"
             >
               <Download className="h-4 w-4" />
               <span>Export PDF</span>
@@ -633,22 +637,22 @@ export function AdminRevenuePage() {
           return (
             <div
               key={card.id}
-              className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   {card.label}
                 </div>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                   <Icon className="h-4 w-4" />
                 </div>
               </div>
-              <div className="mt-3 text-2xl font-bold leading-snug text-slate-900 sm:text-3xl">
+              <div className="mt-3 text-xl font-semibold leading-snug text-slate-900 sm:text-2xl dark:text-slate-50">
                 {card.value}
               </div>
-            {card.change ? (
+            {card.change && (
               <div
-                className={`mt-2 inline-flex items-center text-xs font-medium ${
+                className={`mt-2 inline-flex items-center text-[11px] font-medium ${
                   card.change.direction === "up"
                     ? "text-green-600"
                     : "text-red-600"
@@ -664,10 +668,6 @@ export function AdminRevenuePage() {
                   {card.change.percent.toFixed(1)}% vs bulan lalu
                 </span>
               </div>
-            ) : (
-              <div className="mt-2 text-xs text-slate-400">
-                Belum ada data pembanding
-              </div>
             )}
             </div>
           );
@@ -675,16 +675,16 @@ export function AdminRevenuePage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6 dark:border-slate-800">
             <div>
-              <h2 className="text-lg font-medium text-slate-900">
+              <h2 className="text-lg font-medium text-slate-900 dark:text-slate-50">
                 Tren Pendapatan
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {getSelectedPeriodLabel()}
                 {selectedPeriodRevenue !== null && (
-                  <span className="ml-1 font-semibold text-slate-700">
+                  <span className="ml-1 font-semibold text-slate-700 dark:text-slate-200">
                     · Rp {selectedPeriodRevenue.toLocaleString("id-ID")}
                   </span>
                 )}
@@ -693,7 +693,7 @@ export function AdminRevenuePage() {
           </div>
           <div className="px-4 py-4 sm:px-6 sm:py-5">
             {filteredMonthlyData.length === 0 ? (
-              <div className="flex h-64 items-center justify-center text-sm text-slate-500">
+              <div className="flex h-64 items-center justify-center text-sm text-slate-500 dark:text-slate-400">
                 Tidak ada data pendapatan untuk periode ini
               </div>
             ) : (
@@ -750,17 +750,17 @@ export function AdminRevenuePage() {
                     <Area
                       type="monotone"
                       dataKey="revenue"
-                      stroke="#2563eb"
+                      stroke="var(--color-primary)"
                       strokeWidth={2}
                       fill="none"
                       dot={{
                         r: 3,
-                        stroke: "#2563eb",
+                        stroke: "var(--color-primary)",
                         strokeWidth: 1,
                       }}
                       activeDot={{
                         r: 5,
-                        stroke: "#1d4ed8",
+                        stroke: "var(--color-primary-hover)",
                         strokeWidth: 1,
                         fill: "#ffffff",
                       }}
@@ -772,18 +772,18 @@ export function AdminRevenuePage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-4 py-3 sm:px-6">
-            <h2 className="text-lg font-medium text-slate-900">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <div className="border-b border-slate-200 px-4 py-3 sm:px-6 dark:border-slate-800">
+            <h2 className="text-lg font-medium text-slate-900 dark:text-slate-50">
               Status Pesanan
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Distribusi pesanan berdasarkan status
             </p>
           </div>
           <div className="space-y-4 px-4 py-4 sm:px-6 sm:py-5">
             {totalStatusOrders === 0 ? (
-              <div className="flex h-40 items-center justify-center text-sm text-slate-500">
+              <div className="flex h-40 items-center justify-center text-sm text-slate-500 dark:text-slate-400">
                 Belum ada data pesanan
               </div>
             ) : (
@@ -798,14 +798,14 @@ export function AdminRevenuePage() {
                   return (
                     <div key={entry.status} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-slate-700">
+                        <span className="font-medium text-slate-700 dark:text-slate-100">
                           {entry.status}
                         </span>
-                        <span className="text-slate-500">
+                        <span className="text-slate-500 dark:text-slate-400">
                           {percentage}% · {entry.count} pesanan
                         </span>
                       </div>
-                      <div className="h-2 rounded-full bg-slate-100">
+                      <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-2 rounded-full"
                           style={{
@@ -817,11 +817,11 @@ export function AdminRevenuePage() {
                     </div>
                   );
                 })}
-                <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-3 text-xs">
-                  <span className="font-medium text-slate-600">
+                <div className="mt-2 flex items-center justify-between border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+                  <span className="font-medium text-slate-600 dark:text-slate-200">
                     Total pesanan
                   </span>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
                     {totalStatusOrders}
                   </span>
                 </div>

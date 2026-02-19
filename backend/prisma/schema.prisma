@@ -106,6 +106,8 @@ model Admin {
 
   // Relationships
   pesanan Pesanan[]
+
+  theme_settings Json?
 }
 
 model CleanerProfile {

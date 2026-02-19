@@ -252,14 +252,14 @@ export function AdminOrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[calc(100vh-80px)] flex-col bg-slate-50">
-        <div className="sticky top-0 z-20 border-b border-slate-200 bg-white px-3 py-3 sm:px-4">
+      <div className="flex min-h-[calc(100vh-80px)] flex-col bg-slate-50 dark:bg-slate-950">
+        <div className="sticky top-0 z-20 border-b border-slate-200 bg-white px-3 py-3 sm:px-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-slate-200" />
+            <div className="h-9 w-9 rounded-full bg-slate-200 dark:bg-slate-700" />
             <div className="flex-1 space-y-1">
-              <div className="h-3 w-24 rounded bg-slate-200" />
-              <div className="h-4 w-40 rounded bg-slate-200" />
-              <div className="h-3 w-56 rounded bg-slate-100" />
+              <div className="h-3 w-24 rounded bg-slate-200 dark:bg-slate-700" />
+              <div className="h-4 w-40 rounded bg-slate-200 dark:bg-slate-700" />
+              <div className="h-3 w-56 rounded bg-slate-100 dark:bg-slate-800" />
             </div>
           </div>
         </div>
@@ -267,7 +267,7 @@ export function AdminOrderDetailPage() {
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-24 rounded-[14px] border border-slate-200 bg-slate-100"
+              className="h-24 rounded-[14px] border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900"
             />
           ))}
         </div>
@@ -277,17 +277,17 @@ export function AdminOrderDetailPage() {
 
   if (loadError) {
     return (
-      <div className="flex min-h-[calc(100vh-80px)] flex-col bg-slate-50">
-        <div className="sticky top-0 z-20 border-b border-slate-200 bg-white px-3 py-3 sm:px-4">
+      <div className="flex min-h-[calc(100vh-80px)] flex-col bg-slate-50 dark:bg-slate-950">
+        <div className="sticky top-0 z-20 border-b border-slate-200 bg-white px-3 py-3 sm:px-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleBack}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="text-sm font-semibold text-slate-900">
+            <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
               Detail Pesanan
             </div>
           </div>
@@ -295,14 +295,14 @@ export function AdminOrderDetailPage() {
         <div className="flex flex-1 flex-col items-center justify-center px-4">
           <div className="flex flex-col items-center gap-3 text-center">
             <AlertCircle className="h-10 w-10 text-rose-500" />
-            <h2 className="text-base font-semibold text-slate-900">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">
               Tidak dapat memuat detail pesanan
             </h2>
-            <p className="text-xs text-rose-600">{loadError}</p>
+            <p className="text-xs text-rose-600 dark:text-rose-300">{loadError}</p>
             <button
               type="button"
               onClick={handleBack}
-              className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white"
+              className="mt-2 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Kembali ke Pesanan</span>
@@ -316,12 +316,12 @@ export function AdminOrderDetailPage() {
   if (!order) return null;
 
   return (
-    <div className="relative flex min-h-[calc(100vh-80px)] flex-col bg-slate-50">
+    <div className="relative flex min-h-[calc(100vh-80px)] flex-col bg-slate-50 dark:bg-slate-950">
       <OrderSummaryBar order={order} onBack={handleBack} />
 
       <main className="mb-[72px] space-y-4 px-3 py-4 sm:px-4 sm:py-5">
         {actionError && (
-          <div className="flex items-start gap-2 rounded-[10px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 sm:text-sm">
+          <div className="flex items-start gap-2 rounded-[10px] border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 sm:text-sm dark:border-rose-500/60 dark:bg-rose-500/10 dark:text-rose-200">
             <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>{actionError}</span>
           </div>
@@ -414,21 +414,21 @@ function OrderSummaryBar({ order, onBack }: OrderSummaryBarProps) {
   const orderNumber = formatOrderNumber(order.order_number);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95">
       <div className="flex h-16 items-center gap-3 px-3 sm:h-[64px] sm:px-4">
         <button
           type="button"
           onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] font-semibold text-slate-500">
+          <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             Order {orderNumber}
           </div>
           <div className="mt-0.5 flex items-center gap-2">
-            <div className="flex h-7 w-7 flex-shrink-0 overflow-hidden rounded-md bg-slate-100">
+            <div className="flex h-7 w-7 flex-shrink-0 overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
               <img
                 src={getPackageImage(order.paket.name, order.paket.image)}
                 alt={getPackageImageAlt(order.paket.name)}
@@ -436,11 +436,11 @@ function OrderSummaryBar({ order, onBack }: OrderSummaryBarProps) {
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="truncate text-sm font-semibold text-slate-900">
+            <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
               {order.paket.name}
             </div>
           </div>
-          <div className="truncate text-[11px] text-slate-500">
+          <div className="truncate text-[11px] text-slate-500 dark:text-slate-400">
             {order.address}
           </div>
         </div>
@@ -448,7 +448,7 @@ function OrderSummaryBar({ order, onBack }: OrderSummaryBarProps) {
           <span className="inline-flex h-5 items-center rounded-full bg-slate-900 px-2 text-[10px] font-semibold uppercase tracking-wide text-white">
             {order.status}
           </span>
-          <span className="inline-flex h-5 items-center rounded-full border border-slate-200 bg-slate-50 px-2 text-[10px] font-medium text-slate-600">
+          <span className="inline-flex h-5 items-center rounded-full border border-slate-200 bg-slate-50 px-2 text-[10px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <CreditCard className="mr-1 h-3 w-3" />
             {order.pembayaran.status}
           </span>
@@ -460,46 +460,46 @@ function OrderSummaryBar({ order, onBack }: OrderSummaryBarProps) {
 
 function OrderStatusCard({ order }: OrderStatusCardProps) {
   return (
-    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm">
+    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           Ringkasan Order
         </div>
       </div>
       <dl className="grid grid-cols-2 gap-3">
         <div>
-          <dt className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-            <AlertCircle className="h-3.5 w-3.5 text-slate-400" />
+          <dt className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <AlertCircle className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
             Status
           </dt>
-          <dd className="text-xs font-semibold text-slate-900 sm:text-sm">
+          <dd className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             {order.status}
           </dd>
         </div>
         <div>
-          <dt className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-            <CreditCard className="h-3.5 w-3.5 text-slate-400" />
+          <dt className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <CreditCard className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
             Payment
           </dt>
-          <dd className="text-xs font-semibold text-slate-900 sm:text-sm">
+          <dd className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             {order.pembayaran.status} ({order.pembayaran.method})
           </dd>
         </div>
         <div>
-          <dt className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-            <DollarSign className="h-3.5 w-3.5 text-slate-400" />
+          <dt className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <DollarSign className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
             Amount
           </dt>
-          <dd className="text-xs font-semibold text-slate-900 sm:text-sm">
+          <dd className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             Rp {order.pembayaran.amount.toLocaleString("id-ID")}
           </dd>
         </div>
         <div>
-          <dt className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+          <dt className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
             Scheduled
           </dt>
-          <dd className="text-xs font-semibold text-slate-900 sm:text-sm">
+          <dd className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             {formatDateTimeWITA(order.scheduled_date)}
           </dd>
         </div>
@@ -514,24 +514,24 @@ function CustomerCard({ order, onCopy }: CustomerCardProps) {
   const waPhone = phone.replace(/[^\d]/g, "");
 
   return (
-    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm">
+    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-          <User className="h-3.5 w-3.5 text-slate-400" />
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <User className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
           Customer
         </div>
       </div>
       <div className="space-y-2.5">
         <div>
-          <div className="text-[11px] font-medium text-slate-500">Nama</div>
-          <div className="text-xs font-semibold text-slate-900 sm:text-sm">
+          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Nama</div>
+          <div className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             {order.user.full_name}
           </div>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-[11px] font-medium text-slate-500">Nomor WhatsApp</div>
-            <div className="text-xs font-semibold text-slate-900 sm:text-sm">
+            <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Nomor WhatsApp</div>
+            <div className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
               {phone || "-"}
             </div>
           </div>
@@ -563,15 +563,15 @@ function CustomerCard({ order, onCopy }: CustomerCardProps) {
                   "Nomor telepon berhasil disalin, silakan kirimkan ke petugas cleaning.",
                 )
               }
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             >
               <Copy className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
         <div>
-          <div className="text-[11px] font-medium text-slate-500">Email</div>
-          <div className="truncate text-xs font-semibold text-slate-900 sm:text-sm">
+          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Email</div>
+          <div className="truncate text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             {order.user.email || "-"}
           </div>
         </div>
@@ -584,47 +584,47 @@ function SchedulePaymentCard({ order }: SchedulePaymentCardProps) {
   const paymentPending = order.pembayaran.status === "PENDING";
 
   return (
-    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm">
-      <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-        <Calendar className="h-3.5 w-3.5 text-slate-400" />
+    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+      <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
         Jadwal & Pembayaran
       </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
-            <Calendar className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-[11px] font-medium text-slate-500">
+            <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
               Jadwal layanan
             </span>
           </div>
-          <div className="text-xs font-semibold text-slate-900 sm:text-sm">
+          <div className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             {formatDateTimeWITA(order.scheduled_date)}
           </div>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
-            <DollarSign className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-[11px] font-medium text-slate-500">
+            <DollarSign className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
               Total pembayaran
             </span>
           </div>
-          <div className="text-xs font-semibold text-slate-900 sm:text-sm">
+          <div className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             Rp {order.pembayaran.amount.toLocaleString("id-ID")}
           </div>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
-            <CreditCard className="h-3.5 w-3.5 text-slate-400" />
-            <span className="text-[11px] font-medium text-slate-500">
+            <CreditCard className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
               Status pembayaran
             </span>
           </div>
-          <div className="text-xs font-semibold text-slate-900 sm:text-sm">
+          <div className="text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
             {order.pembayaran.status}
           </div>
         </div>
         {paymentPending && (
-          <div className="mt-2 rounded-[12px] border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
+          <div className="mt-2 rounded-[12px] border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 dark:border-amber-500/60 dark:bg-amber-500/10 dark:text-amber-200">
             Pembayaran masih pending. Pastikan status pembayaran sebelum
             menandai pesanan sebagai selesai.
           </div>
@@ -645,17 +645,17 @@ function LocationCard({
   const hasLocation = Boolean(location);
 
   return (
-    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm">
+    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-          <MapPin className="h-3.5 w-3.5 text-slate-400" />
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <MapPin className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
           Lokasi
         </div>
         {hasLocation && (
           <button
             type="button"
             onClick={onToggle}
-            className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700"
+              className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           >
             {expanded ? "Sembunyikan peta" : "Lihat peta"}
           </button>
@@ -663,17 +663,19 @@ function LocationCard({
       </div>
       <div className="space-y-3">
         <div className="flex items-start gap-2">
-          <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
-          <p className="text-xs text-slate-800 sm:text-sm">{order.address}</p>
+          <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-slate-400 dark:text-slate-400" />
+          <p className="text-xs text-slate-800 sm:text-sm dark:text-slate-100">
+            {order.address}
+          </p>
         </div>
         {hasLocation && (
           <div className="space-y-2">
             {googleMapsLink && (
-              <div className="rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
-                <div className="mb-1 font-medium text-slate-500">
+              <div className="rounded-[10px] border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                <div className="mb-1 font-medium text-slate-500 dark:text-slate-400">
                   Link Google Maps
                 </div>
-                <div className="break-all text-[11px] text-slate-700">
+                <div className="break-all text-[11px] text-slate-700 dark:text-slate-200">
                   {googleMapsLink}
                 </div>
               </div>
@@ -689,7 +691,7 @@ function LocationCard({
                         "Link berhasil disalin, silakan kirimkan ke petugas cleaning.",
                       )
                     }
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white sm:flex-none sm:px-4"
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white sm:flex-none sm:px-4 dark:bg-slate-100 dark:text-slate-900"
                   >
                     <Copy className="h-3.5 w-3.5" />
                     Salin link
@@ -698,7 +700,7 @@ function LocationCard({
                     href={googleMapsLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-[11px] font-semibold text-slate-800 sm:flex-none sm:px-4"
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-[11px] font-semibold text-slate-800 sm:flex-none sm:px-4 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     Buka di Maps
@@ -709,7 +711,7 @@ function LocationCard({
           </div>
         )}
         {expanded && location && (
-          <div className="mt-3 overflow-hidden rounded-[12px] border border-slate-200">
+          <div className="mt-3 overflow-hidden rounded-[12px] border border-slate-200 dark:border-slate-800">
             <OrderLocationMap location={location} />
           </div>
         )}
@@ -727,15 +729,15 @@ function PhotoSection({
   const firstAfter = afterUrls[0];
 
   return (
-    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm">
-      <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-        <Camera className="h-3.5 w-3.5 text-slate-400" />
+    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+      <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <Camera className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
         Room Photos
       </div>
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <button
           type="button"
-          className="flex flex-col rounded-[12px] border border-slate-200 bg-slate-50 p-2 text-left"
+          className="flex flex-col rounded-[12px] border border-slate-200 bg-slate-50 p-2 text-left dark:border-slate-700 dark:bg-slate-900"
           onClick={() =>
             firstBefore &&
             onOpenPhoto({
@@ -745,7 +747,7 @@ function PhotoSection({
           }
         >
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-medium text-slate-600">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
               Before
             </span>
             {beforeUrls.length > 1 && (
@@ -759,10 +761,10 @@ function PhotoSection({
               src={firstBefore}
               alt="Before cleaning"
               loading="lazy"
-              className="aspect-video w-full rounded-[10px] border border-slate-200 object-cover"
+              className="aspect-video w-full rounded-[10px] border border-slate-200 object-cover dark:border-slate-800"
             />
           ) : (
-            <div className="flex aspect-video w-full items-center justify-center rounded-[10px] border border-dashed border-slate-300 text-[11px] text-slate-400">
+            <div className="flex aspect-video w-full items-center justify-center rounded-[10px] border border-dashed border-slate-300 text-[11px] text-slate-400 dark:border-slate-600 dark:text-slate-500">
               No photo
             </div>
           )}
@@ -770,7 +772,7 @@ function PhotoSection({
 
         <button
           type="button"
-          className="flex flex-col rounded-[12px] border border-slate-200 bg-slate-50 p-2 text-left"
+          className="flex flex-col rounded-[12px] border border-slate-200 bg-slate-50 p-2 text-left dark:border-slate-700 dark:bg-slate-900"
           onClick={() =>
             firstAfter &&
             onOpenPhoto({
@@ -780,7 +782,7 @@ function PhotoSection({
           }
         >
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-[11px] font-medium text-slate-600">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
               After
             </span>
             {afterUrls.length > 1 && (
@@ -794,10 +796,10 @@ function PhotoSection({
               src={firstAfter}
               alt="After cleaning"
               loading="lazy"
-              className="aspect-video w-full rounded-[10px] border border-slate-200 object-cover"
+              className="aspect-video w-full rounded-[10px] border border-slate-200 object-cover dark:border-slate-800"
             />
           ) : (
-            <div className="flex aspect-video w-full items-center justify-center rounded-[10px] border border-dashed border-slate-300 text-[11px] text-slate-400">
+            <div className="flex aspect-video w-full items-center justify-center rounded-[10px] border border-dashed border-slate-300 text-[11px] text-slate-400 dark:border-slate-600 dark:text-slate-500">
               <div className="text-center">
                 <div>Foto akan diunggah oleh pengguna</div>
                 <div className="mt-1 text-[10px]">setelah pesanan selesai</div>
@@ -812,36 +814,40 @@ function PhotoSection({
 
 function FeedbackCard({ order }: FeedbackCardProps) {
   return (
-    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm">
-      <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-        <Star className="h-3.5 w-3.5 text-slate-400" />
+    <section className="rounded-[14px] border border-slate-200 bg-white px-3 py-3.5 text-xs text-slate-700 sm:px-4 sm:py-4 sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+      <div className="mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <Star className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
         Ulasan Pelanggan
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5">
-          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-            <Star className="h-3.5 w-3.5 text-slate-400" />
+        <div className="rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/60">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <Star className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
             Rating
           </div>
           {order.rating ? (
-            <div className="text-sm font-semibold text-slate-900">
+            <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
               {order.rating.rating_value}/5
             </div>
           ) : (
-            <div className="text-[11px] text-slate-400">Belum ada rating</div>
+            <div className="text-[11px] text-slate-400 dark:text-slate-500">
+              Belum ada rating
+            </div>
           )}
         </div>
-        <div className="rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5">
-          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-            <Gift className="h-3.5 w-3.5 text-slate-400" />
+        <div className="rounded-[12px] border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/60">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <Gift className="h-3.5 w-3.5 text-slate-400 dark:text-slate-400" />
             Tip
           </div>
           {order.tip ? (
-            <div className="text-sm font-semibold text-slate-900">
+            <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
               Rp {order.tip.amount.toLocaleString("id-ID")}
             </div>
           ) : (
-            <div className="text-[11px] text-slate-400">Belum ada tip</div>
+            <div className="text-[11px] text-slate-400 dark:text-slate-500">
+              Belum ada tip
+            </div>
           )}
         </div>
       </div>
@@ -862,7 +868,7 @@ function OrderActionBar({
   const disableComplete = busyAction !== null || isCompleted;
 
   return (
-    <div className="fixed inset-x-0 bottom-[64px] z-50 border-t border-slate-200 bg-white/95 px-3 py-2.5 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] sm:bottom-0 sm:px-4">
+    <div className="fixed inset-x-0 bottom-[64px] z-50 border-t border-slate-200 bg-white/95 px-3 py-2.5 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] sm:bottom-0 sm:px-4 dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-[0_-4px_18px_rgba(15,23,42,0.7)]">
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -885,7 +891,7 @@ function OrderActionBar({
           type="button"
           onClick={onMarkCompleted}
           disabled={disableComplete}
-          className="hidden min-w-[130px] items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2.5 text-xs font-semibold text-slate-900 sm:inline-flex sm:px-4 sm:text-sm disabled:opacity-60"
+          className="hidden min-w-[130px] items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2.5 text-xs font-semibold text-slate-900 sm:inline-flex sm:px-4 sm:text-sm disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
           {busyAction === "complete" ? (
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-400/60 border-t-slate-700" />
@@ -898,7 +904,7 @@ function OrderActionBar({
           type="button"
           onClick={onDelete}
           disabled={busyAction === "delete"}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 disabled:opacity-60"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 disabled:opacity-60 dark:border-rose-500/60 dark:bg-rose-500/10 dark:text-rose-200"
         >
           {busyAction === "delete" ? (
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rose-300/70 border-t-rose-600" />

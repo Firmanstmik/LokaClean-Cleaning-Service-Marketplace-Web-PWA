@@ -5,18 +5,10 @@
 
 */
 -- AlterEnum
-BEGIN;
-  ALTER TYPE "OrderStatus" ADD VALUE IF NOT EXISTS 'CANCELLED';
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END;
+ALTER TYPE "OrderStatus" ADD VALUE 'CANCELLED';
 
 -- AlterEnum
-BEGIN;
-  ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'CLEANER';
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END;
+ALTER TYPE "Role" ADD VALUE 'CLEANER';
 
 -- DropIndex
 DROP INDEX "cleaner_location_idx";

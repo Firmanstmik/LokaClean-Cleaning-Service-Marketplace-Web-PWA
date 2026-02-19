@@ -30,6 +30,7 @@ import { AdminPackagesPage } from "./pages/admin/AdminPackages";
 import { AdminUsersPage } from "./pages/admin/AdminUsers";
 import { AdminRevenuePage } from "./pages/admin/AdminRevenue";
 import { AdminRatingsPage } from "./pages/admin/AdminRatings";
+import { AdminAppearanceSettingsPage } from "./pages/admin/AdminAppearanceSettings";
 
 function NotFound() {
   return (
@@ -106,6 +107,7 @@ export function AppRoutes() {
         <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/admin/revenue" element={<AdminRevenuePage />} />
         <Route path="/admin/ratings" element={<AdminRatingsPage />} />
+        <Route path="/admin/settings/appearance" element={<AdminAppearanceSettingsPage />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
