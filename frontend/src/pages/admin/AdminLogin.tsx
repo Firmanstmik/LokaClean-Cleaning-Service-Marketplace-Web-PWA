@@ -15,6 +15,7 @@ export function AdminLogin() {
   const [error, setError] = useState<string | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -23,6 +24,12 @@ export function AdminLogin() {
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  useEffect(() => {
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const ios = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    setIsIOS(ios);
   }, []);
 
   // Hard separation:
@@ -159,37 +166,32 @@ export function AdminLogin() {
               </button>
             </form>
 
-            <div className="mt-4 sm:mt-5">
-              <button
-                type="button"
-                onClick={() => {
-                  if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult: any) => {
-                      if (choiceResult.outcome === "accepted") {
-                        setDeferredPrompt(null);
-                      }
-                    });
-                  } else {
-                    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-                    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
-
-                    if (isIOS) {
+            {(deferredPrompt || isIOS) && (
+              <div className="mt-4 sm:mt-5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (deferredPrompt) {
+                      deferredPrompt.prompt();
+                      deferredPrompt.userChoice.then((choiceResult: any) => {
+                        if (choiceResult.outcome === "accepted") {
+                          setDeferredPrompt(null);
+                        }
+                      });
+                    } else if (isIOS) {
                       setShowIOSPrompt(true);
-                    } else {
-                      alert("Silakan gunakan menu browser untuk 'Install app' atau 'Add to Home Screen'.");
                     }
-                  }
-                }}
-                className="flex w-full items-center justify-center gap-2 rounded-lg sm:rounded-xl border border-white/20 bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/10 hover:border-white/30"
-              >
-                <Download className="h-4 w-4 text-teal-300" />
-                <span>Install aplikasi admin (mobile)</span>
-              </button>
-              <p className="mt-1.5 text-[10px] sm:text-xs text-slate-300/80">
-                Untuk akses cepat dari homescreen Android atau iOS.
-              </p>
-            </div>
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg sm:rounded-xl border border-white/20 bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/10 hover:border-white/30"
+                >
+                  <Download className="h-4 w-4 text-teal-300" />
+                  <span>Install aplikasi admin (mobile)</span>
+                </button>
+                <p className="mt-1.5 text-[10px] sm:text-xs text-slate-300/80">
+                  Untuk akses cepat dari homescreen Android atau iOS.
+                </p>
+              </div>
+            )}
 
             <div className="mt-5 sm:mt-6 lg:mt-8 border-t border-white/10 pt-4 sm:pt-5 lg:pt-6 text-center">
               <Link
