@@ -100,9 +100,17 @@ export function ProfilePage() {
       }
     } else {
       const nav = navigator as Navigator & { vendor?: string; opera?: string };
-      const userAgent = nav.userAgent || nav.vendor || nav.opera || "";
-      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-      const isAndroid = /android/i.test(userAgent);
+      const ua = nav.userAgent || nav.vendor || nav.opera || "";
+      const isIOS = /iPad|iPhone|iPod/.test(ua);
+      const isAndroid = /android/i.test(ua);
+      const isChrome =
+        /chrome/i.test(ua) && !/edg/i.test(ua) && !/opr/i.test(ua) && !/samsungbrowser/i.test(ua);
+
+      if (isAndroid && !isChrome) {
+        const current = window.location.href.replace(/^https?:\/\//, "");
+        window.location.href = `intent://${current}#Intent;scheme=https;package=com.android.chrome;end`;
+        return;
+      }
 
       if (isIOS) {
         setShowIOSInstallPrompt(true);

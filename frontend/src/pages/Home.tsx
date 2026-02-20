@@ -818,43 +818,18 @@ export function Home() {
           </div>
         </section>
 
-        {/* Premium Login & Install App CTA - Redesigned */}
         <section className="mb-12 sm:mb-24 px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-10%" }}
-            className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-tropical-700 via-ocean-700 to-tropical-800 shadow-[0_20px_60px_-18px_rgba(15,23,42,0.7)] transition-all duration-500 isolate group hover:shadow-[0_0_50px_-12px_rgba(20,184,166,0.35)]"
+            className="relative overflow-hidden rounded-[2.5rem] bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.18),transparent_55%),linear-gradient(135deg,#0A2540,#0F766E)] shadow-[0_28px_80px_rgba(15,23,42,0.9)] ring-1 ring-white/10 transition-all duration-500 isolate group hover:shadow-[0_32px_100px_rgba(15,23,42,1)]"
           >
-            {/* Animated Dashed Border */}
-            <div className="absolute inset-0 z-0 pointer-events-none rounded-[2.5rem]">
-               <svg className="absolute inset-0 w-full h-full" style={{ overflow: 'visible' }}>
-                 <defs>
-                   <linearGradient id="borderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                     <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.4" />
-                     <stop offset="50%" stopColor="#2dd4bf" stopOpacity="1" />
-                     <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.4" />
-                   </linearGradient>
-                 </defs>
-                 <motion.rect
-                   x="2" y="2"
-                   width="calc(100% - 4px)" height="calc(100% - 4px)"
-                   rx="38" ry="38"
-                   fill="none"
-                   stroke="url(#borderGradient)"
-                   strokeWidth="3"
-                   strokeDasharray="20 15"
-                   strokeLinecap="round"
-                   initial={{ strokeDashoffset: 0 }}
-                   animate={{ strokeDashoffset: -1000 }}
-                   transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-                 />
-               </svg>
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(15,23,42,0.9)_100%)] opacity-80 mix-blend-multiply" />
+              <div className="hidden sm:block absolute -top-32 -right-24 w-[26rem] h-[26rem] bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.38),transparent_60%)] opacity-65 blur-3xl mix-blend-screen" />
+              <div className="hidden sm:block absolute -bottom-32 -left-20 w-[24rem] h-[24rem] bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.3),transparent_60%)] opacity-55 blur-3xl mix-blend-screen" />
             </div>
-
-            {/* Animated Background Elements - Optimized for Mobile (Hidden on small screens) */}
-            <div className="hidden sm:block absolute top-0 right-0 -mr-20 -mt-20 w-[30rem] h-[30rem] bg-tropical-500/25 rounded-full blur-[80px] opacity-50 mix-blend-screen group-hover:opacity-70 transition-opacity duration-700" />
-            <div className="hidden sm:block absolute bottom-0 left-0 -ml-20 -mb-20 w-[25rem] h-[25rem] bg-ocean-500/25 rounded-full blur-[80px] opacity-50 mix-blend-screen group-hover:opacity-70 transition-opacity duration-700" />
             
             {/* Noise Texture & Grid Overlay - Hidden on Mobile for Performance */}
             <div className="hidden sm:block absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
@@ -864,7 +839,7 @@ export function Home() {
               
               {/* Left Content */}
               <div className="lg:col-span-7 text-left space-y-5 sm:space-y-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700/50 backdrop-blur-md">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/40 border border-slate-700/60 backdrop-blur-md">
                    <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
@@ -874,9 +849,9 @@ export function Home() {
 
                 <div className="space-y-3 sm:space-y-4 relative">
                   <div className="flex items-center justify-between gap-2 sm:gap-4">
-                     <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight relative z-10">
+                     <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-50 tracking-tight leading-tight relative z-10">
                        {t("home.premiumCTA.title.part1")} <br/>
-                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-400">{t("home.premiumCTA.title.part2")}</span>
+                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2DD4BF] via-[#22D3EE] to-[#2DD4BF]">{t("home.premiumCTA.title.part2")}</span>
                      </h2>
                      
                      {/* Mobile Only Mini 3D Phone - Smaller & Next to Text */}
@@ -919,7 +894,7 @@ export function Home() {
                      </div>
                   </div>
 
-                  <p className="text-slate-400 text-sm sm:text-lg leading-relaxed max-w-lg">
+                  <p className="text-slate-300 text-sm sm:text-lg leading-relaxed max-w-lg">
                     {t("home.premiumCTA.description")}
                   </p>
                 </div>
@@ -927,26 +902,31 @@ export function Home() {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-1 sm:pt-2">
                   <Link
                     to="/login"
-                    className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white text-slate-900 font-bold transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] overflow-hidden"
+                    className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-[14px] sm:rounded-[16px] bg-white text-slate-900 font-bold shadow-[0_8px_24px_rgba(15,23,42,0.15)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(15,23,42,0.3)] overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-teal-50 to-white opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-50 to-white opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                     <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 relative z-10" />
                     <span className="relative z-10 text-sm sm:text-base">{t("home.premiumCTA.buttons.login")}</span>
                   </Link>
                   
                   <button
                     onClick={() => {
-                      const userAgent = navigator.userAgent || navigator.vendor || "";
-                      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-                      const isAndroid = /android/i.test(userAgent);
+                      const ua = navigator.userAgent || navigator.vendor || "";
+                      const isIOS = /iPad|iPhone|iPod/.test(ua);
+                      const isAndroid = /android/i.test(ua);
+                      const isChrome =
+                        /chrome/i.test(ua) && !/edg/i.test(ua) && !/opr/i.test(ua) && !/samsungbrowser/i.test(ua);
 
-                      if (deferredPrompt && isAndroid) {
+                      if (deferredPrompt && isAndroid && isChrome) {
                         deferredPrompt.prompt();
                         deferredPrompt.userChoice.then((choiceResult) => {
                           if (choiceResult.outcome === "accepted") {
                             setDeferredPrompt(null);
                           }
                         });
+                      } else if (isAndroid && !isChrome) {
+                        const current = window.location.href.replace(/^https?:\/\//, "");
+                        window.location.href = `intent://${current}#Intent;scheme=https;package=com.android.chrome;end`;
                       } else if (isIOS) {
                         setShowIOSPrompt(true);
                       } else if (isAndroid) {
@@ -955,9 +935,9 @@ export function Home() {
                         setShowIOSPrompt(true);
                       }
                     }}
-                    className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/5 text-white font-bold backdrop-blur-md border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
+                    className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-[14px] sm:rounded-[16px] bg-white/10 text-slate-50 font-bold backdrop-blur-md border border-white/15 transition-all duration-300 hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5"
                   >
-                    <Download className="w-4 h-4 sm:w-5 sm:h-5 text-teal-400 group-hover/btn:text-teal-300 transition-colors" />
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5 text-teal-300 group-hover/btn:text-teal-200 transition-colors" />
                     <span className="text-sm sm:text-base">{t("home.premiumCTA.buttons.install")}</span>
                   </button>
                 </div>
@@ -973,7 +953,7 @@ export function Home() {
                         +1k
                       </div>
                    </div>
-                   <p className="text-xs text-slate-500 font-medium">{t("home.premiumCTA.socialProof")}</p>
+                   <p className="text-xs text-slate-400 font-medium">{t("home.premiumCTA.socialProof")}</p>
                 </div>
               </div>
 
@@ -986,9 +966,8 @@ export function Home() {
                     className="relative w-64 mx-auto aspect-[9/18]"
                     style={{ transformStyle: "preserve-3d" }}
                  >
-                    <div className="absolute inset-0 bg-slate-900 rounded-[2rem] border-4 border-slate-700/50 shadow-2xl flex flex-col overflow-hidden">
-                        {/* Fake App UI */}
-                        <div className="h-1/3 bg-gradient-to-br from-teal-600 to-emerald-600 p-4 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[#0b192d] rounded-[2rem] border-4 border-slate-800 shadow-2xl shadow-slate-950/90 flex flex-col overflow-hidden">
+                        <div className="h-1/3 bg-gradient-to-br from-slate-800 to-slate-700 p-4 relative overflow-hidden">
                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
                            <div className="flex items-center justify-between mb-4">
                               <div className="w-8 h-8 bg-white/20 rounded-full backdrop-blur-md" />
@@ -999,10 +978,10 @@ export function Home() {
                               <div className="w-1/2 h-3 bg-white/10 rounded-full" />
                            </div>
                         </div>
-                        <div className="flex-1 bg-slate-800 p-4 space-y-3">
-                           <div className="h-20 bg-slate-700/50 rounded-xl animate-pulse" />
-                           <div className="h-20 bg-slate-700/50 rounded-xl animate-pulse delay-75" />
-                           <div className="h-20 bg-slate-700/50 rounded-xl animate-pulse delay-150" />
+                        <div className="flex-1 bg-slate-900 p-4 space-y-3">
+                           <div className="h-20 bg-slate-800/70 rounded-xl" />
+                           <div className="h-20 bg-slate-800/70 rounded-xl" />
+                           <div className="h-20 bg-slate-800/70 rounded-xl" />
                         </div>
                         
                         {/* Reflection */}
@@ -1013,22 +992,22 @@ export function Home() {
                     <motion.div 
                       animate={{ y: [0, -10, 0] }}
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute -right-8 top-1/4 p-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg"
+                      className="absolute -right-8 top-1/4 p-3 bg-white/12 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg"
                     >
-                       <Zap className="w-6 h-6 text-yellow-400 fill-yellow-400" />
+                       <Zap className="w-6 h-6 text-yellow-300 fill-yellow-300" />
                     </motion.div>
                     
                     <motion.div 
                       animate={{ y: [0, 10, 0] }}
                       transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                      className="absolute -left-8 bottom-1/3 p-3 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg"
+                      className="absolute -left-8 bottom-1/3 p-3 bg-white/12 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg"
                     >
-                       <Shield className="w-6 h-6 text-teal-400" />
+                       <Shield className="w-6 h-6 text-teal-300" />
                     </motion.div>
                  </motion.div>
                  
                  {/* Glow behind */}
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-teal-500/30 blur-[60px] -z-10 rounded-full" />
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.36),transparent_65%)] blur-[70px] -z-10 rounded-full" />
               </div>
 
             </div>

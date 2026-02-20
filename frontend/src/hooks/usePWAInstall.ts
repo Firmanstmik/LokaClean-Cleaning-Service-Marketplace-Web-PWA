@@ -9,7 +9,6 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-const INSTALL_DISMISSED_KEY = "lokaclean_install_banner_dismissed_at";
 const PWA_INSTALLED_KEY = "lokaclean_pwa_installed";
 
 function getPlatform(): InstallPlatform {
@@ -76,15 +75,7 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const dismissedRecently = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const raw = window.localStorage.getItem(INSTALL_DISMISSED_KEY);
-    if (!raw) return false;
-    const ts = Number(raw);
-    if (!Number.isFinite(ts)) return false;
-    const days = (Date.now() - ts) / (1000 * 60 * 60 * 24);
-    return days < 7;
-  }, []);
+  const dismissedRecently = false;
 
   const isInstallable =
     !!deferredPrompt && !installed && !dismissedRecently && platform === "android-chrome";
@@ -121,9 +112,6 @@ export function usePWAInstall() {
 
   const dismissBanner = () => {
     setBannerVisible(false);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(INSTALL_DISMISSED_KEY, String(Date.now()));
-    }
     trackEvent("install_dismissed");
   };
 
