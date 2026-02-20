@@ -27,6 +27,7 @@ import { AdminNotificationContainer } from "./AdminNotificationToast";
 import { playOrderNotificationSound } from "../utils/sound";
 import { speakNotification, isSpeechSynthesisSupported } from "../utils/textToSpeech";
 import { AdminThemeProvider, useAdminTheme } from "./admin/AdminThemeContext";
+import { connectSocket } from "../lib/socket";
 
 export function AdminLayout() {
   return (
@@ -82,7 +83,163 @@ function AdminLayoutInner() {
   const notificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 
-  // Fetch pending orders count and latest order
+  const triggerOrderNotification = useCallback(
+    (order: { id: number; user_name: string; paket_name: string }) => {
+      console.log(
+        "[Admin Notifications] New order detected:",
+        order.id,
+        order.user_name,
+        order.paket_name
+      );
+      setLatestOrderId(order.id);
+      setLatestUserName(order.user_name);
+      setLatestPaketName(order.paket_name);
+      setShowNotification(true);
+
+      console.log("[Admin Notifications] Playing sound...");
+      playOrderNotificationSound().catch((err) => {
+        console.warn("[Admin Notifications] Failed to play sound:", err);
+      });
+
+      const notificationText = `Pesanan baru dari ${order.user_name} untuk paket ${order.paket_name}`;
+      console.log(
+        "[Admin Notifications] Will speak notification after delay:",
+        notificationText
+      );
+
+      if (isSpeechSynthesisSupported()) {
+        setTimeout(() => {
+          console.log(
+            "[Admin Notifications] Speaking notification now:",
+            notificationText
+          );
+          try {
+            speakNotification(notificationText, "id")
+              .then(() => {
+                console.log(
+                  "[Admin Notifications] TTS completed successfully"
+                );
+              })
+              .catch((err) => {
+                console.error(
+                  "[Admin Notifications] Failed to speak notification:",
+                  err
+                );
+                setTimeout(() => {
+                  console.log("[Admin Notifications] Retrying TTS...");
+                  speakNotification(notificationText, "id").catch(
+                    (retryErr) => {
+                      console.error(
+                        "[Admin Notifications] TTS retry also failed:",
+                        retryErr
+                      );
+                    }
+                  );
+                }, 500);
+              });
+          } catch (err) {
+            console.error(
+              "[Admin Notifications] Error calling speakNotification:",
+              err
+            );
+          }
+        }, 600);
+      } else {
+        console.warn(
+          "[Admin Notifications] TTS not supported in this browser"
+        );
+      }
+
+      if (typeof window !== "undefined" && "Notification" in window) {
+        if (Notification.permission === "granted") {
+          const title = "Pesanan Baru Masuk";
+          const body = `${order.user_name} membuat pesanan baru: ${order.paket_name}`;
+          try {
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.ready
+                .then((registration) => {
+                  registration.showNotification(title, {
+                    body,
+                    icon: "/img/Logo_LokaClean_fixed.jpg",
+                    badge: "/img/Logo_LokaClean_fixed.jpg",
+                    tag: `admin-order-${order.id}`,
+                    requireInteraction: false,
+                    data: {
+                      url: `/admin/orders/${order.id}`,
+                      orderId: order.id,
+                    },
+                    silent: false,
+                    renotify: false,
+                  } as NotificationOptions);
+                })
+                .catch(() => {
+                  const browserNotification = new Notification(title, {
+                    body,
+                    icon: "/img/Logo_LokaClean_fixed.jpg",
+                    badge: "/img/Logo_LokaClean_fixed.jpg",
+                    tag: `admin-order-${order.id}`,
+                    requireInteraction: false,
+                    data: {
+                      url: `/admin/orders/${order.id}`,
+                      orderId: order.id,
+                    },
+                    silent: false,
+                    renotify: false,
+                  } as NotificationOptions);
+
+                  browserNotification.onclick = () => {
+                    window.focus();
+                    navigate(`/admin/orders/${order.id}`);
+                    browserNotification.close();
+                  };
+                });
+            } else {
+              const browserNotification = new Notification(title, {
+                body,
+                icon: "/img/Logo_LokaClean_fixed.jpg",
+                badge: "/img/Logo_LokaClean_fixed.jpg",
+                tag: `admin-order-${order.id}`,
+                requireInteraction: false,
+                data: {
+                  url: `/admin/orders/${order.id}`,
+                  orderId: order.id,
+                },
+                silent: false,
+                renotify: false,
+              } as NotificationOptions);
+
+              browserNotification.onclick = () => {
+                window.focus();
+                navigate(`/admin/orders/${order.id}`);
+                browserNotification.close();
+              };
+            }
+          } catch (err) {
+            console.warn(
+              "[Admin Notifications] Failed to show browser notification:",
+              err
+            );
+          }
+        } else if (Notification.permission === "default") {
+          Notification.requestPermission().then((permission) => {
+            console.log(
+              "[Admin Notifications] Notification permission:",
+              permission
+            );
+          });
+        }
+      }
+
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+      notificationTimeoutRef.current = setTimeout(() => {
+        setShowNotification(false);
+      }, 8000);
+    },
+    [navigate]
+  );
+
   const fetchPendingOrders = useCallback(async () => {
     try {
       const resp = await api.get("/admin/orders/pending-count");
@@ -91,146 +248,20 @@ function AdminLayoutInner() {
       const numericCount = typeof count === "number" ? count : Number(count) || 0;
       setPendingCount(numericCount > 0 ? numericCount : 0);
       
-      // Check for new order
       if (latestOrder && latestOrder.id !== previousOrderIdRef.current) {
-        // This is a new order
         if (previousOrderIdRef.current !== null) {
-          // Not the first load, show notification
-          console.log('[Admin Notifications] New order detected:', latestOrder.id, latestOrder.user_name, latestOrder.paket_name);
-          setLatestOrderId(latestOrder.id);
-          setLatestUserName(latestOrder.user_name);
-          setLatestPaketName(latestOrder.paket_name);
-          setShowNotification(true);
-          
-          // Play sound effect for new notification (real-time)
-          console.log('[Admin Notifications] Playing sound...');
-          playOrderNotificationSound().catch(err => {
-            console.warn('[Admin Notifications] Failed to play sound:', err);
+          triggerOrderNotification({
+            id: latestOrder.id,
+            user_name: latestOrder.user_name,
+            paket_name: latestOrder.paket_name,
           });
-          
-          // Speak notification text using AI Text-to-Speech after sound plays
-          // Delay TTS to let sound notification play first
-          const notificationText = `Pesanan baru dari ${latestOrder.user_name} untuk paket ${latestOrder.paket_name}`;
-          console.log('[Admin Notifications] Will speak notification after delay:', notificationText);
-          
-          // Check if TTS is supported before attempting to speak
-          if (isSpeechSynthesisSupported()) {
-            // Use a timeout to ensure TTS is called after sound plays
-            setTimeout(() => {
-              console.log('[Admin Notifications] Speaking notification now:', notificationText);
-              try {
-                speakNotification(notificationText, 'id')
-                  .then(() => {
-                    console.log('[Admin Notifications] TTS completed successfully');
-                  })
-                  .catch(err => {
-                    console.error('[Admin Notifications] Failed to speak notification:', err);
-                    // Retry once after a short delay if first attempt fails
-                    setTimeout(() => {
-                      console.log('[Admin Notifications] Retrying TTS...');
-                      speakNotification(notificationText, 'id').catch(retryErr => {
-                        console.error('[Admin Notifications] TTS retry also failed:', retryErr);
-                      });
-                    }, 500);
-                  });
-              } catch (err) {
-                console.error('[Admin Notifications] Error calling speakNotification:', err);
-              }
-            }, 600); // Delay to let sound notification play first
-          } else {
-            console.warn('[Admin Notifications] TTS not supported in this browser');
-          }
-
-          // Browser notification (Chrome/mobile/desktop)
-          if (typeof window !== "undefined" && "Notification" in window) {
-            if (Notification.permission === "granted") {
-              const title = "Pesanan Baru Masuk";
-              const body = `${latestOrder.user_name} membuat pesanan baru: ${latestOrder.paket_name}`;
-              try {
-                if ("serviceWorker" in navigator) {
-                  navigator.serviceWorker.ready
-                    .then((registration) => {
-                      registration.showNotification(title, {
-                        body,
-                        icon: "/img/Logo_LokaClean_fixed.jpg",
-                        badge: "/img/Logo_LokaClean_fixed.jpg",
-                        tag: `admin-order-${latestOrder.id}`,
-                        requireInteraction: false,
-                        data: {
-                          url: `/admin/orders/${latestOrder.id}`,
-                          orderId: latestOrder.id
-                        },
-                        silent: false,
-                        renotify: false
-                      } as NotificationOptions);
-                    })
-                    .catch(() => {
-                      const browserNotification = new Notification(title, {
-                        body,
-                        icon: "/img/Logo_LokaClean_fixed.jpg",
-                        badge: "/img/Logo_LokaClean_fixed.jpg",
-                        tag: `admin-order-${latestOrder.id}`,
-                        requireInteraction: false,
-                        data: {
-                          url: `/admin/orders/${latestOrder.id}`,
-                          orderId: latestOrder.id
-                        },
-                        silent: false,
-                        renotify: false
-                      } as NotificationOptions);
-
-                      browserNotification.onclick = () => {
-                        window.focus();
-                        navigate(`/admin/orders/${latestOrder.id}`);
-                        browserNotification.close();
-                      };
-                    });
-                } else {
-                  const browserNotification = new Notification(title, {
-                    body,
-                    icon: "/img/Logo_LokaClean_fixed.jpg",
-                    badge: "/img/Logo_LokaClean_fixed.jpg",
-                    tag: `admin-order-${latestOrder.id}`,
-                    requireInteraction: false,
-                    data: {
-                      url: `/admin/orders/${latestOrder.id}`,
-                      orderId: latestOrder.id
-                    },
-                    silent: false,
-                    renotify: false
-                  } as NotificationOptions);
-
-                  browserNotification.onclick = () => {
-                    window.focus();
-                    navigate(`/admin/orders/${latestOrder.id}`);
-                    browserNotification.close();
-                  };
-                }
-              } catch (err) {
-                console.warn("[Admin Notifications] Failed to show browser notification:", err);
-              }
-            } else if (Notification.permission === "default") {
-              Notification.requestPermission().then((permission) => {
-                console.log("[Admin Notifications] Notification permission:", permission);
-              });
-            }
-          }
-          
-          // Auto-hide notification after 8 seconds
-          if (notificationTimeoutRef.current) {
-            clearTimeout(notificationTimeoutRef.current);
-          }
-          notificationTimeoutRef.current = setTimeout(() => {
-            setShowNotification(false);
-          }, 8000);
         }
-        
         previousOrderIdRef.current = latestOrder.id;
       }
     } catch (err) {
-      console.error('[Admin Notifications] Failed to fetch:', err);
+      console.error("[Admin Notifications] Failed to fetch:", err);
     }
-  }, [navigate]);
+  }, [triggerOrderNotification]);
 
   // Setup polling for pending orders (every 5 seconds)
   useEffect(() => {
@@ -251,6 +282,46 @@ function AdminLayoutInner() {
       }
     };
   }, [fetchPendingOrders]);
+
+  useEffect(() => {
+    const socket = connectSocket();
+    socket.emit("join_admin");
+
+    const handleAdminNewOrder = (payload: { order?: any }) => {
+      try {
+        const order = payload?.order;
+        if (!order) return;
+        const orderId = Number(order.id);
+        if (!orderId || orderId === previousOrderIdRef.current) return;
+        previousOrderIdRef.current = orderId;
+
+        const userName =
+          order.user?.full_name ||
+          order.user_name ||
+          "Customer";
+        const paketName =
+          order.paket?.name ||
+          order.paket_name ||
+          "Paket Cleaning";
+
+        setPendingCount((prev) => prev + 1);
+
+        triggerOrderNotification({
+          id: orderId,
+          user_name: userName,
+          paket_name: paketName,
+        });
+      } catch (err) {
+        console.warn("[Admin Notifications] Failed to handle socket new order:", err);
+      }
+    };
+
+    socket.on("admin_new_order", handleAdminNewOrder);
+
+    return () => {
+      socket.off("admin_new_order", handleAdminNewOrder);
+    };
+  }, [triggerOrderNotification]);
 
   const handleCloseNotification = () => {
     setShowNotification(false);
