@@ -321,7 +321,7 @@ function AdminLayoutInner() {
             {pendingCount > 0 && (
               <button
                 type="button"
-                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 shadow-sm sm:h-10 sm:w-10 dark:border-amber-500/60 dark:bg-amber-500/10 dark:text-amber-200"
+                className="relative hidden h-9 w-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 shadow-sm sm:flex sm:h-10 sm:w-10 dark:border-amber-500/60 dark:bg-amber-500/10 dark:text-amber-200"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate("/admin/orders?filter=PENDING");
@@ -452,14 +452,14 @@ function AdminBottomNavItem({ to, label, icon: Icon, badge }: AdminBottomNavItem
             className={`relative flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium transition-all ${
               isActive
                 ? "bg-slate-900 text-white shadow-md shadow-slate-900/30 dark:bg-slate-100 dark:text-slate-900 dark:shadow-none"
-                : "bg-slate-50 text-slate-500 dark:bg-slate-900 dark:text-[color:var(--color-primary)]"
+                : "bg-slate-50 text-slate-500 dark:bg-slate-900 dark:text-tropical-400"
             }`}
           >
             <Icon
               className={`h-4 w-4 transition-colors ${
                 isActive
                   ? "text-white dark:text-slate-900"
-                  : "text-slate-500 dark:text-[color:var(--color-primary)]"
+                  : "text-slate-500 dark:text-tropical-400"
               }`}
             />
             {badge && badge > 0 && (
@@ -471,8 +471,8 @@ function AdminBottomNavItem({ to, label, icon: Icon, badge }: AdminBottomNavItem
           <span
             className={`text-[10px] font-medium ${
               isActive
-                ? "text-slate-900 dark:text-slate-100"
-                : "text-slate-500 dark:text-[color:var(--color-primary)]"
+                ? "text-tropical-600 dark:text-tropical-400"
+                : "text-slate-500 dark:text-tropical-300"
             }`}
           >
             {label}
