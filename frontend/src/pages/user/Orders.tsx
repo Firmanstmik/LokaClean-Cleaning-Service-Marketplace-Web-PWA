@@ -171,13 +171,14 @@ export function OrdersPage() {
             </div>
             <h3 className="text-lg font-bold text-slate-800 mb-2">{t("orders.empty.title")}</h3>
             <p className="text-slate-500 text-sm mb-6">{t("orders.empty.subtitle")}</p>
-            <Link 
-              to="/packages" 
+            <button 
+              type="button"
+              onClick={() => navigate("/orders/new")}
               className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-colors"
             >
               {t("orders.empty.action")}
               <ArrowLeft className="w-4 h-4 rotate-180" />
-            </Link>
+            </button>
           </div>
         ) : (
           <AnimatePresence mode="popLayout">

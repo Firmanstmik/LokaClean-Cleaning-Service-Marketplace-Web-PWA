@@ -359,7 +359,7 @@ export function UserHomePage() {
           <div className="block lg:hidden">
             <div 
               ref={mobileScrollRef}
-              className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-8 -mx-4 px-4 scrollbar-hide touch-pan-x"
+              className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-8 -mx-4 px-4 scrollbar-hide"
               style={{ WebkitOverflowScrolling: "touch", scrollBehavior: "smooth" }}
               onTouchStart={handleMobileTouchStart}
               onTouchEnd={handleMobileTouchEnd}

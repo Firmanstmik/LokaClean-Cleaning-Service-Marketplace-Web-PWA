@@ -135,7 +135,7 @@ export function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-white sm:bg-gradient-to-br sm:from-white sm:via-blue-50/30 sm:to-purple-50/20 overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80 overflow-hidden relative">
       <Helmet>
         <title>Jasa Kebersihan Kuta Mandalika & Lombok Tengah | LokaClean</title>
         <meta name="description" content="Jasa cleaning service no.1 di Kuta Mandalika & Lombok Tengah. Spesialis Villa Cleaning, Home Cleaning, & Daily Housekeeping standar hotel. Pesan online sekarang!" />
@@ -240,7 +240,7 @@ export function Home() {
       {/* Subtle animated background particles - Hidden on mobile for performance */}
       <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-blue-100/20 blur-3xl"
+          className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-tropical-200/28 blur-3xl"
           animate={{
             x: [0, 100, 0],
             y: [0, 80, 0],
@@ -253,7 +253,7 @@ export function Home() {
           }}
         />
         <motion.div
-          className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-purple-100/20 blur-3xl"
+          className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-tropical-300/24 blur-3xl"
           animate={{
             x: [0, -80, 0],
             y: [0, -100, 0],
@@ -386,7 +386,7 @@ export function Home() {
           className="relative w-full mb-8 sm:mb-12 min-h-[calc(100vh-80px)] sm:min-h-0 sm:h-[700px] overflow-visible sm:overflow-hidden group"
         >
           {/* 1. Full Background Image (Covering Everything) */}
-          <div className="absolute inset-0 z-0 bg-blue-50/50">
+          <div className="absolute inset-0 z-0 bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80">
              <img 
                src="/img/hero.png" 
                alt="LokaClean Hero" 
@@ -396,8 +396,7 @@ export function Home() {
                className="hidden sm:block w-full h-full object-contain sm:object-contain object-bottom sm:object-right-bottom transition-transform duration-[10s] ease-in-out group-hover:scale-105"
              />
              {/* Gradient Overlay for Readability on Mobile */}
-             <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/60 to-transparent sm:bg-gradient-to-r sm:from-white/90 sm:via-white/50 sm:to-transparent" />
-             <div className="absolute inset-0 bg-slate-900/5 sm:bg-transparent" />
+             <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/70 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/60 sm:to-transparent" />
           </div>
 
           {/* 2. Mascot Integration (Sidekick style) - REMOVED to avoid duplication */}
@@ -430,7 +429,7 @@ export function Home() {
                 >
                   <span className="inline-block">
                     {t("home.hero.titlePart1")}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-cyan-500 to-blue-500">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
                       {t("home.hero.titleHighlight1")}
                     </span>
                   </span>
@@ -439,7 +438,7 @@ export function Home() {
                     {t("home.hero.titlePart2")}
                   </span>{" "}
                   <br className="hidden lg:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-500 via-tropical-500 to-sun-400">
                     {t("home.hero.titleHighlight2")}
                   </span>
                   {t("home.hero.titlePart3")}
@@ -542,7 +541,7 @@ export function Home() {
         </motion.section>
 
         {/* SEO Text Section - Optimized for Local Search */}
-        <section className="w-full bg-slate-50 border-y border-slate-200 py-12 px-4 sm:px-6 lg:px-8 mb-12">
+        <section className="w-full bg-gradient-to-r from-white via-tropical-50/70 to-white border-y border-tropical-100/80 py-12 px-4 sm:px-6 lg:px-8 mb-12">
           <div className="max-w-5xl mx-auto text-center">
              <h2 className="text-2xl font-black text-slate-900 mb-4">Jasa Kebersihan Terbaik di Kuta Mandalika & Lombok Tengah</h2>
              <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-3xl mx-auto mb-8">
@@ -677,10 +676,10 @@ export function Home() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-10%" }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 shadow-2xl border border-white/10 mb-8 sm:mb-12 will-change-transform"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-tropical-600 via-ocean-600 to-tropical-700 shadow-xl border border-tropical-100/60 mb-8 sm:mb-12 will-change-transform"
         >
           {/* Background Effects */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/75 via-slate-900/55 to-transparent z-10" />
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-30" />
           
           <div className="relative z-20 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 sm:p-5 items-center">
@@ -817,7 +816,7 @@ export function Home() {
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-10%" }}
-            className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.6)] transition-all duration-500 isolate group hover:shadow-[0_0_50px_-10px_rgba(20,184,166,0.3)]"
+            className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-tropical-700 via-ocean-700 to-tropical-800 shadow-[0_20px_60px_-18px_rgba(15,23,42,0.7)] transition-all duration-500 isolate group hover:shadow-[0_0_50px_-12px_rgba(20,184,166,0.35)]"
           >
             {/* Animated Dashed Border */}
             <div className="absolute inset-0 z-0 pointer-events-none rounded-[2.5rem]">
@@ -846,8 +845,8 @@ export function Home() {
             </div>
 
             {/* Animated Background Elements - Optimized for Mobile (Hidden on small screens) */}
-            <div className="hidden sm:block absolute top-0 right-0 -mr-20 -mt-20 w-[30rem] h-[30rem] bg-teal-500/20 rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700" />
-            <div className="hidden sm:block absolute bottom-0 left-0 -ml-20 -mb-20 w-[25rem] h-[25rem] bg-indigo-500/20 rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700" />
+            <div className="hidden sm:block absolute top-0 right-0 -mr-20 -mt-20 w-[30rem] h-[30rem] bg-tropical-500/25 rounded-full blur-[80px] opacity-50 mix-blend-screen group-hover:opacity-70 transition-opacity duration-700" />
+            <div className="hidden sm:block absolute bottom-0 left-0 -ml-20 -mb-20 w-[25rem] h-[25rem] bg-ocean-500/25 rounded-full blur-[80px] opacity-50 mix-blend-screen group-hover:opacity-70 transition-opacity duration-700" />
             
             {/* Noise Texture & Grid Overlay - Hidden on Mobile for Performance */}
             <div className="hidden sm:block absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
@@ -1199,7 +1198,7 @@ export function Home() {
         </section>
         </div>
         {/* Visible SEO Section (Phase 4) */}
-        <section className="py-12 px-4 bg-slate-50 border-t border-slate-200">
+        <section className="py-12 px-4 bg-gradient-to-r from-white via-tropical-50/70 to-white border-t border-tropical-100/80">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-2xl font-bold text-slate-900 mb-4">LokaClean Lombok</h2>
             <p className="text-slate-600 leading-relaxed">
