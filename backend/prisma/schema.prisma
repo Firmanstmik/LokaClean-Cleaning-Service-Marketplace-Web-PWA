@@ -105,7 +105,8 @@ model Admin {
   created_at   DateTime @default(now())
 
   // Relationships
-  pesanan Pesanan[]
+  pesanan           Pesanan[]
+  pushSubscriptions PushSubscription[] @relation("AdminPushSubscriptions")
 
   theme_settings Json?
 }
@@ -263,14 +264,17 @@ model Notification {
 }
 
 model PushSubscription {
-  id        Int      @id @default(autoincrement())
-  user_id   Int
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  admin_id   Int?
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
   created_at DateTime @default(now())
 
-  user      User     @relation(fields: [user_id], references: [id])
+  user  User?  @relation(fields: [user_id], references: [id])
+  admin Admin? @relation("AdminPushSubscriptions", fields: [admin_id], references: [id])
 
   @@index([user_id])
+  @@index([admin_id])
 }

@@ -31,7 +31,6 @@ export const subscribeHandler = asyncHandler(async (req: Request, res: Response)
     throw new HttpError(400, "Invalid subscription payload");
   }
 
-  // Upsert by endpoint
   const sub = await prisma.pushSubscription.upsert({
     where: { endpoint },
     update: {
@@ -59,6 +58,49 @@ export const unsubscribeHandler = asyncHandler(async (req: Request, res: Respons
 
   await prisma.pushSubscription.deleteMany({
     where: { user_id: req.auth.id, endpoint }
+  });
+
+  return ok(res, { message: "Unsubscribed" });
+});
+
+export const subscribeAdminHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.auth) throw new HttpError(401, "Unauthenticated");
+  if (req.auth.actor !== "ADMIN") throw new HttpError(403, "Forbidden");
+
+  const { endpoint, keys } = req.body || {};
+  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    throw new HttpError(400, "Invalid subscription payload");
+  }
+
+  const sub = await prisma.pushSubscription.upsert({
+    where: { endpoint },
+    update: {
+      admin_id: req.auth.id,
+      user_id: null,
+      p256dh: keys.p256dh,
+      auth: keys.auth
+    } as any,
+    create: {
+      admin_id: req.auth.id,
+      user_id: null,
+      endpoint,
+      p256dh: keys.p256dh,
+      auth: keys.auth
+    } as any
+  });
+
+  return created(res, { subscription: sub });
+});
+
+export const unsubscribeAdminHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.auth) throw new HttpError(401, "Unauthenticated");
+  if (req.auth.actor !== "ADMIN") throw new HttpError(403, "Forbidden");
+
+  const { endpoint } = req.body || {};
+  if (!endpoint) throw new HttpError(400, "Endpoint required");
+
+  await prisma.pushSubscription.deleteMany({
+    where: { admin_id: req.auth.id, endpoint } as any
   });
 
   return ok(res, { message: "Unsubscribed" });
@@ -97,7 +139,6 @@ export async function sendPushToUser(userId: number, payload: {
           data
         );
       } catch (err: any) {
-        // Clean up gone subscriptions (status 410)
         if (err?.statusCode === 410 || err?.statusCode === 404) {
           await prisma.pushSubscription.deleteMany({ where: { endpoint: s.endpoint } });
         }
@@ -106,3 +147,46 @@ export async function sendPushToUser(userId: number, payload: {
   );
 }
 
+export async function sendPushToAllAdmins(payload: {
+  title: string;
+  message: string;
+  url?: string;
+  tag?: string;
+}) {
+  if (!ensureVapid()) {
+    return;
+  }
+
+  const subs = await prisma.pushSubscription.findMany({
+    where: { admin_id: { not: null } } as any
+  });
+
+  if (!subs.length) {
+    return;
+  }
+
+  const data = JSON.stringify({
+    title: payload.title,
+    message: payload.message,
+    url: payload.url,
+    tag: payload.tag || "admin-broadcast"
+  });
+
+  await Promise.all(
+    subs.map(async (s: any) => {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: s.endpoint,
+            keys: { p256dh: s.p256dh, auth: s.auth }
+          } as any,
+          data
+        );
+      } catch (err: any) {
+        if (err?.statusCode === 410 || err?.statusCode === 404) {
+          await prisma.pushSubscription.deleteMany({ where: { endpoint: s.endpoint } });
+        }
+      }
+    })
+  );
+}

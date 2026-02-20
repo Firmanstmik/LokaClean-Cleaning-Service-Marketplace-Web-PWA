@@ -16,7 +16,7 @@ import { created, ok } from "../../utils/respond";
 import { HttpError } from "../../utils/httpError";
 import { parseId } from "../../utils/parseId";
 import { fileToPublicPath } from "../../middleware/upload";
-import { sendPushToUser } from "../push/push.controller";
+import { sendPushToUser, sendPushToAllAdmins } from "../push/push.controller";
 import { checkServiceArea, findNearestCleaners } from "../geo/geo.service";
 import { getIO } from "../../socket";
 import {
@@ -269,6 +269,19 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
   } catch (err) {
     console.warn("[createOrder] Failed to emit socket event:", err);
     // Don't fail the request just because socket failed
+  }
+
+  try {
+    const userName = order.user?.full_name ?? "Customer";
+    const paketName = order.paket?.name ?? "Paket Cleaning";
+    await sendPushToAllAdmins({
+      title: "Pesanan Baru Masuk",
+      message: `Order #${order.order_number} dari ${userName} untuk ${paketName}`,
+      url: `/admin/orders/${order.id}`,
+      tag: `admin-order-${order.id}`
+    });
+  } catch (err) {
+    console.warn("[createOrder] Failed to send admin push notification:", err);
   }
 
   // For NON-CASH payments, create a notification reminding user to pay.

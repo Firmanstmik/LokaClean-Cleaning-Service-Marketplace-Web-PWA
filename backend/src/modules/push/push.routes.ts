@@ -1,15 +1,22 @@
 import { Router } from "express";
 import { authenticate } from "../../middleware/auth";
 import { requireActor } from "../../middleware/requireActor";
-import { getPublicKeyHandler, subscribeHandler, unsubscribeHandler } from "./push.controller";
+import {
+  getPublicKeyHandler,
+  subscribeHandler,
+  unsubscribeHandler,
+  subscribeAdminHandler,
+  unsubscribeAdminHandler
+} from "./push.controller";
 
 export const pushRouter = Router();
 
-// Public: expose VAPID public key (or null if not configured)
 pushRouter.get("/public-key", getPublicKeyHandler);
 
-// Authenticated USER: manage subscription
-pushRouter.use(authenticate, requireActor("USER"));
-pushRouter.post("/subscribe", subscribeHandler);
-pushRouter.post("/unsubscribe", unsubscribeHandler);
+pushRouter.use(authenticate);
 
+pushRouter.post("/subscribe", requireActor("USER"), subscribeHandler);
+pushRouter.post("/unsubscribe", requireActor("USER"), unsubscribeHandler);
+
+pushRouter.post("/admin/subscribe", requireActor("ADMIN"), subscribeAdminHandler);
+pushRouter.post("/admin/unsubscribe", requireActor("ADMIN"), unsubscribeAdminHandler);
