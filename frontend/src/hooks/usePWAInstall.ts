@@ -9,8 +9,6 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-const PWA_INSTALLED_KEY = "lokaclean_pwa_installed";
-
 function getPlatform(): InstallPlatform {
   if (typeof navigator === "undefined") return "unknown";
   const ua = navigator.userAgent || "";
@@ -39,17 +37,10 @@ export function usePWAInstall() {
   const [bannerVisible, setBannerVisible] = useState(false);
   const [installed, setInstalled] = useState(() => {
     if (typeof window === "undefined") return false;
-    if (isStandaloneDisplay()) return true;
-    return window.localStorage.getItem(PWA_INSTALLED_KEY) === "1";
+    return isStandaloneDisplay();
   });
 
   const platform = useMemo(() => getPlatform(), []);
-
-  useEffect(() => {
-    if (installed) {
-      window.localStorage.setItem(PWA_INSTALLED_KEY, "1");
-    }
-  }, [installed]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -67,7 +58,6 @@ export function usePWAInstall() {
     const onInstalled = () => {
       setInstalled(true);
       trackEvent("install_accepted");
-      window.localStorage.setItem(PWA_INSTALLED_KEY, "1");
     };
     window.addEventListener("appinstalled", onInstalled);
     return () => {
