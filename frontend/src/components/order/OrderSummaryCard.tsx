@@ -1,4 +1,4 @@
-import { MapPin, Calendar, Package } from "lucide-react";
+import { MapPin, Calendar, Package, Receipt } from "lucide-react";
 import { formatDateTimeWITA } from "../../utils/date";
 import type { Pesanan } from "../../types/api";
 import { t } from "../../lib/i18n";
@@ -31,38 +31,54 @@ export function OrderSummaryCard({ order, packageName, orderNumber }: OrderSumma
   };
 
   return (
-    <div className="mx-4 bg-white/90 rounded-xl shadow-md border border-white/50 p-5 backdrop-blur-sm">
-      <div className="flex justify-between items-start mb-4">
+    <div className="mx-4 rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-            <Package className="w-5 h-5 text-indigo-500" />
-            {packageName}
-          </h3>
-          <p className="text-xs text-slate-500 mt-1">ID: {orderNumber}</p>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <Package className="h-4 w-4" />
+            </div>
+            <h3 className="text-[15px] font-semibold leading-snug text-slate-900">
+              {packageName}
+            </h3>
+          </div>
+          <p className="mt-1 text-[11px] text-slate-500">
+            {t("orderDetail.scheduled")}: {formatDateTimeWITA(order.scheduled_date)}
+          </p>
         </div>
-        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(order.status)}`}>
+        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${getStatusColor(order.status)}`}>
           {getStatusLabel(order.status)}
         </span>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-indigo-50 rounded-full shrink-0">
-            <MapPin className="w-4 h-4 text-indigo-600" />
+          <div className="shrink-0 rounded-full bg-indigo-50 p-2">
+            <MapPin className="h-4 w-4 text-indigo-600" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500">{t('orderDetail.location')}</p>
-            <p className="text-sm text-slate-700 leading-snug line-clamp-2">{order.address}</p>
+            <p className="text-xs font-medium text-slate-500">{t("orderDetail.location")}</p>
+            <p className="line-clamp-2 text-sm leading-snug text-slate-700">{order.address}</p>
           </div>
         </div>
 
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-indigo-50 rounded-full shrink-0">
-            <Calendar className="w-4 h-4 text-indigo-600" />
+          <div className="shrink-0 rounded-full bg-indigo-50 p-2">
+            <Calendar className="h-4 w-4 text-indigo-600" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500">{t('orderDetail.scheduleTime')}</p>
+            <p className="text-xs font-medium text-slate-500">{t("orderDetail.scheduleTime")}</p>
             <p className="text-sm text-slate-700">{formatDateTimeWITA(order.scheduled_date)}</p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 rounded-full bg-slate-50 p-2">
+            <Receipt className="h-4 w-4 text-slate-600" />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500">{t("orderDetail.orderNumber")}</p>
+            <p className="text-sm font-medium text-slate-800">{orderNumber}</p>
           </div>
         </div>
       </div>

@@ -35,39 +35,45 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
   const currentIndex = getCurrentStepIndex();
 
   return (
-    <div className="px-6 py-6">
-      <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('orderDetail.statusTitle')}</h3>
-      <div className="relative pl-2">
-        {/* Vertical Line */}
-        <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-slate-100" />
-        
-        <div className="space-y-6">
-          {steps.map((step, idx) => {
-            const isCompleted = idx <= currentIndex;
-            const isCurrent = idx === currentIndex;
-            
-            return (
-              <div key={step.id} className="relative flex items-center gap-4">
-                <div className={`
-                  relative z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 
-                  ${isCompleted 
-                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200' 
-                    : 'bg-white border-slate-200 text-slate-300'}
-                  transition-all duration-300
-                `}>
-                  {isCompleted ? <Check className="w-4 h-4" /> : <div className="w-2 h-2 rounded-full bg-slate-200" />}
-                </div>
-                <div className={`${isCurrent ? 'opacity-100' : 'opacity-60'} transition-opacity flex-1`}>
-                  <p className={`text-sm ${isCurrent ? 'font-bold text-slate-800' : 'font-medium text-slate-600'}`}>
+    <div className="mx-4 mt-2 rounded-2xl border border-slate-100 bg-white px-4 py-4">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {t('orderDetail.orderStatus')}
+      </h3>
+      <div className="mt-4">
+        <div className="relative">
+          <div className="absolute left-4 right-4 top-4 h-0.5 bg-slate-100" />
+          <div className="relative flex items-start justify-between">
+            {steps.map((step, idx) => {
+              const isCompleted = idx <= currentIndex;
+              const isCurrent = idx === currentIndex;
+
+              return (
+                <div key={step.id} className="flex flex-1 flex-col items-center gap-2">
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold ${
+                      isCompleted
+                        ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm shadow-emerald-200'
+                        : 'border-slate-200 bg-white text-slate-300'
+                    }`}
+                  >
+                    {isCompleted ? <Check className="h-4 w-4" /> : <div className="h-2 w-2 rounded-full bg-slate-200" />}
+                  </div>
+                  <p
+                    className={`text-[10px] leading-tight ${
+                      isCurrent ? 'font-semibold text-slate-800' : 'font-medium text-slate-500'
+                    }`}
+                  >
                     {step.label}
                   </p>
                   {isCurrent && status !== 'COMPLETED' && (
-                    <p className="text-xs text-emerald-600 animate-pulse font-medium mt-0.5">{t('orderDetail.working')}</p>
+                    <p className="text-[10px] font-medium text-emerald-600">
+                      {t('orderDetail.working')}
+                    </p>
                   )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

@@ -136,7 +136,7 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[70] flex h-[85vh] flex-col overflow-hidden rounded-t-[2rem] bg-white md:inset-0 md:m-auto md:h-fit md:max-h-[80vh] md:w-full md:max-w-xl md:rounded-[2rem] md:top-10"
+            className="fixed inset-x-0 bottom-24 z-[70] flex h-[75vh] flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-[0_-18px_45px_rgba(15,23,42,0.28)] md:inset-0 md:bottom-0 md:m-auto md:h-fit md:max-h-[80vh] md:w-full md:max-w-xl md:rounded-[2rem] md:shadow-2xl md:top-10"
           >
             {/* Header Image Section */}
             <div className="relative h-56 md:h-64 shrink-0">
@@ -164,51 +164,76 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
                         <Star className="h-3.5 w-3.5 fill-amber-300" />
                         {pkg.averageRating ? pkg.averageRating.toFixed(1) : "5.0"}
                       </span>
-                      <span className="text-sm font-medium text-white/80">
+                      <span className="text-xs font-medium text-white/80">
                         ({pkg.totalReviews || 0} {isEnglish ? "Reviews" : "Ulasan"})
                       </span>
                     </div>
-                    <h2 className="text-2xl font-bold leading-tight md:text-2xl">{name}</h2>
+                    <h2 className="text-xl font-semibold leading-tight md:text-2xl">{name}</h2>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Content Scrollable Area */}
-            <div className="flex-1 overflow-y-auto bg-white px-6 py-4 pb-32 md:pb-6">
-              {/* Price Row */}
-              <div className="mb-5 flex items-center justify-center rounded-2xl bg-slate-50 p-3 border border-slate-100">
-                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tropical-100 text-tropical-600">
-                       <Wallet className="h-5 w-5" />
-                    </div>
-                    <div>
-                       <p className="text-xs text-slate-500 font-medium">{isEnglish ? "Starting Price" : "Harga Mulai"}</p>
-                       <p className="text-base font-bold text-slate-800">Rp {pkg.price.toLocaleString("id-ID")}</p>
-                    </div>
-                 </div>
+            <div className="flex-1 overflow-y-auto bg-white px-6 py-4 pb-28 md:pb-6">
+              <div className="mb-4 flex items-center justify-center rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tropical-100 text-tropical-600">
+                    <Wallet className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-500">
+                      {isEnglish ? "Starting from" : "Harga Mulai"}
+                    </p>
+                    <p className="text-lg font-semibold text-slate-900">
+                      Rp {pkg.price.toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* Description */}
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>
+                    {isEnglish ? "Clean Guarantee" : "Garansi Bersih Tuntas"}
+                  </span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>
+                    {isEnglish ? "Hotel-inspired finish" : "Sentuhan ala hotel"}
+                  </span>
+                </div>
+              </div>
+
               <div className="mb-6">
-                <h3 className="mb-2 text-base font-bold text-slate-800">{isEnglish ? "About Service" : "Tentang Layanan"}</h3>
-                <p className="text-sm leading-relaxed text-slate-600 md:text-sm">
+                <h3 className="mb-1 text-sm font-semibold text-slate-800">
+                  {isEnglish ? "About this service" : "Tentang layanan ini"}
+                </h3>
+                <p className="text-[13px] leading-relaxed text-slate-600">
                   {description}
                 </p>
               </div>
 
-              {/* Features Grid */}
               <div className="mb-6">
-                <h3 className="mb-3 text-base font-bold text-slate-800">{isEnglish ? "What's Included" : "Termasuk Layanan"}</h3>
+                <h3 className="mb-2 text-sm font-semibold text-slate-800">
+                  {isEnglish ? "What you get" : "Yang Anda Dapatkan"}
+                </h3>
                 <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                   {features.map((feature, idx) => {
-                    // Use bgColor if available, otherwise construct from color (though we now guarantee bgColor)
-                    const bgColor = feature.bgColor || `bg-${feature.color.split('-')[1]}-50`;
-                    
+                    const bgColor = feature.bgColor || `bg-${feature.color.split("-")[1]}-50`;
+
                     return (
-                      <div key={idx} className={`flex items-center gap-2 sm:gap-2.5 p-3 sm:p-3.5 rounded-lg sm:rounded-xl border ${bgColor} h-full`}>
-                        <feature.icon className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${feature.color}`} />
-                        <span className={`text-xs sm:text-sm font-semibold ${feature.color} whitespace-normal leading-relaxed`}>
+                      <div
+                        key={idx}
+                        className={`flex h-full items-center gap-2 rounded-xl border ${bgColor} p-3 sm:p-3.5`}
+                      >
+                        <feature.icon
+                          className={`h-4 w-4 flex-shrink-0 sm:h-5 sm:w-5 ${feature.color}`}
+                        />
+                        <span
+                          className={`text-xs font-semibold leading-relaxed sm:text-sm ${feature.color}`}
+                        >
                           {feature.text}
                         </span>
                       </div>
@@ -218,8 +243,12 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
               </div>
             </div>
 
-            {/* Bottom Action Bar (Sticky on Mobile) */}
-            <div className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-white px-6 py-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] md:relative md:shadow-none md:border-t-0">
+            <div className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-white px-6 py-3.5 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] md:relative md:shadow-none md:border-t-0">
+              <p className="mb-2 text-center text-[11px] text-slate-500">
+                {isEnglish
+                  ? "Secure your preferred time slot – weekend slots fill up fast."
+                  : "Amankan jadwal favorit Anda – slot akhir pekan cepat penuh."}
+              </p>
               <button
                 onClick={() => {
                   if (onBook) {
@@ -228,10 +257,10 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
                     navigate(`/orders/new?paket_id=${pkg.id}`);
                   }
                 }}
-                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-tropical-500 to-ocean-500 py-4 text-base font-bold text-white shadow-xl shadow-tropical-500/30 transition-all hover:scale-[1.02] hover:shadow-tropical-500/50 active:scale-[0.98]"
+                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-tropical-500 to-ocean-500 py-3.5 text-sm font-semibold text-white shadow-xl shadow-tropical-500/30 transition-all hover:scale-[1.02] hover:shadow-tropical-500/50 active:scale-[0.98]"
               >
                 <span>{isEnglish ? "Book Now" : "Pesan Sekarang"}</span>
-                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
           </motion.div>

@@ -583,7 +583,14 @@ const translations = {
       summaryLocation: "Lokasi",
       nextBtn: "Lanjut",
       orderNowBtn: "Pesan Sekarang",
-      validationError: "Mohon lengkapi semua data pesanan."
+      validationError: "Mohon lengkapi semua data pesanan.",
+      extraRequestTitle: "Butuh permintaan tambahan?",
+      extraRequestDesc: "Jika Anda punya kebutuhan khusus seperti ART wanita atau alat pembersih tambahan, silakan selesaikan pesanan terlebih dahulu lalu gunakan tombol WhatsApp di halaman sukses pesanan untuk berdiskusi langsung dengan admin.",
+      extraRequestExample1: "Petugas ART wanita",
+      extraRequestExample2: "Alat pembersih tambahan di lokasi",
+      extraRequestExample3: "Kebutuhan khusus lain (jam fleksibel, area tertentu, dll.)",
+      extraRequestPlaceholder: "",
+      extraRequestHint: ""
     },
     // Order Detail
     orderDetail: {
@@ -679,7 +686,10 @@ const translations = {
       cancelledTitle: "Pesanan Dibatalkan",
       cancelledSubtitle: "Silakan buat pesanan baru jika Anda berubah pikiran",
       inProgressTitle: "Cleaner Sedang Bekerja",
-      inProgressSubtitle: "Mohon tunggu hasil kebersihan terbaik dari kami"
+      inProgressSubtitle: "Mohon tunggu hasil kebersihan terbaik dari kami",
+      extraRequestWhatsAppTitle: "Butuh permintaan tambahan?",
+      extraRequestWhatsAppDesc: "Jika Anda membutuhkan ART wanita, alat pembersih tambahan, atau kebutuhan khusus lainnya, silakan hubungi admin melalui WhatsApp agar bisa dipersiapkan sebelum kedatangan.",
+      extraRequestWhatsAppCta: "Hubungi Admin via WhatsApp"
      },
      // Login
     login: {
@@ -1386,7 +1396,14 @@ const translations = {
       summaryLocation: "Location",
       nextBtn: "Next",
       orderNowBtn: "Order Now",
-      validationError: "Please complete all order data."
+      validationError: "Please complete all order data.",
+      extraRequestTitle: "Need additional requests?",
+      extraRequestDesc: "If you have special needs such as female staff or extra cleaning tools, please complete your order first then use the WhatsApp button on the success page to discuss directly with our admin.",
+      extraRequestExample1: "Female cleaning staff",
+      extraRequestExample2: "Extra cleaning tools at location",
+      extraRequestExample3: "Other preferences (flexible time, specific areas, etc.)",
+      extraRequestPlaceholder: "",
+      extraRequestHint: ""
     },
     // Order Detail
     orderDetail: {
@@ -1482,7 +1499,10 @@ const translations = {
       cancelledTitle: "Order Cancelled",
       cancelledSubtitle: "Please place a new order if you change your mind",
       inProgressTitle: "Cleaner is Working",
-      inProgressSubtitle: "Please wait for our best cleaning results"
+      inProgressSubtitle: "Please wait for our best cleaning results",
+      extraRequestWhatsAppTitle: "Need additional requests?",
+      extraRequestWhatsAppDesc: "If you need female staff, extra cleaning tools, or other special requests, please contact our admin via WhatsApp so we can prepare before arrival.",
+      extraRequestWhatsAppCta: "Contact Admin via WhatsApp"
      },
  
      // Admin

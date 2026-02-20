@@ -1300,19 +1300,19 @@ export const MapPicker = memo(function MapPicker({
             </div>
           )}
 
-          {/* Top Row: Address & GPS Button */}
-          <div className="flex items-start justify-between w-full pointer-events-none">
+          {/* Bottom Row: Address Card & GPS Button */}
+          <div className="mt-auto flex items-end justify-between w-full pointer-events-none pb-1 sm:pb-2">
             {/* Left: Address Card (Glassmorphism) */}
             <div className="flex-1 max-w-[calc(100%-60px)] pointer-events-auto">
               {value && details ? (
-                <div className="bg-white/95 backdrop-blur-xl p-3.5 rounded-2xl shadow-lg border border-white/50 animate-in slide-in-from-top-4 fade-in duration-500 w-full sm:w-auto">
-                   <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mt-0.5">
-                        <CheckCircle2 className="w-4 h-4" />
+                <div className="bg-white/95 backdrop-blur-xl p-2.5 sm:p-3 rounded-2xl shadow-lg border border-white/50 animate-in slide-in-from-top-4 fade-in duration-500 w-full max-w-xs sm:max-w-sm">
+                   <div className="flex items-start gap-2">
+                      <div className="flex-shrink-0 w-7 h-7 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mt-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start">
-                          <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">
+                          <div className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">
                             {t("map.approxAddress")}
                           </div>
                           <button 
@@ -1320,13 +1320,17 @@ export const MapPicker = memo(function MapPicker({
                             onClick={() => {
                                 setShowSimpleModal(true);
                             }}
-                            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="group inline-flex items-center gap-1.5 rounded-full bg-indigo-50/90 px-2.5 py-1 text-[10px] font-semibold text-indigo-600 shadow-sm border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <Save className="w-3 h-3" />
-                            {t("map.saveAddress.save")}
+                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-white text-indigo-600 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                              <Save className="w-3 h-3" />
+                            </span>
+                            <span className="leading-tight">
+                              {t("map.saveAddress.save")}
+                            </span>
                           </button>
                         </div>
-                        <div className="text-xs font-semibold text-slate-800 leading-tight line-clamp-2 mt-0.5">
+                        <div className="text-[11px] font-semibold text-slate-800 leading-tight line-clamp-2 mt-0.5">
                           {resolving ? (
                             <span className="flex items-center gap-2 text-slate-500 font-normal">
                               <Loader2 className="w-3 h-3 animate-spin" />
@@ -1337,12 +1341,12 @@ export const MapPicker = memo(function MapPicker({
                           )}
                         </div>
                         {activeSavedAddress?.notes && (
-                           <div className="mt-1.5 flex items-start gap-1 bg-slate-50 p-1.5 rounded border border-slate-100/50">
-                              <span className="text-[9px] font-bold text-indigo-500 uppercase shrink-0 mt-0.5">Detail Catatan untuk Petugas:</span>
-                              <span className="text-[10px] text-slate-600 italic line-clamp-2">{activeSavedAddress.notes}</span>
+                           <div className="mt-1 flex items-start gap-1 bg-slate-50 p-1.5 rounded border border-slate-100/50">
+                              <span className="text-[8px] font-bold text-indigo-500 uppercase shrink-0 mt-0.5">Catatan:</span>
+                              <span className="text-[9px] text-slate-600 italic line-clamp-2">{activeSavedAddress.notes}</span>
                            </div>
                         )}
-                        <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-medium border-t border-slate-100 pt-2">
+                        <div className="flex items-center gap-3 mt-1.5 text-[9px] text-slate-500 font-medium border-t border-slate-100 pt-1.5">
                           <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">
                             {details.coords}
                           </span>

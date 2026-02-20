@@ -12,7 +12,7 @@ import {
   MapPin, Camera, Calendar, CheckCircle2, 
   AlertCircle, ChevronRight, ChevronLeft, 
   Banknote, Info, Sparkles, Palmtree,
-  Clock, ArrowRight, X, Hand
+  Clock, ArrowRight, X, Hand, MessageCircle
 } from "lucide-react";
 
 import { MapPicker, type LatLng } from "../../components/MapPicker";
@@ -92,6 +92,8 @@ export function NewOrderPage() {
   // --- Refs ---
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const firstAvailableDateRef = useRef<HTMLButtonElement | null>(null);
+  const bottomActionRef = useRef<HTMLDivElement | null>(null);
 
   // --- Initial Data Fetch ---
   useEffect(() => {
@@ -145,12 +147,35 @@ export function NewOrderPage() {
     }
   }, [beforePhotos]);
 
-  // --- Handlers ---
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== 2) return;
+    if (typeof window === "undefined") return;
+
+    const timer = window.setTimeout(() => {
+      if (!firstAvailableDateRef.current) return;
+      firstAvailableDateRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center"
+      });
+    }, 260);
+
+    return () => window.clearTimeout(timer);
+  }, [step]);
+
+  // --- Handlers --- 
 
   const handleNext = () => {
-    if (step === 1 && !paketId) return; // Validate Step 1
-    if (step === 2 && (!selectedDate || !selectedTime)) return; // Validate Step 2
-    if (step < 3) setStep((s) => (s + 1) as Step);
+    if (step === 1 && !paketId) return;
+    if (step === 2 && (!selectedDate || !selectedTime)) return;
+    if (step < 3) {
+      setStep((s) => (s + 1) as Step);
+    }
   };
 
   const handleBack = () => {
@@ -162,6 +187,18 @@ export function NewOrderPage() {
     if (e.target.files?.length) {
       const newFiles = Array.from(e.target.files).slice(0, 4 - beforePhotos.length);
       setBeforePhotos(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const scrollToBottomAction = () => {
+    if (typeof window === "undefined") return;
+    if (bottomActionRef.current) {
+      const rect = bottomActionRef.current.getBoundingClientRect();
+      const offset = 96;
+      const targetY = window.scrollY + rect.top - offset;
+      window.scrollTo({ top: targetY, behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     }
   };
 
@@ -230,7 +267,7 @@ export function NewOrderPage() {
   // --- Render Helpers ---
 
   const StepIndicator = () => (
-    <div className="flex items-center justify-center space-x-2 mb-6 px-4">
+    <div className="flex items-center justify-center gap-1.5 mb-6 px-2 max-w-sm mx-auto">
       {[
         { id: 1, label: t("newOrder.summaryPackage") },
         { id: 2, label: t("newOrder.summarySchedule") },
@@ -242,11 +279,11 @@ export function NewOrderPage() {
           <div key={s.id} className="flex items-center">
             <div 
               className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300
+                flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-300
                 ${isActive 
                   ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/30 scale-105" 
                   : isDone
-                    ? "bg-teal-50 text-teal-600 border border-teal-100"
+                    ? "bg-teal-50 text-teal-700 border border-teal-100"
                     : "bg-white text-slate-400 border border-slate-200"
                 }
               `}
@@ -257,7 +294,12 @@ export function NewOrderPage() {
               <span>{s.label}</span>
             </div>
             {idx < 2 && (
-              <div className={`w-4 h-0.5 mx-1 rounded-full ${isDone ? "bg-teal-200" : "bg-slate-100"}`} />
+              <div
+                className={`
+                  w-6 h-0.5 mx-1 rounded-full
+                  ${isDone || isActive ? "bg-emerald-400" : "bg-emerald-100"}
+                `}
+              />
             )}
           </div>
         );
@@ -313,7 +355,10 @@ export function NewOrderPage() {
                     return (
                       <div
                         key={pkg.id}
-                        onClick={() => setPaketId(pkg.id)}
+                        onClick={() => {
+                          setPaketId(pkg.id);
+                          scrollToBottomAction();
+                        }}
                         className={`
                           relative flex items-center gap-4 p-3 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden
                           ${isSelected 
@@ -450,7 +495,9 @@ export function NewOrderPage() {
                     </div>
                   </div>
                   <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide snap-x">
-                    {calendarDates.map((date) => {
+                    {(() => {
+                      let firstAttached = false;
+                      return calendarDates.map((date) => {
                       const isSelected = selectedDate.toDateString() === date.toDateString();
                       const dayName = date.toLocaleDateString(language === "en" ? "en-US" : "id-ID", { weekday: "short" });
                       const dayNum = date.getDate();
@@ -463,10 +510,14 @@ export function NewOrderPage() {
                       checkDate.setHours(0, 0, 0, 0);
                       
                       const isPast = checkDate < now;
+
+                      const attachRef = !isPast && !firstAttached;
+                      if (attachRef) firstAttached = true;
                       
                       return (
                         <button
                           key={date.toISOString()}
+                          ref={attachRef ? firstAvailableDateRef : undefined}
                           disabled={isPast}
                           onClick={() => !isPast && setSelectedDate(date)}
                           className={`
@@ -487,9 +538,10 @@ export function NewOrderPage() {
                           </span>
                         </button>
                       );
-                    })}
+                    });
+                    })()}
                   </div>
-                </div>
+                  </div>
 
                 {/* Time Picker (Grid) */}
                 <div className="space-y-3">
@@ -530,7 +582,11 @@ export function NewOrderPage() {
                         <button
                           key={time}
                           disabled={isDisabled}
-                          onClick={() => !isDisabled && setSelectedTime(time)}
+                          onClick={() => {
+                            if (isDisabled) return;
+                            setSelectedTime(time);
+                            scrollToBottomAction();
+                          }}
                           className={`
                             py-3 rounded-xl text-sm font-bold transition-all duration-200 border
                             ${isDisabled 
@@ -683,43 +739,66 @@ export function NewOrderPage() {
 
                 {/* Total & Summary */}
                 {selectedPackage && (
-                  <div className="bg-slate-800 text-white p-5 rounded-2xl shadow-lg mt-8">
-                    <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
-                      <span className="text-sm text-slate-300">{t("newOrder.totalPayment")}</span>
-                      <div className="text-right">
-                        <span className="text-xl font-bold block">
-                          Rp {(selectedPackage.price + selectedExtras.reduce((acc, curr) => acc + curr.price, 0)).toLocaleString("id-ID")}
-                        </span>
-                        {selectedExtras.length > 0 && (
-                          <span className="text-[10px] text-slate-400 font-normal">
-                            (Paket: {selectedPackage.price.toLocaleString()} + Extra: {selectedExtras.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()})
+                  <>
+                    <div className="bg-slate-800 text-white p-5 rounded-2xl shadow-lg mt-8">
+                      <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
+                        <span className="text-sm text-slate-300">{t("newOrder.totalPayment")}</span>
+                        <div className="text-right">
+                          <span className="text-xl font-bold block">
+                            Rp {(selectedPackage.price + selectedExtras.reduce((acc, curr) => acc + curr.price, 0)).toLocaleString("id-ID")}
                           </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-2 text-xs text-slate-400">
-                      <div className="flex justify-between">
-                        <span>{t("newOrder.summaryPackage")}</span>
-                        <span className="text-slate-200">{isEnglish && selectedPackage.name_en ? selectedPackage.name_en : selectedPackage.name}</span>
-                      </div>
-                      {selectedExtras.length > 0 && (
-                        <div className="flex justify-between items-start">
-                           <span>Extras</span>
-                           <div className="text-right text-slate-200">
-                             {selectedExtras.map(e => (
-                               <div key={e.id}>{e.name}</div>
-                             ))}
-                           </div>
+                          {selectedExtras.length > 0 && (
+                            <span className="text-[10px] text-slate-400 font-normal">
+                              (Paket: {selectedPackage.price.toLocaleString()} + Extra: {selectedExtras.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()})
+                            </span>
+                          )}
                         </div>
-                      )}
-                      <div className="flex justify-between">
-                        <span>{t("newOrder.summarySchedule")}</span>
-                        <span className="text-slate-200">
-                          {selectedDate.toLocaleDateString(language === "en" ? "en-US" : "id-ID", { day: 'numeric', month: 'short' })}, {selectedTime}
-                        </span>
+                      </div>
+                      <div className="space-y-2 text-xs text-slate-400">
+                        <div className="flex justify-between">
+                          <span>{t("newOrder.summaryPackage")}</span>
+                          <span className="text-slate-200">{isEnglish && selectedPackage.name_en ? selectedPackage.name_en : selectedPackage.name}</span>
+                        </div>
+                        {selectedExtras.length > 0 && (
+                          <div className="flex justify-between items-start">
+                            <span>Extras</span>
+                            <div className="text-right text-slate-200">
+                              {selectedExtras.map(e => (
+                                <div key={e.id}>{e.name}</div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span>{t("newOrder.summarySchedule")}</span>
+                          <span className="text-slate-200">
+                            {selectedDate.toLocaleDateString(language === "en" ? "en-US" : "id-ID", { day: 'numeric', month: 'short' })}, {selectedTime}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+
+                    <div className="mt-4">
+                      <div className="flex gap-3 rounded-2xl bg-emerald-50/80 border border-emerald-100 px-3.5 py-3.5">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                          <MessageCircle className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                            {t("newOrder.extraRequestTitle")}
+                          </div>
+                          <p className="mt-1 text-[11px] text-slate-600 leading-relaxed">
+                            {t("newOrder.extraRequestDesc")}
+                          </p>
+                          <ul className="mt-2 space-y-0.5 text-[11px] text-slate-600">
+                            <li>• {t("newOrder.extraRequestExample1")}</li>
+                            <li>• {t("newOrder.extraRequestExample2")}</li>
+                            <li>• {t("newOrder.extraRequestExample3")}</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
               </motion.div>
             )}
@@ -727,7 +806,7 @@ export function NewOrderPage() {
         </div>
 
         {/* BOTTOM ACTION BAR */}
-        <div className="mt-8 border-t border-slate-100 pt-6">
+        <div ref={bottomActionRef} className="mt-8 border-t border-slate-100 pt-6">
           <div className="max-w-md mx-auto flex gap-3 lg:max-w-sm lg:ml-auto">
             {step === 3 ? (
               <button
