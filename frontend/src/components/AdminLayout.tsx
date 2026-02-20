@@ -140,6 +140,81 @@ function AdminLayoutInner() {
           } else {
             console.warn('[Admin Notifications] TTS not supported in this browser');
           }
+
+          // Browser notification (Chrome/mobile/desktop)
+          if (typeof window !== "undefined" && "Notification" in window) {
+            if (Notification.permission === "granted") {
+              const title = "Pesanan Baru Masuk";
+              const body = `${latestOrder.user_name} membuat pesanan baru: ${latestOrder.paket_name}`;
+              try {
+                if ("serviceWorker" in navigator) {
+                  navigator.serviceWorker.ready
+                    .then((registration) => {
+                      registration.showNotification(title, {
+                        body,
+                        icon: "/img/Logo_LokaClean_fixed.jpg",
+                        badge: "/img/Logo_LokaClean_fixed.jpg",
+                        tag: `admin-order-${latestOrder.id}`,
+                        requireInteraction: false,
+                        data: {
+                          url: `/admin/orders/${latestOrder.id}`,
+                          orderId: latestOrder.id
+                        },
+                        silent: false,
+                        renotify: false
+                      } as NotificationOptions);
+                    })
+                    .catch(() => {
+                      const browserNotification = new Notification(title, {
+                        body,
+                        icon: "/img/Logo_LokaClean_fixed.jpg",
+                        badge: "/img/Logo_LokaClean_fixed.jpg",
+                        tag: `admin-order-${latestOrder.id}`,
+                        requireInteraction: false,
+                        data: {
+                          url: `/admin/orders/${latestOrder.id}`,
+                          orderId: latestOrder.id
+                        },
+                        silent: false,
+                        renotify: false
+                      } as NotificationOptions);
+
+                      browserNotification.onclick = () => {
+                        window.focus();
+                        navigate(`/admin/orders/${latestOrder.id}`);
+                        browserNotification.close();
+                      };
+                    });
+                } else {
+                  const browserNotification = new Notification(title, {
+                    body,
+                    icon: "/img/Logo_LokaClean_fixed.jpg",
+                    badge: "/img/Logo_LokaClean_fixed.jpg",
+                    tag: `admin-order-${latestOrder.id}`,
+                    requireInteraction: false,
+                    data: {
+                      url: `/admin/orders/${latestOrder.id}`,
+                      orderId: latestOrder.id
+                    },
+                    silent: false,
+                    renotify: false
+                  } as NotificationOptions);
+
+                  browserNotification.onclick = () => {
+                    window.focus();
+                    navigate(`/admin/orders/${latestOrder.id}`);
+                    browserNotification.close();
+                  };
+                }
+              } catch (err) {
+                console.warn("[Admin Notifications] Failed to show browser notification:", err);
+              }
+            } else if (Notification.permission === "default") {
+              Notification.requestPermission().then((permission) => {
+                console.log("[Admin Notifications] Notification permission:", permission);
+              });
+            }
+          }
           
           // Auto-hide notification after 8 seconds
           if (notificationTimeoutRef.current) {
@@ -155,7 +230,7 @@ function AdminLayoutInner() {
     } catch (err) {
       console.error('[Admin Notifications] Failed to fetch:', err);
     }
-  }, []);
+  }, [navigate]);
 
   // Setup polling for pending orders (every 5 seconds)
   useEffect(() => {
@@ -199,6 +274,15 @@ function AdminLayoutInner() {
       console.error("[AdminLayout] Failed to record theme usage:", err);
     }
   }, [effectiveMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        console.log("[Admin Notifications] Notification permission (admin):", permission);
+      });
+    }
+  }, []);
 
   return (
     <div className="relative min-h-dvh overflow-x-hidden bg-slate-50 text-slate-900 transition-colors duration-200 scrollbar-hide dark:bg-slate-900 dark:text-slate-50">
