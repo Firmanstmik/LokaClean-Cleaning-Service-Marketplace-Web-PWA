@@ -482,48 +482,324 @@ export function AdminRatingsPage() {
     (sortBy !== "recent" ? 1 : 0);
 
   function handleExport() {
-    if (!ratings.length) return;
-    const header = [
-      "Order ID",
-      "Nama Paket",
-      "Nama Pelanggan",
-      "Email",
-      "Rating",
-      "Review",
-      "Tanggal",
-    ];
-    const rows = ratings.map((rating) => [
-      formatOrderNumber(rating.pesanan.id),
-      rating.pesanan.paket.name,
-      rating.pesanan.user.full_name,
-      rating.pesanan.user.email,
-      rating.rating_value.toString(),
-      rating.review?.replace(/"/g, '""') ?? "",
-      formatDateTimeWITA(rating.created_at),
-    ]);
-    const csvContent =
-      header.join(",") +
-      "\n" +
-      rows
-        .map((row) =>
-          row
-            .map((cell) => `"${cell.replace(/\r?\n/g, " ")}"`)
-            .join(","),
-        )
-        .join("\n");
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
+    if (!ratings.length || typeof window === "undefined") return;
+
+    const nowWita = new Date().toLocaleString("id-ID", {
+      timeZone: "Asia/Makassar",
+      dateStyle: "full",
+      timeStyle: "short",
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `ratings-report-${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+
+    const safeSummary = summary || {
+      average_rating: 0,
+      total_ratings: ratings.length,
+      five_star_percentage: 0,
+      distribution: {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+      } as Record<number, number>,
+    };
+
+    const escapeHtml = (text: string) =>
+      text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const rowsHtml =
+      ratings.length > 0
+        ? ratings
+            .map((rating, index) => {
+              const rowClass = index % 2 === 0 ? "row-even" : "row-odd";
+              const review = rating.review
+                ? escapeHtml(
+                    rating.review.length > 220
+                      ? `${rating.review.slice(0, 220)}…`
+                      : rating.review,
+                  )
+                : "Tidak ada ulasan tertulis.";
+
+              return `
+                <tr class="${rowClass}">
+                  <td class="text-left">
+                    <div class="order-id">${formatOrderNumber(rating.pesanan.id)}</div>
+                    <div class="order-meta">${escapeHtml(
+                      rating.pesanan.paket.name,
+                    )}</div>
+                  </td>
+                  <td class="text-left">
+                    <div class="user-name">${escapeHtml(
+                      rating.pesanan.user.full_name,
+                    )}</div>
+                    <div class="user-email">${escapeHtml(
+                      rating.pesanan.user.email,
+                    )}</div>
+                  </td>
+                  <td>
+                    <div class="rating-value">${rating.rating_value.toFixed(
+                      1,
+                    )}</div>
+                    <div class="rating-stars">★★★★★</div>
+                  </td>
+                  <td>
+                    <div class="date">${formatDateTimeWITA(
+                      rating.created_at,
+                    )}</div>
+                  </td>
+                  <td class="text-left">
+                    <div class="review">${review}</div>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("")
+        : `<tr><td colspan="5" class="text-left">Belum ada data rating untuk ditampilkan.</td></tr>`;
+
+    const html = `
+      <!doctype html>
+      <html lang="id">
+        <head>
+          <meta charset="utf-8" />
+          <title>Laporan Rating & Ulasan - LokaClean</title>
+          <style>
+            :root {
+              color-scheme: light;
+            }
+            * {
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            body {
+              margin: 24px;
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              font-size: 12px;
+              color: #020617;
+              background-color: #f8fafc;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 16px;
+            }
+            .title-block h1 {
+              margin: 0;
+              font-size: 18px;
+              font-weight: 700;
+              letter-spacing: 0.03em;
+              color: #020617;
+            }
+            .title-block p {
+              margin: 4px 0 0;
+              font-size: 11px;
+              color: #64748b;
+            }
+            .badge {
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              padding: 6px 10px;
+              border-radius: 999px;
+              background: linear-gradient(135deg, #0f172a, #020617);
+              color: #e5e7eb;
+              font-size: 10px;
+              font-weight: 500;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+            }
+            .meta {
+              margin-bottom: 12px;
+              font-size: 11px;
+              color: #64748b;
+            }
+            .summary {
+              display: grid;
+              grid-template-columns: repeat(4, minmax(0, 1fr));
+              gap: 12px;
+              margin-bottom: 16px;
+            }
+            .summary-card {
+              border-radius: 12px;
+              padding: 10px 12px;
+              background: radial-gradient(circle at top left, #f97316 0, #0f172a 46%, #020617 100%);
+              color: #e5e7eb;
+              position: relative;
+              overflow: hidden;
+            }
+            .summary-card::after {
+              content: "";
+              position: absolute;
+              inset: 0;
+              background: radial-gradient(circle at top right, rgba(251,191,36,0.12), transparent 60%);
+              pointer-events: none;
+            }
+            .summary-label {
+              font-size: 9px;
+              text-transform: uppercase;
+              letter-spacing: 0.11em;
+              opacity: 0.85;
+            }
+            .summary-value {
+              margin-top: 6px;
+              font-size: 14px;
+              font-weight: 600;
+            }
+            .summary-sub {
+              margin-top: 2px;
+              font-size: 10px;
+              opacity: 0.85;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 8px;
+            }
+            thead {
+              background: #020617;
+              color: #e5e7eb;
+            }
+            th, td {
+              padding: 8px 10px;
+              text-align: left;
+              border-bottom: 1px solid #e2e8f0;
+              vertical-align: top;
+            }
+            th {
+              font-size: 11px;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+            }
+            td {
+              font-size: 11px;
+              color: #0f172a;
+            }
+            .row-even {
+              background-color: #f9fafb;
+            }
+            .order-id {
+              font-weight: 600;
+            }
+            .order-meta {
+              margin-top: 2px;
+              font-size: 10px;
+              color: #64748b;
+            }
+            .user-name {
+              font-weight: 500;
+            }
+            .user-email {
+              margin-top: 2px;
+              font-size: 10px;
+              color: #64748b;
+            }
+            .rating-value {
+              font-weight: 600;
+              font-size: 13px;
+            }
+            .rating-stars {
+              margin-top: 2px;
+              font-size: 11px;
+              letter-spacing: 1px;
+              color: #fbbf24;
+            }
+            .date {
+              font-size: 10px;
+              color: #64748b;
+            }
+            .review {
+              font-size: 11px;
+              color: #0f172a;
+            }
+            .footer {
+              margin-top: 18px;
+              font-size: 10px;
+              color: #94a3b8;
+              display: flex;
+              justify-content: space-between;
+            }
+            @page {
+              margin: 18mm 14mm 18mm;
+            }
+          </style>
+        </head>
+        <body>
+          <header class="header">
+            <div class="title-block">
+              <h1>Laporan Rating & Ulasan</h1>
+              <p>LokaClean · Ringkasan kepuasan pelanggan berdasarkan ulasan</p>
+            </div>
+            <div class="badge">
+              <span>RATING DASHBOARD</span>
+            </div>
+          </header>
+          <div class="meta">
+            Dibuat pada ${nowWita} (WITA)
+          </div>
+          <section class="summary">
+            <div class="summary-card">
+              <div class="summary-label">Rata-rata rating</div>
+              <div class="summary-value">${safeSummary.average_rating.toFixed(
+                2,
+              )} / 5.00</div>
+              <div class="summary-sub">Performa keseluruhan layanan</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Total ulasan</div>
+              <div class="summary-value">${safeSummary.total_ratings.toLocaleString(
+                "id-ID",
+              )}</div>
+              <div class="summary-sub">Jumlah rating yang tercatat</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Porsi 5 bintang</div>
+              <div class="summary-value">${safeSummary.five_star_percentage.toFixed(
+                1,
+              )}%</div>
+              <div class="summary-sub">Kontribusi ulasan sangat puas</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Periode laporan</div>
+              <div class="summary-value">${ratings.length.toLocaleString(
+                "id-ID",
+              )} entri</div>
+              <div class="summary-sub">Sesuai filter aktif di halaman Rating</div>
+            </div>
+          </section>
+          <table>
+            <thead>
+              <tr>
+                <th>Pesanan</th>
+                <th>Pelanggan</th>
+                <th>Rating</th>
+                <th>Tanggal</th>
+                <th>Ringkasan ulasan</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+          <div class="footer">
+            <span>LokaClean Admin · Panel Rating & Ulasan</span>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
   }
 
   async function refresh() {
@@ -638,12 +914,12 @@ export function AdminRatingsPage() {
       </AnimatePresence>
 
       {summary && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Rata-rata Rating
             </div>
-            <div className="mt-3 flex items-end justify-between gap-2">
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-50">
                 {summary.average_rating.toFixed(2)}
               </div>

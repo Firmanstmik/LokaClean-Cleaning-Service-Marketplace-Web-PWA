@@ -268,21 +268,21 @@ function AdminLayoutInner() {
               </div>
             )}
             
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="relative h-4 min-w-[88px] whitespace-nowrap text-right sm:min-w-[96px]">
+            <div className="flex items-center gap-5 sm:gap-2.5">
+              <div className="relative h-3 min-w-[45px] whitespace-nowrap text-left sm:h-4 sm:min-w-[88px]">
                 <span
-                  className={`absolute inset-0 text-[11px] font-medium leading-none text-slate-800 transition-opacity duration-150 ${
+                  className={`absolute inset-0 pl-0.5 text-[6px] font-semibold leading-none tracking-[0.12em] text-slate-600/80 transition-opacity duration-150 sm:text-[11px] ${
                     isDark ? "opacity-0" : "opacity-100"
                   }`}
                 >
-                  Mode: Light
+                  MODE · LIGHT
                 </span>
                 <span
-                  className={`absolute inset-0 text-[11px] font-medium leading-none text-slate-100 transition-opacity duration-150 ${
+                  className={`absolute inset-0 pl-0.5 text-[6px] font-semibold leading-none tracking-[0.12em] text-sky-100 transition-opacity duration-150 sm:text-[11px] ${
                     isDark ? "opacity-100" : "opacity-0"
                   }`}
                 >
-                  Mode: Dark
+                  MODE · DARK
                 </span>
               </div>
 

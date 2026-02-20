@@ -553,8 +553,8 @@ export function AdminRevenuePage() {
   };
 
   return (
-    <div className="space-y-8 pb-8 bg-slate-50 dark:bg-slate-950">
-      <div className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 pb-3 pt-1 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
+    <div className="space-y-8 pb-8">
+      <div className="border-b border-slate-200 pb-3 pt-1 dark:border-slate-800">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-slate-800 dark:text-blue-400">
@@ -631,13 +631,13 @@ export function AdminRevenuePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
             <div
               key={card.id}
-              className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+              className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">

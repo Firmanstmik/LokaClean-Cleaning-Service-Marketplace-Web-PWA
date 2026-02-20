@@ -35,8 +35,6 @@ type OrdersHeaderProps = {
   totalCount: number;
   loading: boolean;
   onRefresh: () => void;
-  performanceMode: boolean;
-  onPerformanceChange: (value: boolean) => void;
 };
 
 type OrdersSearchProps = {
@@ -60,11 +58,6 @@ type OrdersDateFilterProps = {
   onDateToChange: (value: string) => void;
 };
 
-type PerformanceToggleProps = {
-  value: boolean;
-  onChange: (value: boolean) => void;
-};
-
 type OrderCardProps = {
   order: Pesanan;
   selected: boolean;
@@ -72,7 +65,6 @@ type OrderCardProps = {
   onAssign: (id: number) => void;
   onDeleteClick: (order: Pesanan) => void;
   busy: boolean;
-  performanceMode: boolean;
 };
 
 type OrdersPaginationProps = {
@@ -174,15 +166,6 @@ export function AdminOrdersPage() {
   const [dateTo, setDateTo] = useState("");
   const [showDateFilters, setShowDateFilters] = useState(false);
 
-  const [performanceMode, setPerformanceMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return localStorage.getItem("lokaclean_admin_orders_perf_mode") === "1";
-    } catch {
-      return false;
-    }
-  });
-
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -220,15 +203,6 @@ export function AdminOrdersPage() {
   const handleRefresh = useCallback(() => {
     fetchOrders();
   }, [fetchOrders]);
-
-  const handlePerformanceChange = useCallback((value: boolean) => {
-    setPerformanceMode(value);
-    try {
-      localStorage.setItem("lokaclean_admin_orders_perf_mode", value ? "1" : "0");
-    } catch {
-      // ignore
-    }
-  }, []);
 
   const filteredItems = useMemo(() => {
     if (!items.length) return [];
@@ -275,9 +249,9 @@ export function AdminOrdersPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, statusFilter, paymentFilter, dateFrom, dateTo, performanceMode]);
+  }, [debouncedSearch, statusFilter, paymentFilter, dateFrom, dateTo]);
 
-  const itemsPerPage = performanceMode ? 15 : 10;
+  const itemsPerPage = 10;
 
   const totalPages = Math.max(
     1,
@@ -367,14 +341,12 @@ export function AdminOrdersPage() {
   }, [deleteConfirm, fetchOrders]);
 
   return (
-    <div className="space-y-4 bg-slate-50 px-0 pb-8 pt-0 sm:space-y-5 sm:pb-8 dark:bg-slate-950">
+    <div className="space-y-6 pb-24 sm:pb-8">
       <OrdersHeader
         visibleCount={filteredItems.length}
         totalCount={items.length}
         loading={loading}
         onRefresh={handleRefresh}
-        performanceMode={performanceMode}
-        onPerformanceChange={handlePerformanceChange}
       />
 
       {successMessage && (
@@ -450,7 +422,6 @@ export function AdminOrdersPage() {
                 onAssign={handleAssign}
                 onDeleteClick={handleOpenDelete}
                 busy={busyId === order.id}
-                performanceMode={performanceMode}
               />
             ))}
           </div>
@@ -493,13 +464,11 @@ function OrdersHeader({
   totalCount,
   loading,
   onRefresh,
-  performanceMode,
-  onPerformanceChange,
 }: OrdersHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-sm ring-1 ring-slate-100 dark:bg-slate-800 dark:text-blue-400 dark:ring-slate-700">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-sm ring-1 ring-slate-100 dark:bg-slate-800 dark:text-blue-400 dark:ring-slate-700">
           <Package className="h-6 w-6" />
         </div>
         <div className="min-w-0">
@@ -511,13 +480,12 @@ function OrdersHeader({
               {visibleCount}
             </span>
           </div>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-1 text-xs text-slate-600 sm:text-sm dark:text-slate-400">
             Kelola dan pantau pesanan pelanggan · {totalCount} pesanan
           </p>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <PerformanceToggle value={performanceMode} onChange={onPerformanceChange} />
         <button
           type="button"
           onClick={onRefresh}
@@ -578,11 +546,11 @@ function OrdersFilterBar({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          <div className="flex flex-col gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
         <Filter className="h-3.5 w-3.5" />
         <span>Filter cepat</span>
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex flex-wrap gap-2">
         {statusOptions.map((option) => {
           const active = statusFilter === option.value;
           return (
@@ -601,7 +569,7 @@ function OrdersFilterBar({
           );
         })}
       </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex flex-wrap gap-2">
         {paymentOptions.map((option) => {
           const active = paymentFilter === option.value;
           return (
@@ -700,32 +668,6 @@ function OrdersDateFilter({
   );
 }
 
-function PerformanceToggle({ value, onChange }: PerformanceToggleProps) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!value)}
-      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-    >
-      <span className="text-[11px]">⚡ Mode ringan</span>
-      <span
-        className={`flex h-4 w-8 items-center rounded-full ${
-          value ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-        }`}
-      >
-        <span
-          className={`h-3 w-3 rounded-full bg-white transition-transform ${
-            value ? "translate-x-4" : "translate-x-1"
-          }`}
-        />
-      </span>
-      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-        {value ? "Aktif" : "Mati"}
-      </span>
-    </button>
-  );
-}
-
 const OrderCard = memo(function OrderCard({
   order,
   selected,
@@ -733,18 +675,14 @@ const OrderCard = memo(function OrderCard({
   onAssign,
   onDeleteClick,
   busy,
-  performanceMode,
 }: OrderCardProps) {
   const paymentStatus = order.pembayaran?.status ?? "PENDING";
 
   const cardBase =
-    "group relative overflow-hidden rounded-[14px] border px-3 py-3 sm:px-4 sm:py-3.5 transition-colors";
-  const cardTone = performanceMode
-    ? "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
-    : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900";
+    "group relative overflow-hidden rounded-[14px] border border-slate-200 bg-white px-3 py-3 sm:px-4 sm:py-3.5 transition-colors dark:border-slate-700 dark:bg-slate-900";
 
   return (
-    <div className={`${cardBase} ${cardTone}`}>
+    <div className={cardBase}>
       <div className="flex items-start gap-3">
         <button
           type="button"
@@ -759,7 +697,7 @@ const OrderCard = memo(function OrderCard({
           )}
         </button>
 
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 border border-slate-100 sm:h-20 sm:w-20 dark:bg-slate-800 dark:border-slate-700">
           <img
             src={getPackageImage(order.paket.name, order.paket.image)}
             alt={getPackageImageAlt(order.paket.name)}
@@ -791,17 +729,15 @@ const OrderCard = memo(function OrderCard({
             <div className="flex flex-col items-end gap-1.5">
               <StatusBadge status={order.status} />
               <PaymentBadge status={paymentStatus} />
-              {!performanceMode && (
-                    <button
-                      type="button"
-                      onClick={() => onDeleteClick(order)}
-                      disabled={busy}
-                      className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100 disabled:opacity-60 dark:border-rose-500/60 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
-                      aria-label="Hapus pesanan"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-              )}
+              <button
+                type="button"
+                onClick={() => onDeleteClick(order)}
+                disabled={busy}
+                className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100 disabled:opacity-60 dark:border-rose-500/60 dark:bg-rose-500/10 dark:text-rose-200 dark:hover:bg-rose-500/20"
+                aria-label="Hapus pesanan"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
 
@@ -809,11 +745,7 @@ const OrderCard = memo(function OrderCard({
             <Link to={`/admin/orders/${order.id}`} className="flex-1">
               <button
                 type="button"
-                className={`flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border px-3 text-xs font-semibold sm:text-sm ${
-                  performanceMode
-                    ? "border-slate-300 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                    : "border-slate-200 bg-slate-50 text-slate-900 hover:bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-                }`}
+                className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-900 hover:bg-white sm:text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
               >
                 <Eye className="h-3.5 w-3.5" />
                 <span>Detail</span>
@@ -825,11 +757,7 @@ const OrderCard = memo(function OrderCard({
                 type="button"
                 onClick={() => onAssign(order.id)}
                 disabled={busy}
-                className={`flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white sm:text-sm ${
-                  performanceMode
-                    ? "bg-slate-900 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900"
-                    : "bg-slate-900 hover:bg-black disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
-                }`}
+                className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white hover:bg-black disabled:opacity-60 sm:text-sm dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
               >
                 {busy ? (
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
