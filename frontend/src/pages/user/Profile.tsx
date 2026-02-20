@@ -103,19 +103,15 @@ export function ProfilePage() {
       const ua = nav.userAgent || nav.vendor || nav.opera || "";
       const isIOS = /iPad|iPhone|iPod/.test(ua);
       const isAndroid = /android/i.test(ua);
-      const isChrome =
-        /chrome/i.test(ua) && !/edg/i.test(ua) && !/opr/i.test(ua) && !/samsungbrowser/i.test(ua);
-
-      if (isAndroid && !isChrome) {
-        const current = window.location.href.replace(/^https?:\/\//, "");
-        window.location.href = `intent://${current}#Intent;scheme=https;package=com.android.chrome;end`;
+      
+      if (isAndroid) {
+        const apkUrl = import.meta.env.VITE_ANDROID_APK_URL || "/lokaclean.apk";
+        window.location.href = apkUrl;
         return;
       }
 
       if (isIOS) {
         setShowIOSInstallPrompt(true);
-      } else if (isAndroid) {
-        setShowAndroidInstallPrompt(true);
       } else {
         setShowIOSInstallPrompt(true);
       }

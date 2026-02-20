@@ -914,23 +914,14 @@ export function Home() {
                       const ua = navigator.userAgent || navigator.vendor || "";
                       const isIOS = /iPad|iPhone|iPod/.test(ua);
                       const isAndroid = /android/i.test(ua);
-                      const isChrome =
-                        /chrome/i.test(ua) && !/edg/i.test(ua) && !/opr/i.test(ua) && !/samsungbrowser/i.test(ua);
+                      if (isAndroid) {
+                        const apkUrl = import.meta.env.VITE_ANDROID_APK_URL || "/lokaclean.apk";
+                        window.location.href = apkUrl;
+                        return;
+                      }
 
-                      if (deferredPrompt && isAndroid && isChrome) {
-                        deferredPrompt.prompt();
-                        deferredPrompt.userChoice.then((choiceResult) => {
-                          if (choiceResult.outcome === "accepted") {
-                            setDeferredPrompt(null);
-                          }
-                        });
-                      } else if (isAndroid && !isChrome) {
-                        const current = window.location.href.replace(/^https?:\/\//, "");
-                        window.location.href = `intent://${current}#Intent;scheme=https;package=com.android.chrome;end`;
-                      } else if (isIOS) {
+                      if (isIOS) {
                         setShowIOSPrompt(true);
-                      } else if (isAndroid) {
-                        setShowAndroidPrompt(true);
                       } else {
                         setShowIOSPrompt(true);
                       }
