@@ -49,6 +49,7 @@ self.addEventListener('push', (event) => {
     badge: '/img/Logo_LokaClean.jpg',
     tag: data.tag || 'notification',
     requireInteraction: false,
+    silent: false,
     vibrate: [200, 100, 200],
     data: data,
     // Modern notification options
