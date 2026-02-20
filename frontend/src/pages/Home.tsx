@@ -26,25 +26,33 @@ import { AndroidInstallPrompt } from "../components/AndroidInstallPrompt";
 
 import { Helmet } from "react-helmet-async";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 export function Home() {
   const { token, actor } = useAuth();
   useCurrentLanguage(); // Force re-render on language change
 
   // PWA Standalone Mode Check
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+  const nav = window.navigator as Navigator & { standalone?: boolean };
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches || !!nav.standalone;
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [showAndroidPrompt, setShowAndroidPrompt] = useState(false);
   const [packages, setPackages] = useState<PaketCleaning[]>([]);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<PaketCleaning | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    const handler = (e: Event) => {
+      const event = e as BeforeInstallPromptEvent;
+      event.preventDefault();
+      setDeferredPrompt(event);
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
@@ -928,26 +936,24 @@ export function Home() {
                   
                   <button
                     onClick={() => {
-                       if (deferredPrompt) {
-                         deferredPrompt.prompt();
-                         deferredPrompt.userChoice.then((choiceResult: any) => {
-                           if (choiceResult.outcome === "accepted") {
-                             setDeferredPrompt(null);
-                           }
-                         });
-                       } else {
-                         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-                         const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
-                         const isAndroid = /android/i.test(userAgent);
+                      const userAgent = navigator.userAgent || navigator.vendor || "";
+                      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+                      const isAndroid = /android/i.test(userAgent);
 
-                         if (isIOS) {
-                           setShowIOSPrompt(true);
-                         } else if (isAndroid) {
-                           setShowAndroidPrompt(true);
-                         } else {
-                           alert("Silakan buka menu browser Anda dan pilih 'Add to Home Screen' atau 'Install App' untuk menginstall LokaClean.");
-                         }
-                       }
+                      if (deferredPrompt && isAndroid) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                          if (choiceResult.outcome === "accepted") {
+                            setDeferredPrompt(null);
+                          }
+                        });
+                      } else if (isIOS) {
+                        setShowIOSPrompt(true);
+                      } else if (isAndroid) {
+                        setShowAndroidPrompt(true);
+                      } else {
+                        setShowIOSPrompt(true);
+                      }
                     }}
                     className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white/5 text-white font-bold backdrop-blur-md border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
                   >

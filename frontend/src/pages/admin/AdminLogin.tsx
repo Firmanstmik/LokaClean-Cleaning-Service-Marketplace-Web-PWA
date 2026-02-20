@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type React from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Shield, Mail, Lock, LogIn, ArrowLeft, AlertCircle, Download } from "lucide-react";
 
@@ -7,28 +8,35 @@ import { useAuth } from "../../lib/auth";
 import { getApiErrorMessage } from "../../lib/apiError";
 import { IOSInstallPrompt } from "../../components/IOSInstallPrompt";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 export function AdminLogin() {
   const { token, actor, setAuth } = useAuth();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    const handler = (e: Event) => {
+      const event = e as unknown as BeforeInstallPromptEvent;
+      event.preventDefault();
+      setDeferredPrompt(event);
     };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    window.addEventListener("beforeinstallprompt", handler as EventListener);
+    return () => window.removeEventListener("beforeinstallprompt", handler as EventListener);
   }, []);
 
   useEffect(() => {
-    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
-    const ios = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    const nav = navigator as Navigator & { vendor?: string; opera?: string };
+    const ua = nav.userAgent || nav.vendor || nav.opera || "";
+    const ios = /iPad|iPhone|iPod/.test(ua);
     setIsIOS(ios);
   }, []);
 
@@ -81,7 +89,7 @@ export function AdminLogin() {
             {/* Login form */}
             <form
               className="space-y-4 sm:space-y-5"
-              onSubmit={async (e) => {
+              onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
                 e.preventDefault();
                 setLoading(true);
                 setError(null);
@@ -170,9 +178,9 @@ export function AdminLogin() {
               <button
                 type="button"
                 onClick={() => {
-                  if (deferredPrompt) {
+                  if (deferredPrompt && !isIOS) {
                     deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult: any) => {
+                    deferredPrompt.userChoice.then((choiceResult) => {
                       if (choiceResult.outcome === "accepted") {
                         setDeferredPrompt(null);
                       }
@@ -180,7 +188,7 @@ export function AdminLogin() {
                   } else if (isIOS) {
                     setShowIOSPrompt(true);
                   } else {
-                    alert("Browser belum menyediakan tombol install otomatis. Silakan gunakan menu 'Install app' atau 'Add to Home Screen'.");
+                    setShowIOSPrompt(true);
                   }
                 }}
                 className="flex w-full items-center justify-center gap-2 rounded-lg sm:rounded-xl border border-white/20 bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/10 hover:border-white/30"

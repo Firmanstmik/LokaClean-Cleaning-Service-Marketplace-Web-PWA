@@ -38,9 +38,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // This fixes the issue where missing actor in localStorage causes redirect to Landing Page
       if (userData.role && (!actor || actor !== userData.role)) {
         console.log("[UserGlobalData] Restoring missing/mismatched actor state:", userData.role);
-        // Cast to any to avoid strict type checking issues if role string varies slightly, 
-        // though it should match "USER" | "ADMIN"
-        setAuth(token, userData.role as any); 
+        if (userData.role === "USER" || userData.role === "ADMIN") {
+          setAuth(token, userData.role);
+        }
       }
     } catch (err) {
       const msg = getApiErrorMessage(err);

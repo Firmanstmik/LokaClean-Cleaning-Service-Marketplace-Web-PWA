@@ -60,7 +60,6 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         src={src}
         alt={alt}
         loading={priority ? "eager" : "lazy"}
-        // @ts-ignore - fetchPriority is standard but missing in React types currently
         fetchPriority={priority ? "high" : "auto"}
         onLoad={handleLoad}
         onError={handleError}

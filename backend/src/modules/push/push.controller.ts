@@ -46,6 +46,17 @@ export const subscribeHandler = asyncHandler(async (req: Request, res: Response)
     }
   });
 
+  if (ensureVapid()) {
+    try {
+      await sendPushToUser(req.auth.id, {
+        title: "Terima kasih sudah install LokaClean",
+        message: "Notifikasi real-time sudah aktif di perangkat ini.",
+        tag: `welcome-${req.auth.id}`
+      });
+    } catch {
+    }
+  }
+
   return created(res, { subscription: sub });
 });
 

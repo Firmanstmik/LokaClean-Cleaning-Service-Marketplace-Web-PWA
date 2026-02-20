@@ -138,11 +138,14 @@ export function UserLayout() {
   
   // Clear app badge when user opens the app (UserLayout mounts)
   useEffect(() => {
-    if ('clearAppBadge' in navigator) {
+    if ("clearAppBadge" in navigator) {
       try {
-        (navigator as any).clearAppBadge();
+        const navWithBadge = navigator as Navigator & {
+          clearAppBadge?: () => Promise<void> | void;
+        };
+        navWithBadge.clearAppBadge?.();
       } catch (e) {
-        console.error('Failed to clear app badge', e);
+        console.error("Failed to clear app badge", e);
       }
     }
   }, []);
@@ -576,12 +579,15 @@ export function UserLayout() {
 
   // Set app icon badge (installed PWA) when unread count changes
   useEffect(() => {
-    const navAny = navigator as any;
-    if (navAny.setAppBadge) {
+    const navWithBadge = navigator as Navigator & {
+      setAppBadge?: (count?: number) => Promise<void>;
+      clearAppBadge?: () => Promise<void>;
+    };
+    if (navWithBadge.setAppBadge) {
       if (unreadCount > 0) {
-        navAny.setAppBadge(unreadCount).catch(() => {});
+        navWithBadge.setAppBadge(unreadCount).catch(() => {});
       } else {
-        navAny.clearAppBadge?.().catch(() => {});
+        navWithBadge.clearAppBadge?.().catch(() => {});
       }
     }
   }, [unreadCount]);

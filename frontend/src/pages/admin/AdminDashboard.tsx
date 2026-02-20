@@ -238,6 +238,7 @@ export function AdminDashboardPage() {
     try {
       localStorage.setItem("lokaclean_admin_smart_theme_dismissed", "true");
     } catch {
+      void 0;
     }
   };
 
@@ -246,6 +247,7 @@ export function AdminDashboardPage() {
     try {
       localStorage.setItem("lokaclean_admin_smart_theme_dismissed", "true");
     } catch {
+      void 0;
     }
   };
 

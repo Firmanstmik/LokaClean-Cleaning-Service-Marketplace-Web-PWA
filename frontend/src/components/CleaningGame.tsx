@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import type React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, Timer, Sparkles, Play, RotateCcw, Zap, TrendingUp, Crown } from 'lucide-react';

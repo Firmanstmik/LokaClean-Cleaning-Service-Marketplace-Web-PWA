@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, memo } from "react";
+import type React from "react";
 import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents, GeoJSON, Popup, LayersControl } from "react-leaflet";
 import { LocateFixed, Loader2, MapPin, Navigation, Search, CheckCircle2, Home, Briefcase, Star, Clock, Trash2, Plus, Save, AlertCircle, X, Check } from "lucide-react";
 import L from "leaflet";
@@ -38,7 +39,19 @@ if (!IS_KEY_VALID) {
 }
 
 // Simplified NTB Boundary (Lombok + Sumbawa boxes) for visual context
-const NTB_GEOJSON: any = {
+type NTBFeatureCollection = {
+  type: "FeatureCollection";
+  features: Array<{
+    type: "Feature";
+    properties: Record<string, unknown>;
+    geometry: {
+      type: "MultiPolygon";
+      coordinates: number[][][][];
+    };
+  }>;
+};
+
+const NTB_GEOJSON: NTBFeatureCollection = {
   type: "FeatureCollection",
   features: [
     {
@@ -69,6 +82,41 @@ type SavedAddress = {
   district?: string;
   city?: string;
   notes?: string;
+};
+
+type SearchResultAddress = {
+  village?: string;
+  hamlet?: string;
+  suburb?: string;
+  neighbourhood?: string;
+  city?: string;
+  town?: string;
+  regency?: string;
+  county?: string;
+  road?: string;
+  building?: string;
+};
+
+type SearchResult = {
+  lat: string;
+  lon: string;
+  display_name: string;
+  name?: string;
+  address?: SearchResultAddress;
+  type?: string;
+  category?: string;
+  osm_id?: number | string;
+};
+
+type ReverseAddressDetails = {
+  road?: string;
+  village?: string;
+  suburb?: string;
+  district?: string;
+  city_district?: string;
+  city?: string;
+  town?: string;
+  regency?: string;
 };
 
 const NTB_CITIES = [
@@ -368,13 +416,13 @@ export const MapPicker = memo(function MapPicker({
 
   const [resolving, setResolving] = useState(false);
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
-  const [addressDetails, setAddressDetails] = useState<any>(null); // Store full address details (street, city, etc.)
+  const [addressDetails, setAddressDetails] = useState<ReverseAddressDetails | null>(null);
   const [resolveError, setResolveError] = useState<string | null>(null);
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -470,8 +518,9 @@ export const MapPicker = memo(function MapPicker({
            // Optional: Notify parent if needed, but we are doing simple flow
         }
       }
-    } catch (e: any) {
-      const msg = e.response?.data?.message || t("map.saveAddress.failed");
+    } catch (e) {
+      const err = e as { response?: { data?: { message?: string } } };
+      const msg = err.response?.data?.message || t("map.saveAddress.failed");
       alert(msg);
     }
   };
@@ -488,8 +537,8 @@ export const MapPicker = memo(function MapPicker({
     try {
       const res = await api.get("/address/list");
       setInternalSavedAddresses(res.data.data);
-    } catch (e) {
-      // Ignore if unauthenticated or error
+    } catch {
+      void 0;
     }
   };
 
@@ -497,9 +546,11 @@ export const MapPicker = memo(function MapPicker({
     try {
       const raw = localStorage.getItem("lokaclean_recent_locations");
       if (raw) {
-        setRecentLocations(JSON.parse(raw));
+        setRecentLocations(JSON.parse(raw) as SavedAddress[]);
       }
-    } catch (e) {}
+    } catch {
+      void 0;
+    }
   };
 
   const addToRecents = (addr: SavedAddress) => {
@@ -526,7 +577,7 @@ export const MapPicker = memo(function MapPicker({
     const shorter = s1.length > s2.length ? s2 : s1;
     if (longer.length === 0) return 1.0;
     
-    const costs = new Array();
+    const costs: number[] = [];
     for (let i = 0; i <= longer.length; i++) {
       let lastValue = i;
       for (let j = 0; j <= shorter.length; j++) {
@@ -561,7 +612,7 @@ export const MapPicker = memo(function MapPicker({
       
       try {
         // Helper to fetch from Nominatim
-        const fetchNominatim = async (queryStr: string, limit = 20) => {
+        const fetchNominatim = async (queryStr: string, limit = 20): Promise<SearchResult[]> => {
           const params = new URLSearchParams({
             q: queryStr,
             format: 'jsonv2',
@@ -574,10 +625,10 @@ export const MapPicker = memo(function MapPicker({
           });
           const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
           if (!res.ok) throw new Error("Network response was not ok");
-          return await res.json();
+          return (await res.json()) as SearchResult[];
         };
 
-        let results: any[] = [];
+        let results: SearchResult[] = [];
 
         // 2. PRIMARY SEARCH (CITY CONSTRAINED)
         if (selectedCity) {
@@ -624,8 +675,8 @@ export const MapPicker = memo(function MapPicker({
         } else {
           // 5. RANKING
           // Sort by: village > hamlet > suburb > neighbourhood > POI > road
-          const rankedData = results.sort((a: any, b: any) => {
-            const getGranularityScore = (item: any) => {
+          const rankedData = results.sort((a, b) => {
+            const getGranularityScore = (item: SearchResult) => {
               const addr = item.address || {};
               if (addr.village) return 1;
               if (addr.hamlet) return 2;
@@ -698,8 +749,11 @@ export const MapPicker = memo(function MapPicker({
     (async () => {
       try {
         const resp = await api.get("/geo/reverse", { params: { lat: value.lat, lng: value.lng } });
-        const json = resp.data?.data;
-        const displayName = (json?.display_name ?? null) as string | null;
+        const json = resp.data?.data as {
+          display_name?: string | null;
+          address?: ReverseAddressDetails;
+        } | null;
+        const displayName = json?.display_name ?? null;
         const addr = json?.address ?? {};
 
         if (requestIdRef.current !== id) return;
@@ -740,7 +794,17 @@ export const MapPicker = memo(function MapPicker({
   };
 
   // 6. AUTO CITY SWITCH & 7. MAP ACTIONS
-  const selectSearchResult = (result: any) => {
+  const selectSearchResult = (result: {
+    lat: string;
+    lon: string;
+    display_name: string;
+    address?: {
+      city?: string;
+      town?: string;
+      regency?: string;
+      county?: string;
+    };
+  }) => {
     const lat = parseFloat(result.lat);
     const lon = parseFloat(result.lon);
     
@@ -792,7 +856,19 @@ export const MapPicker = memo(function MapPicker({
     }
   };
 
-  const handleSaveData = async (data: any) => {
+  const handleSaveData = async (data: {
+    label: string;
+    address: string;
+    street?: string;
+    village?: string;
+    district?: string;
+    city?: string;
+    notes?: string;
+    gate_photo_url?: string;
+    is_primary?: boolean;
+    lat: number;
+    lng: number;
+  }) => {
     try {
       await api.post("/address/save", data);
       setShowSaveModal(false);
@@ -947,7 +1023,6 @@ export const MapPicker = memo(function MapPicker({
                 const subtitleParts = [
                    addr.village, 
                    addr.suburb, 
-                   addr.district, 
                    addr.city || addr.town || addr.regency
                 ].filter(Boolean);
                 const subtitle = subtitleParts.join(" - ");

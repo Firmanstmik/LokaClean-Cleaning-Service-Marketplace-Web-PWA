@@ -132,7 +132,9 @@ export function ModernMascot({
     setIsVisible(false);
     try {
       localStorage.setItem("mascotHidden", "1");
-    } catch {}
+    } catch {
+      void 0;
+    }
     setTimeout(() => {
       onDismiss?.();
     }, 300);

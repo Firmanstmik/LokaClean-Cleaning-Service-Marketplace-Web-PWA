@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import type React from "react";
 import { Link, useLocation, Navigate } from "react-router-dom";
 import { ArrowRight, MapPin, Star, Shield, Clock } from "lucide-react";
 

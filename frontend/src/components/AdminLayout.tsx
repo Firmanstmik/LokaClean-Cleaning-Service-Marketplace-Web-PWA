@@ -287,7 +287,15 @@ function AdminLayoutInner() {
     const socket = connectSocket();
     socket.emit("join_admin");
 
-    const handleAdminNewOrder = (payload: { order?: any }) => {
+    const handleAdminNewOrder = (payload: {
+      order?: {
+        id?: number | string;
+        user?: { full_name?: string | null } | null;
+        user_name?: string | null;
+        paket?: { name?: string | null } | null;
+        paket_name?: string | null;
+      };
+    }) => {
       try {
         const order = payload?.order;
         if (!order) return;

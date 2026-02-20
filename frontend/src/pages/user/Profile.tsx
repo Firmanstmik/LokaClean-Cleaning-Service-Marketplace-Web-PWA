@@ -29,6 +29,8 @@ import { normalizeWhatsAppPhone } from "../../lib/phone";
 import { toAbsoluteUrl } from "../../lib/urls";
 import { getLanguage, setLanguage, t } from "../../lib/i18n";
 import type { User } from "../../types/api";
+import { IOSInstallPrompt } from "../../components/IOSInstallPrompt";
+import { AndroidInstallPrompt } from "../../components/AndroidInstallPrompt";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -52,6 +54,8 @@ export function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showAndroidPromo, setShowAndroidPromo] = useState(true);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showIOSInstallPrompt, setShowIOSInstallPrompt] = useState(false);
+  const [showAndroidInstallPrompt, setShowAndroidInstallPrompt] = useState(false);
 
   // PWA Install Prompt Listener
   useEffect(() => {
@@ -95,8 +99,18 @@ export function ProfilePage() {
         setShowAndroidPromo(false);
       }
     } else {
-      // Fallback if PWA prompt is not available (e.g. already installed or iOS)
-      alert(t("profile.androidPromo.manualInstallTip"));
+      const nav = navigator as Navigator & { vendor?: string; opera?: string };
+      const userAgent = nav.userAgent || nav.vendor || nav.opera || "";
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+      const isAndroid = /android/i.test(userAgent);
+
+      if (isIOS) {
+        setShowIOSInstallPrompt(true);
+      } else if (isAndroid) {
+        setShowAndroidInstallPrompt(true);
+      } else {
+        setShowIOSInstallPrompt(true);
+      }
     }
   };
 
@@ -226,11 +240,9 @@ export function ProfilePage() {
     return <CleaningGame onClose={() => setShowGame(false)} />;
   }
 
-  // =================================================================
-  // VIEW MODE (Dashboard Style)
-  // =================================================================
   if (!isEditing) {
     return (
+      <>
       <div className="min-h-screen bg-slate-50/50 pb-24 relative overflow-hidden">
         {/* Decorative Background Elements */}
         <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-cyan-50/80 to-transparent pointer-events-none" />
@@ -453,6 +465,15 @@ export function ProfilePage() {
            </button>
         </div>
       </div>
+      <IOSInstallPrompt
+        isOpen={showIOSInstallPrompt}
+        onClose={() => setShowIOSInstallPrompt(false)}
+      />
+      <AndroidInstallPrompt
+        isOpen={showAndroidInstallPrompt}
+        onClose={() => setShowAndroidInstallPrompt(false)}
+      />
+      </>
     );
   }
 

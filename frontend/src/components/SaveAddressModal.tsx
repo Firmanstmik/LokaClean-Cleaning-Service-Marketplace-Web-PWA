@@ -5,7 +5,19 @@ import { t } from "../lib/i18n";
 type SaveAddressModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any) => Promise<void>;
+  onSave: (data: {
+    label: string;
+    address: string;
+    street: string;
+    village: string;
+    district: string;
+    city: string;
+    notes: string;
+    gate_photo_url: string;
+    is_primary: boolean;
+    lat: number;
+    lng: number;
+  }) => Promise<void>;
   address: string;
   details: {
     street?: string;
@@ -14,7 +26,7 @@ type SaveAddressModalProps = {
     city?: string;
   };
   coordinates: { lat: number; lng: number };
-  existingAddresses: any[];
+  existingAddresses: unknown[];
 };
 
 export function SaveAddressModal({
@@ -92,10 +104,13 @@ export function SaveAddressModal({
         lng: coordinates.lng
       });
       onClose();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      // Show specific error from backend if available, otherwise generic
-      const msg = e.response?.data?.message || e.message || t("map.saveAddress.failed");
+      let msg = t("map.saveAddress.failed");
+      if (e && typeof e === "object") {
+        const err = e as { response?: { data?: { message?: string } }; message?: string };
+        msg = err.response?.data?.message || err.message || msg;
+      }
       alert(msg);
     } finally {
       setIsSubmitting(false);

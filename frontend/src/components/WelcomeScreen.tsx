@@ -16,7 +16,9 @@ export function WelcomeScreen({ onComplete }: { onComplete: () => void }) {
 
   useEffect(() => {
     // Detect if PWA (Standalone)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    const nav = window.navigator as Navigator & { standalone?: boolean };
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches || !!nav.standalone;
     
     // Use sessionStorage for PWA (show once per launch/session), localStorage for Web (show less frequently)
     const storage = isStandalone ? sessionStorage : localStorage;

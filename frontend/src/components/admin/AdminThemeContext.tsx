@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import type React from "react";
 import { api } from "../../lib/api";
 
 type ThemeMode = "light" | "dark";
@@ -206,6 +207,7 @@ export function AdminThemeProvider({ children }: Props) {
         return { ...defaultSettings, ...parsed };
       }
     } catch {
+      void 0;
     }
     return defaultSettings;
   });
@@ -240,6 +242,7 @@ export function AdminThemeProvider({ children }: Props) {
           setSettings(prev => ({ ...prev, ...remote }));
         }
       } catch {
+        void 0;
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -264,6 +267,7 @@ export function AdminThemeProvider({ children }: Props) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch {
+      void 0;
     }
   }, [settings, effectiveMode]);
 
@@ -296,6 +300,7 @@ export function AdminThemeProvider({ children }: Props) {
     try {
       await api.put("/admin/me/theme", { settings: next });
     } catch {
+      void 0;
     }
   }, []);
 

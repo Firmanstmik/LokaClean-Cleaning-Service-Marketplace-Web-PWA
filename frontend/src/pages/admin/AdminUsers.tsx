@@ -530,10 +530,15 @@ export function AdminUsersPage() {
     });
 
     const usersWithOrders = sortedUsers.map((user) => {
+      const candidate = user as typeof user & {
+        total_orders?: number;
+        orders_count?: number;
+        ordersCount?: number;
+      };
       const raw =
-        (user as any).total_orders ??
-        (user as any).orders_count ??
-        (user as any).ordersCount ??
+        candidate.total_orders ??
+        candidate.orders_count ??
+        candidate.ordersCount ??
         0;
       const ordersCount =
         typeof raw === "number" && Number.isFinite(raw) ? raw : 0;

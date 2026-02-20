@@ -41,7 +41,8 @@ export function UserLogin() {
   // - Logged-in ADMIN should not see user login page.
   // - Logged-in USER should be sent to the user area.
   if (token) {
-    const from = (location.state as any)?.from || (actor === "ADMIN" ? "/admin/orders" : "/home");
+    const state = location.state as { from?: string } | null;
+    const from = state?.from || (actor === "ADMIN" ? "/admin/orders" : "/home");
     return <Navigate to={from} replace />;
   }
 
