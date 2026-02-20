@@ -256,6 +256,42 @@ export function AdminDashboardPage() {
       right={<SystemLiveBadge />}
     >
       <section className="space-y-4 sm:space-y-5">
+        <div className="block sm:hidden">
+          <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-4 py-3 shadow-sm dark:border-slate-700">
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.28),_transparent_60%)]" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-800/80 text-sky-300 ring-2 ring-sky-500/40">
+                <LayoutDashboard className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">
+                  Selamat datang Admin
+                </p>
+                <p className="mt-0.5 truncate text-sm font-semibold text-slate-50">
+                  {typeof window !== "undefined"
+                    ? (() => {
+                        try {
+                          const raw = localStorage.getItem("lokaclean_admin_data");
+                          if (!raw) return "Admin";
+                          const parsed = JSON.parse(raw) as { full_name?: string };
+                          return parsed.full_name || "Admin";
+                        } catch {
+                          return "Admin";
+                        }
+                      })()
+                    : "Admin"}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="relative ml-auto inline-flex h-7 items-center rounded-full border border-slate-600/70 bg-slate-900/60 px-2 text-[10px] font-semibold text-slate-200 active:scale-95"
+              >
+                <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Dashboard aktif
+              </button>
+            </div>
+          </div>
+        </div>
         {showSmartCard && (
           <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-start gap-3">

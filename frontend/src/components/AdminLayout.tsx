@@ -221,10 +221,10 @@ function AdminLayoutInner() {
               </div>
             </div>
             <div className="flex min-w-0 flex-col text-left">
-              <span className="text-sm font-black leading-tight text-slate-900 sm:text-base dark:text-slate-50">
+              <span className="text-[11px] font-black leading-tight text-slate-900 sm:text-base dark:text-slate-50">
                 LokaClean Admin
               </span>
-              <span className="text-[10px] font-medium leading-tight text-slate-500 sm:text-xs dark:text-slate-400">
+              <span className="text-[8px] font-medium leading-tight text-slate-500 sm:text-xs dark:text-slate-400">
                 Panel Operasional
               </span>
             </div>
@@ -243,7 +243,6 @@ function AdminLayoutInner() {
             <NavHeaderItem to="/admin/users" label="Pengguna" icon={Users} />
             <NavHeaderItem to="/admin/revenue" label="Pendapatan" icon={TrendingUp} />
             <NavHeaderItem to="/admin/ratings" label="Rating" icon={Star} />
-            <NavHeaderItem to="/admin/settings/appearance" label="Pengaturan" icon={Palette} />
           </nav>
 
           {/* Right section */}
@@ -405,7 +404,7 @@ function NavHeaderItem({ to, label, icon: Icon, badge }: { to: string; label: st
           className={`relative flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold transition-all duration-150 ${
             isActive
               ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20"
-              : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+              : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-[color:var(--color-primary)] dark:hover:bg-slate-800 dark:hover:text-[color:var(--color-primary)]"
           }`}
         >
           {isActive && (
@@ -416,7 +415,11 @@ function NavHeaderItem({ to, label, icon: Icon, badge }: { to: string; label: st
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
             />
           )}
-          <Icon className={`relative z-10 h-4 w-4 flex-shrink-0 ${isActive ? "text-white" : "text-slate-500"}`} />
+          <Icon
+            className={`relative z-10 h-4 w-4 flex-shrink-0 ${
+              isActive ? "text-white" : "text-slate-500 dark:text-[color:var(--color-primary)]"
+            }`}
+          />
           <span className="relative z-10 whitespace-nowrap">{label}</span>
           {badge !== undefined && badge > 0 && (
             <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-sm">

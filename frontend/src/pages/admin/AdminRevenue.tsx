@@ -434,6 +434,37 @@ export function AdminRevenuePage() {
               background: #0f172a;
               color: #e5e7eb;
             }
+            .brand {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-bottom: 6px;
+            }
+            .brand-logo-wrap {
+              width: 30px;
+              height: 30px;
+              border-radius: 10px;
+              overflow: hidden;
+              background: #e5e7eb;
+              box-shadow: 0 6px 12px rgba(15,23,42,0.25);
+            }
+            .brand-logo {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+            .brand-title {
+              font-size: 13px;
+              font-weight: 700;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+              color: #0f172a;
+            }
+            .brand-subtitle {
+              margin-top: 2px;
+              font-size: 10px;
+              color: #64748b;
+            }
             .summary-item {
               display: flex;
               flex-direction: column;
@@ -494,6 +525,15 @@ export function AdminRevenuePage() {
         <body>
           <header class="header">
             <div class="title-block">
+              <div class="brand">
+                <div class="brand-logo-wrap">
+                  <img src="/img/logo.jpg" alt="LokaClean Logo" class="brand-logo" />
+                </div>
+                <div>
+                  <div class="brand-title">LOKACLEAN</div>
+                  <div class="brand-subtitle">Cleaning Service Mandalika</div>
+                </div>
+              </div>
               <h1>Laporan Pendapatan</h1>
               <p>LokaClean · Ringkasan revenue dan tip</p>
             </div>

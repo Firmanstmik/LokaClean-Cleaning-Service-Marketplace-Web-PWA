@@ -588,6 +588,37 @@ export function AdminRatingsPage() {
               align-items: flex-start;
               margin-bottom: 16px;
             }
+            .brand {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-bottom: 6px;
+            }
+            .brand-logo-wrap {
+              width: 30px;
+              height: 30px;
+              border-radius: 10px;
+              overflow: hidden;
+              background: #e5e7eb;
+              box-shadow: 0 6px 12px rgba(15,23,42,0.25);
+            }
+            .brand-logo {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+            .brand-title {
+              font-size: 13px;
+              font-weight: 700;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+              color: #0f172a;
+            }
+            .brand-subtitle {
+              margin-top: 2px;
+              font-size: 10px;
+              color: #64748b;
+            }
             .title-block h1 {
               margin: 0;
               font-size: 18px;
@@ -732,6 +763,15 @@ export function AdminRatingsPage() {
         <body>
           <header class="header">
             <div class="title-block">
+              <div class="brand">
+                <div class="brand-logo-wrap">
+                  <img src="/img/logo.jpg" alt="LokaClean Logo" class="brand-logo" />
+                </div>
+                <div>
+                  <div class="brand-title">LOKACLEAN</div>
+                  <div class="brand-subtitle">Dashboard Rating & Ulasan</div>
+                </div>
+              </div>
               <h1>Laporan Rating & Ulasan</h1>
               <p>LokaClean · Ringkasan kepuasan pelanggan berdasarkan ulasan</p>
             </div>

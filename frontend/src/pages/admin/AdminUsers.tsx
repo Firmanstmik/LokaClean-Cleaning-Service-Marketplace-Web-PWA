@@ -55,6 +55,8 @@ interface UserData {
   default_latitude?: number | null;
   default_longitude?: number | null;
   status?: UserStatus;
+  total_orders?: number;
+  orders_count?: number;
 }
 
 type SortField = "name" | "email" | "role" | "created_at";
@@ -519,39 +521,370 @@ export function AdminUsersPage() {
   };
 
   const handleExport = () => {
-    if (!sortedUsers.length) return;
-    const header = ["Nama", "Email", "No HP", "Role", "Tanggal Daftar"];
-    const rows = sortedUsers.map(user => [
-      user.full_name,
-      user.email,
-      user.phone_number,
-      user.role,
-      formatDateOnlyWITA(user.created_at),
-    ]);
+    if (!sortedUsers.length || typeof window === "undefined") return;
 
-    const csv = [header, ...rows]
-      .map(row =>
-        row
-          .map(value => {
-            const str = String(value ?? "");
-            const escaped = str.replace(/"/g, '""');
-            return `"${escaped}"`;
-          })
-          .join(","),
-      )
-      .join("\n");
+    const nowWita = new Date().toLocaleString("id-ID", {
+      timeZone: "Asia/Makassar",
+      dateStyle: "full",
+      timeStyle: "short",
+    });
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `lokaclean-users-${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const usersWithOrders = sortedUsers.map((user) => {
+      const raw =
+        (user as any).total_orders ??
+        (user as any).orders_count ??
+        (user as any).ordersCount ??
+        0;
+      const ordersCount =
+        typeof raw === "number" && Number.isFinite(raw) ? raw : 0;
+      return { user, ordersCount };
+    });
+
+    const topUsers = [...usersWithOrders]
+      .filter((item) => item.ordersCount > 0)
+      .sort((a, b) => b.ordersCount - a.ordersCount)
+      .slice(0, 5);
+
+    const escapeHtml = (text: string) =>
+      text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const topUsersHtml =
+      topUsers.length > 0
+        ? topUsers
+            .map(
+              (item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td class="text-left">
+              <div class="user-name">${escapeHtml(item.user.full_name)}</div>
+              <div class="user-email">${escapeHtml(item.user.email)}</div>
+            </td>
+            <td>${item.ordersCount.toLocaleString("id-ID")}</td>
+          </tr>
+        `,
+            )
+            .join("")
+        : `<tr><td colspan="3" class="text-left">Belum ada data frekuensi pesanan per pengguna.</td></tr>`;
+
+    const rowsHtml =
+      usersWithOrders.length > 0
+        ? usersWithOrders
+            .map(({ user, ordersCount }, index) => {
+              const rowClass = index % 2 === 0 ? "row-even" : "row-odd";
+              return `
+          <tr class="${rowClass}">
+            <td class="text-left">
+              <div class="user-name">${escapeHtml(user.full_name)}</div>
+              <div class="user-email">${escapeHtml(user.email)}</div>
+            </td>
+            <td class="text-left">
+              <div>${escapeHtml(user.phone_number || "-")}</div>
+            </td>
+            <td>${escapeHtml(user.role)}</td>
+            <td>${formatDateOnlyWITA(user.created_at)}</td>
+            <td>${ordersCount.toLocaleString("id-ID")}</td>
+          </tr>
+        `;
+            })
+            .join("")
+        : `<tr><td colspan="5" class="text-left">Belum ada pengguna untuk ditampilkan.</td></tr>`;
+
+    const html = `
+      <!doctype html>
+      <html lang="id">
+        <head>
+          <meta charset="utf-8" />
+          <title>Laporan Pengguna - LokaClean</title>
+          <style>
+            :root {
+              color-scheme: light;
+            }
+            * {
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            body {
+              margin: 24px;
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              font-size: 12px;
+              color: #020617;
+              background-color: #f9fafb;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 16px;
+            }
+            .brand {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            }
+            .brand-logo-wrap {
+              width: 30px;
+              height: 30px;
+              border-radius: 10px;
+              overflow: hidden;
+              background: #e5e7eb;
+              box-shadow: 0 6px 12px rgba(15,23,42,0.25);
+            }
+            .brand-logo {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+            .brand-title {
+              font-size: 13px;
+              font-weight: 700;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+              color: #0f172a;
+            }
+            .brand-subtitle {
+              margin-top: 2px;
+              font-size: 10px;
+              color: #64748b;
+            }
+            .badge {
+              padding: 6px 10px;
+              border-radius: 999px;
+              background: linear-gradient(135deg, #22c55e, #16a34a);
+              color: #ecfdf5;
+              font-size: 10px;
+              font-weight: 600;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+            }
+            .meta {
+              margin-bottom: 10px;
+              font-size: 11px;
+              color: #64748b;
+            }
+            .summary-grid {
+              display: grid;
+              grid-template-columns: repeat(4, minmax(0, 1fr));
+              gap: 10px;
+              margin-bottom: 16px;
+            }
+            .summary-card {
+              border-radius: 12px;
+              padding: 10px 12px;
+              background: linear-gradient(135deg, #ecfdf5, #dcfce7);
+              border: 1px solid #bbf7d0;
+              color: #022c22;
+            }
+            .summary-label {
+              font-size: 9px;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+              color: #047857;
+            }
+            .summary-value {
+              margin-top: 4px;
+              font-size: 14px;
+              font-weight: 700;
+            }
+            .summary-sub {
+              margin-top: 2px;
+              font-size: 10px;
+              color: #047857;
+              opacity: 0.85;
+            }
+            .top-users {
+              margin-top: 4px;
+              margin-bottom: 16px;
+              padding: 10px 12px;
+              border-radius: 12px;
+              background: #0f172a;
+              color: #e5e7eb;
+              display: grid;
+              grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr);
+              gap: 12px;
+            }
+            .top-users-title {
+              font-size: 12px;
+              font-weight: 600;
+              margin-bottom: 4px;
+            }
+            .top-users-desc {
+              font-size: 10px;
+              color: #9ca3af;
+            }
+            .top-users table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 10px;
+            }
+            .top-users th,
+            .top-users td {
+              padding: 4px 6px;
+              text-align: left;
+              border-bottom: 1px solid rgba(148,163,184,0.5);
+            }
+            .top-users th {
+              font-weight: 600;
+              color: #e5e7eb;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+            }
+            .user-name {
+              font-weight: 600;
+            }
+            .user-email {
+              margin-top: 2px;
+              font-size: 10px;
+              color: #6b7280;
+            }
+            table.main {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 4px;
+            }
+            table.main thead {
+              background: #0f172a;
+              color: #e5e7eb;
+            }
+            table.main th,
+            table.main td {
+              padding: 8px 10px;
+              border-bottom: 1px solid #e5e7eb;
+              font-size: 11px;
+            }
+            table.main th {
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+            }
+            table.main td {
+              color: #111827;
+            }
+            table.main td.text-left {
+              text-align: left;
+            }
+            table.main td:nth-child(3),
+            table.main td:nth-child(5) {
+              white-space: nowrap;
+            }
+            .row-even {
+              background-color: #f9fafb;
+            }
+            .footer {
+              margin-top: 18px;
+              font-size: 10px;
+              color: #9ca3af;
+              display: flex;
+              justify-content: space-between;
+            }
+            @page {
+              margin: 18mm 14mm 18mm;
+            }
+          </style>
+        </head>
+        <body>
+          <header class="header">
+            <div class="brand">
+              <div class="brand-logo-wrap">
+                <img src="/img/logo.jpg" alt="LokaClean Logo" class="brand-logo" />
+              </div>
+              <div>
+                <div class="brand-title">LOKACLEAN</div>
+                <div class="brand-subtitle">Laporan Manajemen Pengguna</div>
+              </div>
+            </div>
+            <div class="badge">
+              ADMIN · USERS
+            </div>
+          </header>
+          <div class="meta">
+            Dibuat pada ${nowWita} (WITA)
+          </div>
+          <section class="summary-grid">
+            <div class="summary-card">
+              <div class="summary-label">Total pengguna</div>
+              <div class="summary-value">${totalUsers.toLocaleString(
+                "id-ID",
+              )}</div>
+              <div class="summary-sub">Semua akun terdaftar</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Admin</div>
+              <div class="summary-value">${totalAdmins.toLocaleString(
+                "id-ID",
+              )}</div>
+              <div class="summary-sub">Akun dengan akses penuh</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">User</div>
+              <div class="summary-value">${totalRegularUsers.toLocaleString(
+                "id-ID",
+              )}</div>
+              <div class="summary-sub">Pelanggan aplikasi</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Aktif bulan ini</div>
+              <div class="summary-value">${usersActiveThisMonth.toLocaleString(
+                "id-ID",
+              )}</div>
+              <div class="summary-sub">Pengguna baru periode berjalan</div>
+            </div>
+          </section>
+          <section class="top-users">
+            <div>
+              <div class="top-users-title">Pengguna paling sering memesan</div>
+              <div class="top-users-desc">
+                Daftar singkat pelanggan dengan jumlah pesanan tertinggi berdasarkan data sistem.
+              </div>
+            </div>
+            <div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Pengguna</th>
+                    <th>Total pesanan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${topUsersHtml}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <table class="main">
+            <thead>
+              <tr>
+                <th>Nama & email</th>
+                <th>No HP</th>
+                <th>Role</th>
+                <th>Tanggal daftar</th>
+                <th>Total pesanan</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+          <div class="footer">
+            <span>LokaClean Admin · Panel Pengguna</span>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
   };
 
   const openEditModal = (user: UserData) => {
