@@ -36,23 +36,25 @@ export default defineConfig({
       manifest: {
         name: "LokaClean",
         short_name: "LokaClean",
-        description: "Room cleaning marketplace (Phase 1)",
-        theme_color: "#0ea5e9",
-        background_color: "#f8fafc",
-        display: "standalone",
         start_url: "/",
+        scope: "/",
+        display: "standalone",
+        orientation: "portrait",
+        background_color: "#0F172A",
+        theme_color: "#0F766E",
+        description: "Layanan Kebersihan Profesional di Lombok",
         icons: [
           {
             src: "/img/Logo_LokaClean_fixed.jpg",
             sizes: "192x192",
             type: "image/jpeg",
-            purpose: "any"
+            purpose: "any maskable"
           },
           {
             src: "/img/Logo_LokaClean.jpg",
             sizes: "512x512",
             type: "image/jpeg",
-            purpose: "any"
+            purpose: "any maskable"
           }
         ]
       }

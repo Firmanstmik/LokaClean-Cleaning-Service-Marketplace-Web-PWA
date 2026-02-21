@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.lokaclean.app",
+      "sha256_cert_fingerprints": [
+        "GENERATE_SHA256_RELEASE_KEY_AND_PASTE_HERE"
+      ]
+    }
+  }
+]

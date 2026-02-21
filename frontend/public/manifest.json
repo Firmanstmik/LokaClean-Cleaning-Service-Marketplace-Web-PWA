@@ -2,21 +2,24 @@
   "name": "LokaClean",
   "short_name": "LokaClean",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#14b8a6",
-  "description": "Layanan Kebersihan Profesional di Lombok",
   "orientation": "portrait",
+  "background_color": "#0F172A",
+  "theme_color": "#0F766E",
+  "description": "Layanan Kebersihan Profesional di Lombok",
   "icons": [
     {
-      "src": "/img/Logo_LokaClean.jpg",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/img/Logo_LokaClean.jpg",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

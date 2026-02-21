@@ -1,0 +1,2 @@
+-keep class androidx.browser.trusted.** { *; }
+-keep class com.google.androidbrowserhelper.** { *; }
