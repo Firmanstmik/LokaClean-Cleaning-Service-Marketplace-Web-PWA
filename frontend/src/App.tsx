@@ -5,35 +5,35 @@
 import { useState, useEffect } from "react";
 import { AuthProvider } from "./lib/auth";
 import { AppRoutes } from "./routes";
-import { WelcomeScreen } from "./components/WelcomeScreen";
 import { UserProvider } from "./components/UserGlobalData";
 import { usePWAInstall } from "./hooks/usePWAInstall";
 import { usePushNotificationOnboarding } from "./hooks/usePushNotification";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PushOnboardingModal } from "./components/PushOnboardingModal";
 import { IOSInstallPrompt } from "./components/IOSInstallPrompt";
+import { SplashScreen } from "./components/SplashScreen";
 
 interface NavigatorWithStandalone extends Navigator {
   standalone?: boolean;
 }
 
 export function App() {
-  const [showSplash, setShowSplash] = useState(false);
+  const [showSplash, setShowSplash] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const seen = window.sessionStorage.getItem("lokaclean_splash_seen_v1");
+    return !seen;
+  });
 
   useEffect(() => {
-    const nav = window.navigator as NavigatorWithStandalone;
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches || !!nav.standalone;
-    
-    if (isStandalone) {
-      setShowSplash(true);
+    if (!showSplash && typeof window !== "undefined") {
+      window.sessionStorage.setItem("lokaclean_splash_seen_v1", "1");
     }
-  }, []);
+  }, [showSplash]);
 
   return (
     <AuthProvider>
       <UserProvider>
-        {showSplash && <WelcomeScreen onComplete={() => setShowSplash(false)} />}
+        <SplashScreen visible={showSplash} onFinished={() => setShowSplash(false)} />
         <PWAExperienceLayer />
         <AppRoutes />
       </UserProvider>

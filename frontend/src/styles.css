@@ -70,6 +70,28 @@
   }
 }
 
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@layer utilities {
+  .skeleton-base {
+    @apply relative overflow-hidden bg-slate-200/70 rounded-xl;
+  }
+
+  .skeleton-base::before {
+    content: "";
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    transform: translateX(-100%);
+  }
+}
+
 @layer components {
   .btn-admin-primary {
     @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition-colors;

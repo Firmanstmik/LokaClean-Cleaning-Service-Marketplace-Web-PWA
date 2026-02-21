@@ -103,15 +103,11 @@ export function ProfilePage() {
       const ua = nav.userAgent || nav.vendor || nav.opera || "";
       const isIOS = /iPad|iPhone|iPod/.test(ua);
       const isAndroid = /android/i.test(ua);
-      
-      if (isAndroid) {
-        const apkUrl = import.meta.env.VITE_ANDROID_APK_URL || "/lokaclean.apk";
-        window.location.href = apkUrl;
-        return;
-      }
 
       if (isIOS) {
         setShowIOSInstallPrompt(true);
+      } else if (isAndroid) {
+        setShowAndroidInstallPrompt(true);
       } else {
         setShowIOSInstallPrompt(true);
       }

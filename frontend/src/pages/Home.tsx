@@ -23,6 +23,7 @@ import { MobileWelcome } from "./MobileWelcome";
 import { OptimizedImage } from "../components/ui/OptimizedImage";
 import { IOSInstallPrompt } from "../components/IOSInstallPrompt";
 import { AndroidInstallPrompt } from "../components/AndroidInstallPrompt";
+import { Skeleton } from "../components/ui/Skeleton";
 
 import { Helmet } from "react-helmet-async";
 
@@ -34,6 +35,7 @@ interface BeforeInstallPromptEvent extends Event {
 export function Home() {
   const { token, actor } = useAuth();
   useCurrentLanguage(); // Force re-render on language change
+  const currentLanguage = getLanguage();
 
   // PWA Standalone Mode Check
   const nav = window.navigator as Navigator & { standalone?: boolean };
@@ -47,6 +49,7 @@ export function Home() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<PaketCleaning | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showHeroSkeleton, setShowHeroSkeleton] = useState(true);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -56,6 +59,11 @@ export function Home() {
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowHeroSkeleton(false), 700);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -419,89 +427,91 @@ export function Home() {
                   transition={{ duration: 0.5, ease: "easeOut" }}
                   className="w-full mb-1 sm:hidden flex justify-center will-change-transform"
                 >
-                  <img 
-                    src="/img/hero.png" 
-                    alt="LokaClean Hero" 
+                  <img
+                    src="/img/hero.png"
+                    alt="LokaClean Hero"
                     fetchPriority="high"
                     loading="eager"
                     decoding="async"
                     className="h-[270px] w-auto object-contain drop-shadow-2xl filter contrast-110"
                   />
                 </motion.div>
-                {/* Headlines */}
-                <motion.h1
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
-                  className="text-2xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
-                >
-                  <span className="inline-block">
-                    {t("home.hero.titlePart1")}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
-                      {t("home.hero.titleHighlight1")}
-                    </span>
-                  </span>
-                  <br className="hidden lg:block" />
-                  <span className="inline-block">
-                    {t("home.hero.titlePart2")}
-                  </span>{" "}
-                  <br className="hidden lg:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-500 via-tropical-500 to-sun-400">
-                    {t("home.hero.titleHighlight2")}
-                  </span>
-                  {t("home.hero.titlePart3")}
-                </motion.h1>
 
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
-                  className="text-sm sm:text-lg text-slate-800 font-semibold leading-relaxed mb-3 sm:mb-8 max-w-lg drop-shadow-md bg-white/40 sm:bg-white/30 sm:backdrop-blur-md p-3.5 rounded-xl border border-white/40 text-center sm:text-left mx-auto sm:mx-0 will-change-transform"
-                >
-                  {t("home.hero.subtitle")}
-                </motion.p>
+                {showHeroSkeleton ? (
+                  <div className="w-full max-w-lg mx-auto sm:mx-0 space-y-4">
+                    <Skeleton className="h-7 sm:h-10 w-4/5" />
+                    <Skeleton className="h-6 sm:h-8 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <div className="flex gap-3 pt-2">
+                      <Skeleton className="h-11 w-32 sm:w-40" />
+                      <Skeleton className="h-11 w-32 sm:w-40" />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <motion.h1
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
+                      className="text-2xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
+                    >
+                      Jasa Cleaning Service Terbaik di Lombok | Villa &amp; Home Cleaning Kuta Mandalika
+                    </motion.h1>
 
-                {/* CTA Buttons - Moved to Hero Section */}
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
-                  className="flex flex-row gap-3 sm:gap-4 justify-center sm:justify-start mb-4 sm:mb-10 will-change-transform"
-                >
-                  <Link
-                    to="/register"
-                    className="w-36 sm:w-64 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-white shadow-[0_8px_32px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_48px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-105 text-center flex items-center justify-center whitespace-nowrap"
-                  >
-                    <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
-                      {t("home.hero.ctaRegister")}
-                      <ArrowRight className="h-3.5 w-3.5 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
-                    </span>
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+                      className="text-sm sm:text-lg text-slate-800 font-semibold leading-relaxed mb-3 sm:mb-8 max-w-lg drop-shadow-md bg-white/40 sm:bg-white/30 sm:backdrop-blur-md p-3.5 rounded-xl border border-white/40 text-center sm:text-left mx-auto sm:mx-0 will-change-transform"
+                    >
+                      {currentLanguage === "en"
+                        ? "LokaClean is a professional cleaning service in Lombok serving Kuta Mandalika, Praya, Mataram, and West Lombok. We specialize in villa cleaning, home cleaning, and daily housekeeping with 5-star hotel standards."
+                        : "LokaClean adalah layanan kebersihan profesional di Lombok yang melayani Kuta Mandalika, Praya, Mataram, dan Lombok Barat. Spesialis villa cleaning, home cleaning, dan daily housekeeping dengan standar hotel bintang 5."}
+                    </motion.p>
+
                     <motion.div
-                      className="hidden sm:block absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      animate={{
-                        x: ["-100%", "200%"],
-                      }}
-                      transition={{
-                        duration: 2.5,
-                        repeat: Infinity,
-                        repeatDelay: 1.5,
-                        ease: "linear",
-                      }}
-                    />
-                  </Link>
-                  <Link
-                    to="/login"
-                    className="w-36 sm:w-64 relative rounded-xl sm:rounded-2xl border-2 border-slate-300 bg-white/90 sm:backdrop-blur-xl px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-slate-700 hover:bg-white hover:border-slate-400 hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden group text-center block whitespace-nowrap"
-                  >
-                    <span className="relative z-10">{t("home.hero.ctaLogin")}</span>
-                    <motion.div
-                      className="absolute inset-0 bg-slate-100"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: 0 }}
-                      transition={{ duration: 0.3 }}
-                      />
-                  </Link>
-                </motion.div>
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
+                      className="flex flex-row gap-3 sm:gap-4 justify-center sm:justify-start mb-4 sm:mb-10 will-change-transform"
+                    >
+                      <Link
+                        to="/register"
+                        className="w-36 sm:w-64 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-white shadow-[0_8px_32px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_48px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-105 text-center flex items-center justify-center whitespace-nowrap"
+                      >
+                        <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
+                          {t("home.hero.ctaRegister")}
+                          <ArrowRight className="h-3.5 w-3.5 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                        <motion.div
+                          className="hidden sm:block absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                          animate={{
+                            x: ["-100%", "200%"],
+                          }}
+                          transition={{
+                            duration: 2.5,
+                            repeat: Infinity,
+                            repeatDelay: 1.5,
+                            ease: "linear",
+                          }}
+                        />
+                      </Link>
+                      <Link
+                        to="/login"
+                        className="w-36 sm:w-64 relative rounded-xl sm:rounded-2xl border-2 border-slate-300 bg-white/90 sm:backdrop-blur-xl px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-slate-700 hover:bg-white hover:border-slate-400 hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden group text-center block whitespace-nowrap"
+                      >
+                        <span className="relative z-10">{t("home.hero.ctaLogin")}</span>
+                        <motion.div
+                          className="absolute inset-0 bg-slate-100"
+                          initial={{ x: "-100%" }}
+                          whileHover={{ x: 0 }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </Link>
+                    </motion.div>
+                  </>
+                )}
 
                 {/* Highlight Values (Floating Cards on Image) - Grid on Mobile */}
                 <motion.div
@@ -914,14 +924,21 @@ export function Home() {
                       const ua = navigator.userAgent || navigator.vendor || "";
                       const isIOS = /iPad|iPhone|iPod/.test(ua);
                       const isAndroid = /android/i.test(ua);
-                      if (isAndroid) {
-                        const apkUrl = import.meta.env.VITE_ANDROID_APK_URL || "/lokaclean.apk";
-                        window.location.href = apkUrl;
+
+                      if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choice) => {
+                          if (choice.outcome === "accepted") {
+                            setDeferredPrompt(null);
+                          }
+                        });
                         return;
                       }
 
                       if (isIOS) {
                         setShowIOSPrompt(true);
+                      } else if (isAndroid) {
+                        setShowAndroidPrompt(true);
                       } else {
                         setShowIOSPrompt(true);
                       }
