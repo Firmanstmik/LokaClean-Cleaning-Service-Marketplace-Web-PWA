@@ -12,6 +12,7 @@ import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PushOnboardingModal } from "./components/PushOnboardingModal";
 import { IOSInstallPrompt } from "./components/IOSInstallPrompt";
 import { SplashScreen } from "./components/SplashScreen";
+import { StickyMobileCTA } from "./components/StickyMobileCTA";
 
 interface NavigatorWithStandalone extends Navigator {
   standalone?: boolean;
@@ -35,7 +36,10 @@ export function App() {
       <UserProvider>
         <SplashScreen visible={showSplash} onFinished={() => setShowSplash(false)} />
         <PWAExperienceLayer />
-        <AppRoutes />
+        <div className="relative min-h-safe-screen">
+          <AppRoutes />
+          <StickyMobileCTA />
+        </div>
       </UserProvider>
     </AuthProvider>
   );

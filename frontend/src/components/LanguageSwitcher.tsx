@@ -67,19 +67,19 @@ export function LanguageSwitcherPill({ variant = "light", uniqueId = "lang-switc
     return () => window.removeEventListener("languagechange", handleLanguageChange);
   }, []);
 
-  const containerClass = variant === "light" 
-    ? "bg-white/10 backdrop-blur-md border border-white/20" 
-    : "bg-slate-100 border border-slate-200";
+  const containerClass = variant === "light"
+    ? "bg-white/10 backdrop-blur-md border border-white/30 shadow-[0_0_0_1px_rgba(255,255,255,0.4)]"
+    : "bg-white/90 border border-slate-200 shadow-[0_6px_16px_rgba(15,23,42,0.12)]";
 
   const inactiveTextClass = variant === "light"
     ? "text-slate-200 hover:text-white"
     : "text-slate-500 hover:text-slate-900";
 
   return (
-    <div className={`flex items-center p-1 rounded-full shadow-sm ${containerClass}`}>
+    <div className={`flex items-center px-1 py-0.5 rounded-full ${containerClass}`}>
       <button
         onClick={() => setLanguage("id")}
-        className="relative px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-300 overflow-hidden"
+        className="relative px-2.5 py-1 rounded-full text-[9px] font-bold transition-all duration-300 overflow-hidden"
       >
         {language === "id" && (
           <motion.div
@@ -95,7 +95,7 @@ export function LanguageSwitcherPill({ variant = "light", uniqueId = "lang-switc
       </button>
       <button
         onClick={() => setLanguage("en")}
-        className="relative px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-300 overflow-hidden"
+        className="relative px-2.5 py-1 rounded-full text-[9px] font-bold transition-all duration-300 overflow-hidden"
       >
         {language === "en" && (
           <motion.div

@@ -37,7 +37,7 @@ export function RequireUserProfileComplete() {
     );
   }
 
-  if (!me) return null;
+  if (!me) return <Outlet />;
 
   if (!isUserProfileComplete(me)) {
     const next = encodeURIComponent(location.pathname + location.search);

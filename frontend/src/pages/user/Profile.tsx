@@ -79,7 +79,7 @@ export function ProfilePage() {
   const [defaultLoc, setDefaultLoc] = useState<LatLng | null>(null);
 
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, token } = useAuth();
 
   // Listen for language changes
   useEffect(() => {
@@ -114,8 +114,15 @@ export function ProfilePage() {
     }
   };
 
-  // Load User Data
+  // Load User Data (only when logged in)
   useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      setUser(null);
+      setLoadError(null);
+      return;
+    }
+
     let alive = true;
     (async () => {
       try {
@@ -138,7 +145,7 @@ export function ProfilePage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [token]);
 
   // Photo URL logic
   const photoPreviewUrl = useMemo(() => {
@@ -233,7 +240,75 @@ export function ProfilePage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50/60 pb-24 flex items-center justify-center px-6">
+        <div className="relative w-full max-w-md">
+          <div className="pointer-events-none absolute -top-20 -right-16 h-40 w-40 rounded-full bg-teal-200/40 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-sky-200/40 blur-3xl" />
+          <div className="relative rounded-3xl bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 border border-emerald-100/70 shadow-lg px-[1px] py-[1px]">
+            <div className="rounded-3xl bg-white/95 px-5 py-6 backdrop-blur-sm">
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-gradient-to-br from-teal-50 via-sky-50 to-emerald-50 shadow-md border border-white/70 overflow-hidden flex items-center justify-center">
+                  <img
+                    src="/img/maskot1.png"
+                    alt="LokaClean Mascot"
+                    loading="lazy"
+                    className="h-full w-full object-contain mix-blend-multiply"
+                  />
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-sm font-semibold text-slate-900">
+                      {currentLanguage === "en" ? "You are not logged in yet" : "Kamu belum login"}
+                    </h1>
+                    <Sparkles className="h-4 w-4 text-teal-500" />
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {currentLanguage === "en"
+                      ? "Create your LokaClean profile so we can remember your home details and make each next booking faster."
+                      : "Buat profil LokaClean kamu supaya detail rumah tersimpan dan setiap pemesanan berikutnya jauh lebih cepat."}
+                  </p>
+                </div>
+                <div className="flex flex-col items-stretch gap-1.5 w-full">
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-medium text-teal-700">
+                      <span>✓</span>
+                      {currentLanguage === "en" ? "Save favorite addresses" : "Simpan alamat favorit & catatan khusus"}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-medium text-sky-700">
+                      <span>✓</span>
+                      {currentLanguage === "en" ? "1-tap repeat bookings" : "Repeat order 1x klik tanpa isi ulang form"}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                      <span>✓</span>
+                      {currentLanguage === "en" ? "Personalized recommendations" : "Rekomendasi paket sesuai kebiasaan kamu"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row w-full gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/register")}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-teal-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 active:scale-95 transition"
+                  >
+                    {currentLanguage === "en" ? "Create Account" : "Buat Akun Sekarang"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/login")}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-teal-200 bg-teal-50/70 px-4 py-2 text-xs font-semibold text-teal-700 hover:bg-teal-100 active:scale-95 transition"
+                  >
+                    {currentLanguage === "en" ? "I already have an account" : "Saya sudah punya akun"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Game Overlay
   if (showGame) {

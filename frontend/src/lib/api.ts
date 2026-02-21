@@ -26,6 +26,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const storedToken = localStorage.getItem("lokaclean_token");
+      if (!storedToken) {
+        return Promise.reject(error);
+      }
       const actor = localStorage.getItem("lokaclean_actor");
       
       localStorage.removeItem("lokaclean_token");

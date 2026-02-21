@@ -392,7 +392,8 @@ export const MapPicker = memo(function MapPicker({
   onRefresh,
   mapHeight = "h-[400px]",
   savedAddresses: externalSavedAddresses,
-  hideSearch = false
+  hideSearch = false,
+  hideSaveButton = false
 }: {
   value: LatLng | null;
   onChange: (v: LatLng | null) => void;
@@ -407,6 +408,7 @@ export const MapPicker = memo(function MapPicker({
   mapHeight?: string;
   savedAddresses?: SavedAddress[];
   hideSearch?: boolean;
+  hideSaveButton?: boolean;
 }) {
   const defaultLabel = t("common.location");
   const defaultHelperText = t("map.tapToSetLocation");
@@ -1390,20 +1392,22 @@ export const MapPicker = memo(function MapPicker({
                           <div className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">
                             {t("map.approxAddress")}
                           </div>
-                          <button 
-                            disabled={resolving || !resolvedAddress}
-                            onClick={() => {
+                          {!hideSaveButton && (
+                            <button 
+                              disabled={resolving || !resolvedAddress}
+                              onClick={() => {
                                 setShowSimpleModal(true);
-                            }}
-                            className="group inline-flex items-center gap-1.5 rounded-full bg-indigo-50/90 px-2.5 py-1 text-[10px] font-semibold text-indigo-600 shadow-sm border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-white text-indigo-600 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                              <Save className="w-3 h-3" />
-                            </span>
-                            <span className="leading-tight">
-                              {t("map.saveAddress.save")}
-                            </span>
-                          </button>
+                              }}
+                              className="group inline-flex items-center gap-1.5 rounded-full bg-indigo-50/90 px-2.5 py-1 text-[10px] font-semibold text-indigo-600 shadow-sm border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-white text-indigo-600 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <Save className="w-3 h-3" />
+                              </span>
+                              <span className="leading-tight">
+                                {t("map.saveAddress.save")}
+                              </span>
+                            </button>
+                          )}
                         </div>
                         <div className="text-[11px] font-semibold text-slate-800 leading-tight line-clamp-2 mt-0.5">
                           {resolving ? (

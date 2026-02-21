@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Phone, Lock, UserPlus, Sparkles, Gem } from "lucide-react";
+import { User, Phone, Lock, UserPlus, Sparkles, Gem } from "lucide-react";
 
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -22,19 +22,15 @@ export function UserRegister() {
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isFormValid = 
     fullName.trim().length > 0 && 
-    email.trim().length > 0 && 
     phone.trim().length > 0 && 
-    password.trim().length >= 6 && 
-    password === passwordConfirm;
+    password.trim().length >= 6;
 
   // Hard separation:
   // - Logged-in ADMIN should not see user registration page.
@@ -116,9 +112,9 @@ export function UserRegister() {
           <img 
             src="/img/hero.png" 
             alt="Background" 
-            className="w-full h-[39%] object-cover object-top opacity-90"
+            className="w-full h-[44%] object-cover object-top opacity-90"
           />
-         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-slate-900/60 to-slate-900" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-slate-900/60 to-slate-900" />
         </div>
         
         {/* Desktop Language Switcher */}
@@ -284,10 +280,6 @@ export function UserRegister() {
                         setError(t("auth.validation.passwordMin"));
                         return;
                     }
-                    if (password !== passwordConfirm) {
-                        setError(t("auth.validation.passwordMismatch"));
-                        return;
-                    }
                     setLoading(true);
                     setError(null);
                     try {
@@ -295,7 +287,6 @@ export function UserRegister() {
                         const [resp] = await Promise.all([
                             api.post("/auth/user/register", {
                                 full_name: fullName,
-                                email: email.trim().toLowerCase(),
                                 phone_number: normalizedPhone,
                                 password
                             }),
@@ -341,27 +332,6 @@ export function UserRegister() {
                         </div>
                     </div>
 
-                    {/* Email */}
-                    <div className="space-y-2">
-                        <label className="text-xs lg:text-sm font-semibold text-slate-700">{t("auth.register.emailLabel")}</label>
-                        <div className="relative group">
-                            <div className="absolute left-3.5 lg:left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-tropical-500 text-slate-400">
-                                <Mail className="h-4 w-4 lg:h-5 lg:w-5" />
-                            </div>
-                            <input
-                                className="w-full rounded-lg lg:rounded-xl border border-slate-300 bg-white pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3.5 text-sm lg:text-base font-medium text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-4 focus:ring-tropical-500/10 focus:outline-none"
-                                type="email"
-                                value={email}
-                                onChange={(e) => {
-                                setEmail(e.target.value);
-                                setError(null);
-                                }}
-                                required
-                                placeholder={t("auth.register.emailPlaceholder")}
-                            />
-                        </div>
-                    </div>
-
                     {/* Phone Number */}
                     <div className="space-y-2">
                         <label className="text-xs lg:text-sm font-semibold text-slate-700">{t("auth.register.whatsappLabel")}</label>
@@ -385,53 +355,33 @@ export function UserRegister() {
                         </div>
                     </div>
 
-                    {/* Password Fields */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-xs lg:text-sm font-semibold text-slate-700">{t("auth.register.passwordLabel")}</label>
-                            <div className="relative group">
-                                <div className="absolute left-3.5 lg:left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-tropical-500 text-slate-400">
-                                    <Lock className="h-4 w-4 lg:h-5 lg:w-5" />
-                                </div>
-                                <input
-                                    className="w-full rounded-lg lg:rounded-xl border border-slate-300 bg-white pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3.5 text-sm lg:text-base font-medium text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-4 focus:ring-tropical-500/10 focus:outline-none"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={password}
-                                    onChange={(e) => {
-                                    setPassword(e.target.value);
-                                    setError(null);
-                                    }}
-                                    required
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                            <p className={`text-[11px] font-medium ml-1 transition-colors ${
-                                password.length > 0 && password.trim().length < 6 ? "text-red-500" : "text-slate-400"
-                            }`}>
-                                {t("auth.validation.passwordMin")}
-                            </p>
+                    {/* Password */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs lg:text-sm font-semibold text-slate-700">{t("auth.register.passwordLabel")}</label>
+                      <div className="relative group">
+                        <div className="absolute left-3.5 lg:left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-tropical-500 text-slate-400">
+                          <Lock className="h-4 w-4 lg:h-5 lg:w-5" />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-xs lg:text-sm font-semibold text-slate-700">{t("auth.register.confirmPasswordLabel")}</label>
-                            <div className="relative group">
-                                <div className="absolute left-3.5 lg:left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-tropical-500 text-slate-400">
-                                    <Lock className="h-4 w-4 lg:h-5 lg:w-5" />
-                                </div>
-                                <input
-                                    className="w-full rounded-lg lg:rounded-xl border border-slate-300 bg-white pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3.5 text-sm lg:text-base font-medium text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-4 focus:ring-tropical-500/10 focus:outline-none"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={passwordConfirm}
-                                    onChange={(e) => {
-                                    setPasswordConfirm(e.target.value);
-                                    setError(null);
-                                    }}
-                                    required
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
+                        <input
+                          className="w-full rounded-lg lg:rounded-xl border border-slate-300 bg-white pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3.5 text-sm lg:text-base font-medium text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-4 focus:ring-tropical-500/10 focus:outline-none"
+                          type="password"
+                          autoComplete="new-password"
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            setError(null);
+                          }}
+                          required
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      <p
+                        className={`text-[11px] font-medium ml-1 transition-colors ${
+                          password.length > 0 && password.trim().length < 6 ? "text-red-500" : "text-slate-400"
+                        }`}
+                      >
+                        {t("auth.validation.passwordMin")}
+                      </p>
                     </div>
 
                     {/* Submit Button */}

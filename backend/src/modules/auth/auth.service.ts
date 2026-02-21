@@ -48,14 +48,10 @@ function signToken(payload: JwtTokenPayload) {
 
 export async function registerUser(input: {
   full_name: string;
-  email: string;
+  email?: string;
   phone_number: string;
   password: string;
 }) {
-  const email = input.email.trim().toLowerCase();
-  const existingEmail = await prisma.user.findUnique({ where: { email } });
-  if (existingEmail) throw new HttpError(409, "Email already registered");
-
   const normalizedPhone = normalizeWhatsAppPhone(input.phone_number);
   if (!normalizedPhone) throw new HttpError(400, "Invalid phone number");
 
@@ -64,6 +60,16 @@ export async function registerUser(input: {
 
   if (input.password.trim().length < 6) throw new HttpError(400, "Invalid password");
   const passwordHash = await bcrypt.hash(input.password, 12);
+
+  let email: string;
+  if (input.email && input.email.trim().length > 0) {
+    email = input.email.trim().toLowerCase();
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingEmail) throw new HttpError(409, "Email already registered");
+  } else {
+    const digits = normalizedPhone.replace(/\D/g, "");
+    email = `user+${digits}@lokaclean.local`;
+  }
 
   const user = await prisma.user.create({
     data: {

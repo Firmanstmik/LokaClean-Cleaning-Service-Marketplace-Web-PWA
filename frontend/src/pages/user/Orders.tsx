@@ -8,7 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { 
   LayoutGrid, Wallet, PackageCheck, Truck, Star, XCircle,
   ArrowLeft, ShoppingBag, Calendar, MapPin, CreditCard,
-  ChevronRight, Search, RefreshCcw, CheckCircle
+  ChevronRight, Search, RefreshCcw, CheckCircle, Lock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -18,6 +18,7 @@ import { formatDateOnlyWITA } from "../../utils/date";
 import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
 import { t, useCurrentLanguage, getLanguage } from "../../lib/i18n";
 import type { Pesanan } from "../../types/api";
+import { useAuth } from "../../lib/auth";
 
 // --- Types & Helpers ---
 
@@ -55,15 +56,24 @@ import { Skeleton } from "../../components/ui/Skeleton";
 import { OptimizedImage } from "../../components/ui/OptimizedImage";
 
 export function OrdersPage() {
-  useCurrentLanguage();
+  const currentLanguage = useCurrentLanguage();
   const navigate = useNavigate();
+  const { token } = useAuth();
+  const isGuest = !token;
   const [items, setItems] = useState<Pesanan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isGuest);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [selectedOrder, setSelectedOrder] = useState<Pesanan | null>(null);
 
   const fetchOrders = async () => {
+    if (!token) {
+      setItems([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -84,8 +94,14 @@ export function OrdersPage() {
   };
 
   useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      setItems([]);
+      setError(null);
+      return;
+    }
     fetchOrders();
-  }, [activeTab]);
+  }, [activeTab, token]);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 font-sans">
@@ -139,7 +155,71 @@ export function OrdersPage() {
 
       {/* Content List */}
       <div className="px-4 mt-6 space-y-4">
-        {loading ? (
+        {isGuest ? (
+          <div className="mt-2">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 border border-emerald-100/70 shadow-lg px-[1px] py-[1px]">
+              <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-200/40 blur-3xl" />
+              <div className="pointer-events-none absolute -left-8 bottom-0 h-24 w-24 rounded-full bg-teal-200/40 blur-3xl" />
+              <div className="relative z-10 rounded-3xl bg-white/95 px-4 py-5 backdrop-blur-sm">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 shadow-md border border-white/70 overflow-hidden flex items-center justify-center">
+                    <img
+                      src="/img/maskot2.png"
+                      alt="LokaClean Orders Mascot"
+                      loading="lazy"
+                      className="h-full w-full object-contain mix-blend-multiply"
+                    />
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-slate-900">
+                        {currentLanguage === "en" ? "You are not logged in yet" : "Kamu belum login"}
+                      </h3>
+                      <Lock className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {currentLanguage === "en"
+                        ? "Create a free LokaClean account so your orders are saved and you can track every cleaning easily."
+                        : "Buat akun gratis LokaClean supaya semua pesanan kamu tersimpan dan mudah dipantau."}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-stretch gap-1.5 w-full">
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
+                        <span>✓</span>
+                        {currentLanguage === "en" ? "Full order history" : "Riwayat pesanan lengkap"}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-medium text-teal-700">
+                        <span>✓</span>
+                        {currentLanguage === "en" ? "Realtime status & photos" : "Status real-time & foto dokumentasi"}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-medium text-sky-700">
+                        <span>✓</span>
+                        {currentLanguage === "en" ? "Exclusive member promos" : "Promo & benefit khusus member"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row w-full gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/register")}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 active:scale-95 transition"
+                    >
+                      {currentLanguage === "en" ? "Create Account" : "Buat Akun Sekarang"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/login")}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50/80 px-4 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 active:scale-95 transition"
+                    >
+                      {currentLanguage === "en" ? "I already have an account" : "Saya sudah punya akun"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">

@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, Lock, LogIn, Sparkles, ArrowLeft, Hand } from "lucide-react";
+import { Phone, Lock, Sparkles, Hand } from "lucide-react";
 
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -22,20 +22,12 @@ export function UserLogin() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [loginMethod, setLoginMethod] = useState<"EMAIL" | "WHATSAPP">("EMAIL");
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isFormValid = login.trim().length > 0 && password.trim().length >= 6;
-
-  // Clear error and login value when switching methods
-  const handleMethodChange = (method: "EMAIL" | "WHATSAPP") => {
-    setLoginMethod(method);
-    setLogin("");
-    setError(null);
-  };
 
   // Hard separation:
   // - Logged-in ADMIN should not see user login page.
@@ -244,41 +236,17 @@ export function UserLogin() {
 
                     const rawLogin = login.trim();
 
-                    // Validate email format if using EMAIL method
-                    if (loginMethod === "EMAIL") {
-                        if (!rawLogin) {
-                        setError(t("auth.validation.emailRequired"));
-                        return;
-                        }
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(rawLogin)) {
-                        setError(t("auth.validation.emailInvalid"));
-                        return;
-                        }
-                    } else {
-                        if (!rawLogin) {
-                        setError(t("auth.validation.whatsappRequired"));
-                        return;
-                        }
-                        const normalized = normalizeWhatsAppPhone(rawLogin);
-                        if (!normalized) {
-                        setError(t("auth.validation.whatsappInvalidFormat"));
-                        return;
-                        }
+                    if (!rawLogin) {
+                      setError(t("auth.validation.whatsappRequired"));
+                      return;
+                    }
+                    const normalized = normalizeWhatsAppPhone(rawLogin);
+                    if (!normalized) {
+                      setError(t("auth.validation.whatsappInvalidFormat"));
+                      return;
                     }
 
-                    // Prepare login value
-                    let loginValue: string;
-                    if (loginMethod === "EMAIL") {
-                        loginValue = rawLogin.toLowerCase();
-                    } else {
-                        const normalized = normalizeWhatsAppPhone(rawLogin);
-                        if (!normalized) {
-                        setError(t("auth.validation.whatsappInvalidFormat"));
-                        return;
-                        }
-                        loginValue = rawLogin.trim();
-                    }
+                    const loginValue = normalized;
 
                     if (!password.trim()) {
                         setError(t("auth.validation.passwordRequired"));
@@ -309,11 +277,7 @@ export function UserLogin() {
                         let friendlyMessage = errorMessage;
                         
                         if (errorMessage.toLowerCase().includes("invalid credentials")) {
-                        if (loginMethod === "EMAIL") {
-                            friendlyMessage = t("auth.validation.loginFailed");
-                        } else {
-                            friendlyMessage = t("auth.validation.loginFailed");
-                        }
+                          friendlyMessage = t("auth.validation.loginFailed");
                         } else if (errorMessage.toLowerCase().includes("nomor whatsapp tidak valid")) {
                         friendlyMessage = t("auth.validation.whatsappInvalidFormat");
                         } else if (errorMessage.toLowerCase().includes("password salah")) {
@@ -328,75 +292,32 @@ export function UserLogin() {
                     }
                     }}
                 >
-                    {/* Login Method Toggle */}
-                    <div className="space-y-1.5 lg:space-y-2">
-                    <div className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-wider">{t("auth.login.methodLabel")}</div>
-                    <div className="flex rounded-lg lg:rounded-xl border border-slate-200 bg-slate-50 p-1 lg:p-1.5">
-                        <button
-                        type="button"
-                        className={[
-                            "flex-1 rounded-md lg:rounded-lg px-3 py-2 lg:py-2.5 text-xs lg:text-sm font-semibold transition-all duration-200",
-                            loginMethod === "EMAIL"
-                            ? "bg-white text-tropical-600 shadow-sm ring-1 ring-slate-200"
-                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
-                        ].join(" ")}
-                        onClick={() => handleMethodChange("EMAIL")}
-                        >
-                        <div className="flex items-center justify-center gap-1.5 lg:gap-2">
-                            <Mail className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                            Email
-                        </div>
-                        </button>
-                        <button
-                        type="button"
-                        className={[
-                            "flex-1 rounded-md lg:rounded-lg px-3 py-2 lg:py-2.5 text-xs lg:text-sm font-semibold transition-all duration-200",
-                            loginMethod === "WHATSAPP"
-                            ? "bg-white text-tropical-600 shadow-sm ring-1 ring-slate-200"
-                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
-                        ].join(" ")}
-                        onClick={() => handleMethodChange("WHATSAPP")}
-                        >
-                        <div className="flex items-center justify-center gap-1.5 lg:gap-2">
-                            <Phone className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
-                            WhatsApp
-                        </div>
-                        </button>
-                    </div>
-                    </div>
-
-                    {/* Login Input */}
+                    {/* Login Input (WhatsApp only) */}
                     <div className="space-y-1.5 lg:space-y-2">
                         <label className="text-xs lg:text-sm font-semibold text-slate-700">
-                            {loginMethod === "EMAIL" ? t("auth.login.emailLabel") : t("auth.login.whatsappLabel")}
+                            {t("auth.login.whatsappLabel")}
                         </label>
                         <div className="relative group">
                             <div className="absolute left-3.5 lg:left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-tropical-500 text-slate-400">
-                            {loginMethod === "EMAIL" ? (
-                                <Mail className="h-4 w-4 lg:h-5 lg:w-5" />
-                            ) : (
-                                <Phone className="h-4 w-4 lg:h-5 lg:w-5" />
-                            )}
+                              <Phone className="h-4 w-4 lg:h-5 lg:w-5" />
                             </div>
                             <input
                             className="w-full rounded-lg lg:rounded-xl border border-slate-300 bg-white pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3.5 text-sm lg:text-base font-medium text-slate-900 placeholder-slate-400 transition-all focus:border-tropical-500 focus:ring-4 focus:ring-tropical-500/10 focus:outline-none"
-                            type={loginMethod === "EMAIL" ? "email" : "tel"}
-                            inputMode={loginMethod === "EMAIL" ? "email" : "tel"}
-                            {...(loginMethod === "EMAIL" ? { autoComplete: "email" } : { autoComplete: "tel" })}
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel"
                             value={login}
                             onChange={(e) => {
                                 setLogin(e.target.value);
                                 setError(null);
                             }}
                             required
-                            placeholder={loginMethod === "EMAIL" ? t("auth.login.emailPlaceholder") : t("auth.login.whatsappPlaceholder")}
+                            placeholder={t("auth.login.whatsappPlaceholder")}
                             />
                         </div>
-                        {loginMethod === "WHATSAPP" && (
-                            <div className="text-[10px] lg:text-xs text-slate-500 pl-1">
-                            Format: <span className="font-medium">+kode negara</span> (e.g. +62)
-                            </div>
-                        )}
+                        <div className="text-[10px] lg:text-xs text-slate-500 pl-1">
+                          Format: <span className="font-medium">+kode negara</span> (e.g. +62)
+                        </div>
                     </div>
 
                     {/* Password Input */}

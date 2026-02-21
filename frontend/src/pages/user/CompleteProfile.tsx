@@ -30,7 +30,8 @@ import {
   ScanFace,
   Fingerprint,
   Compass,
-  ShieldCheck
+  ShieldCheck,
+  Home
 } from "lucide-react";
 
 import { MapPicker, type LatLng } from "../../components/MapPicker";
@@ -63,6 +64,7 @@ export function CompleteProfilePage() {
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [defaultLoc, setDefaultLoc] = useState<LatLng | null>(null);
   const [address, setAddress] = useState("");
+  const [houseNotes, setHouseNotes] = useState("");
   const [geocodingAddress, setGeocodingAddress] = useState(false);
   const addressGeocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addressFromMapRef = useRef(false);
@@ -309,8 +311,11 @@ export function CompleteProfilePage() {
             value={defaultLoc}
             onChange={setDefaultLoc}
             onAddressChange={handleAddressChange}
+            onDetailsChange={(details) => setHouseNotes(details.notes || "")}
             hideLabel
             isOpen={activeSection === "location"}
+            hideSearch
+            hideSaveButton
           />
         </div>
 
@@ -340,9 +345,27 @@ export function CompleteProfilePage() {
             )}
           </div>
         </div>
+
+        <div className="group bg-slate-50/80 rounded-2xl p-4 border border-slate-100 focus-within:bg-white focus-within:border-emerald-200 focus-within:shadow-lg focus-within:shadow-emerald-100/50 transition-all duration-300">
+          <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 group-focus-within:text-emerald-600 transition-colors">
+            {t("completeProfile.houseDetailLabel")}
+            <span className="ml-1 text-[10px] font-normal normal-case text-slate-400">
+              {t("completeProfile.optional")}
+            </span>
+          </label>
+          <div className="relative">
+            <Home className="absolute left-0 top-3 h-5 w-5 text-slate-300 group-focus-within:text-emerald-600 transition-colors" />
+            <textarea
+              className="w-full min-h-[70px] bg-transparent pl-8 py-2 text-xs sm:text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none resize-none leading-relaxed"
+              value={houseNotes}
+              onChange={(e) => setHouseNotes(e.target.value)}
+              placeholder={t("completeProfile.houseDetailPlaceholder")}
+            />
+          </div>
+        </div>
       </div>
     )
-  }), [isLocationValid, defaultLoc, address, geocodingAddress, handleAddressChange, activeSection]);
+  }), [isLocationValid, defaultLoc, address, houseNotes, geocodingAddress, handleAddressChange, activeSection]);
 
   const sections = useMemo(() => [photoSection, infoSection, locationSection], [photoSection, infoSection, locationSection]);
 
@@ -463,6 +486,21 @@ export function CompleteProfilePage() {
       });
       
       const updated = resp.data.data.user as User;
+      
+      if (address.trim() || houseNotes.trim()) {
+        try {
+          await api.post("/address/save", {
+            label: "Home",
+            address: address.trim() || "Default Address",
+            lat: defaultLoc.lat,
+            lng: defaultLoc.lng,
+            is_primary: true,
+            notes: houseNotes.trim() || undefined
+          });
+        } catch {
+          void 0;
+        }
+      }
       
       // Cleanup preview URL
       if (photoPreviewUrl) {

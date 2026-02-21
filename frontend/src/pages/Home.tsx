@@ -50,6 +50,14 @@ export function Home() {
     window.matchMedia("(display-mode: standalone)").matches || !!nav.standalone;
 
   const [showWelcome, setShowWelcome] = useState(false);
+  const [greeting, setGreeting] = useState<string | null>(null);
+  const [detectedArea, setDetectedArea] = useState<string | null>(null);
+  const [isInLombok, setIsInLombok] = useState(false);
+  const [ctaHighlight, setCtaHighlight] = useState(false);
+  const [showExitBanner, setShowExitBanner] = useState(false);
+  const [liveOrdersCount, setLiveOrdersCount] = useState<number>(() => {
+    return Math.floor(Math.random() * 4) + 1;
+  });
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
   const [showAndroidPrompt, setShowAndroidPrompt] = useState(false);
   const [packages, setPackages] = useState<PaketCleaning[]>([]);
@@ -66,6 +74,97 @@ export function Home() {
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const nowString = new Date().toLocaleString("en-US", { timeZone: "Asia/Makassar" });
+      const now = new Date(nowString);
+      const hour = now.getHours();
+      if (hour < 11) {
+        setGreeting("Selamat Pagi ☀️");
+      } else if (hour < 16) {
+        setGreeting("Selamat Siang 🌤️");
+      } else {
+        setGreeting("Selamat Malam 🌙");
+      }
+    } catch {
+      setGreeting("Selamat Datang");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const inLombok =
+          latitude >= -9.0 && latitude <= -8.3 && longitude >= 115.8 && longitude <= 116.7;
+        setIsInLombok(inLombok);
+
+        let area: string | null = null;
+        if (latitude >= -8.93 && latitude <= -8.85 && longitude >= 116.25 && longitude <= 116.35) {
+          area = "Kuta Mandalika";
+        } else if (latitude >= -8.8 && latitude <= -8.65 && longitude >= 116.2 && longitude <= 116.45) {
+          area = "Lombok";
+        } else if (latitude >= -8.7 && latitude <= -8.55 && longitude >= 115.9 && longitude <= 116.2) {
+          area = "Lombok Barat";
+        } else if (latitude >= -8.65 && latitude <= -8.5 && longitude >= 116.05 && longitude <= 116.15) {
+          area = "Mataram";
+        } else if (latitude >= -8.9 && latitude <= -8.8 && longitude >= 116.3 && longitude <= 116.4) {
+          area = "Rembitan";
+        }
+
+        if (area) {
+          setDetectedArea(area);
+        } else if (inLombok) {
+          setDetectedArea("Lombok");
+        }
+      },
+      () => {},
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setLiveOrdersCount(Math.floor(Math.random() * 4) + 1);
+    }, 25000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    let triggered = false;
+    const onScroll = () => {
+      if (triggered) return;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight <= 0) return;
+      const ratio = scrollTop / scrollHeight;
+      if (ratio > 0.4) {
+        triggered = true;
+        setCtaHighlight(true);
+        window.setTimeout(() => {
+          setCtaHighlight(false);
+        }, 700);
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true } as AddEventListenerOptions);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth < 768) return;
+    let shown = false;
+    const handleMouseLeave = (event: MouseEvent) => {
+      if (event.clientY <= 0 && !shown) {
+        shown = true;
+        setShowExitBanner(true);
+      }
+    };
+    document.addEventListener("mouseleave", handleMouseLeave);
+    return () => document.removeEventListener("mouseleave", handleMouseLeave);
   }, []);
 
   useEffect(() => {
@@ -102,6 +201,15 @@ export function Home() {
   if (isStandalone) {
     return <MobileWelcome />;
   }
+
+  const heroArea = detectedArea;
+  const heroLocationTitle = heroArea
+    ? isEnglish
+      ? `Professional Cleaning in ${heroArea}`
+      : `Cleaning Profesional di ${heroArea}`
+    : isEnglish
+      ? "Premium Cleaning Solution in Lombok"
+      : "Solusi Cleaning Premium di Lombok";
 
   const features = [
     {
@@ -285,34 +393,10 @@ export function Home() {
         )}
       </AnimatePresence>
 
-      {/* Subtle animated background particles - Hidden on mobile for performance */}
+      {/* Static background accents on desktop (no continuous animation for performance) */}
       <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-tropical-200/28 blur-3xl"
-          animate={{
-            x: [0, 100, 0],
-            y: [0, 80, 0],
-            scale: [1, 1.3, 1],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-tropical-300/24 blur-3xl"
-          animate={{
-            x: [0, -80, 0],
-            y: [0, -100, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
+        <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-tropical-200/24 blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-tropical-300/20 blur-3xl" />
       </div>
 
        {/* Header - Fixed Navbar */}
@@ -320,7 +404,7 @@ export function Home() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-white/20 bg-white/95 sm:bg-white/90 sm:backdrop-blur-xl shadow-sm pt-safe"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-white/20 bg-white/95 sm:bg-white/90 sm:backdrop-blur-sm shadow-sm pt-safe"
       >
         <div className="w-full flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 lg:px-8 py-2 sm:py-3.5">
           <Link
@@ -361,7 +445,7 @@ export function Home() {
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
                 <motion.span
-                  className="block text-lg sm:text-2xl font-black leading-tight bg-gradient-to-r from-tropical-600 via-ocean-600 to-tropical-600 bg-clip-text text-transparent truncate"
+                  className="block text-base sm:text-xl font-black leading-tight bg-gradient-to-r from-tropical-600 via-ocean-600 to-tropical-600 bg-clip-text text-transparent tracking-tight truncate"
                 >
                   LokaClean
                 </motion.span>
@@ -383,42 +467,14 @@ export function Home() {
               </motion.div>
             </div>
            </Link>
-           <div className="flex items-center gap-2 sm:gap-3">
-             {/* Language Switcher */}
-             <LanguageSwitcherPill variant="dark" uniqueId="home-navbar" />
-
-             <Link
-               to="/login"
-               className="relative rounded-lg sm:rounded-xl border-2 border-slate-200 bg-white sm:bg-white/80 sm:backdrop-blur px-2.5 sm:px-4 lg:px-5 py-1 sm:py-2 lg:py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm overflow-hidden group"
-             >
-               <span className="relative z-10">{t("home.navbar.login")}</span>
-               <motion.div
-                 className="absolute inset-0 bg-slate-100"
-                 initial={{ x: "-100%" }}
-                 whileHover={{ x: 0 }}
-                 transition={{ duration: 0.3 }}
-               />
-             </Link>
-             <Link
-               to="/register"
-               className="hidden sm:flex rounded-lg sm:rounded-xl bg-lombok-gradient px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 lg:py-2.5 text-xs sm:text-sm font-semibold text-white hover:shadow-[0_8px_24px_rgba(26,188,156,0.4)] transition-all duration-300 hover:scale-105 shadow-lg relative overflow-hidden group"
-             >
-               <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
-                 {t("home.navbar.register")}
-                 <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
-               </span>
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{
-                  x: ["-100%", "200%"],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatDelay: 1,
-                  ease: "linear",
-                }}
-              />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageSwitcherPill variant="dark" uniqueId="home-navbar" />
+            <Link
+              to="/home"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-teal-500 via-teal-600 to-sky-500 px-4 sm:px-5 lg:px-6 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold text-white shadow-md hover:shadow-lg border border-teal-400/70 transition-transform duration-200 hover:scale-[1.03] active:scale-95"
+            >
+              <span>{isEnglish ? "Open App" : "Buka Aplikasi"}</span>
+              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Link>
           </div>
         </div>
@@ -438,14 +494,16 @@ export function Home() {
         >
           {/* 1. Full Background Image (Covering Everything) */}
           <div className="absolute inset-0 z-0 bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80">
-             <img 
-               src="/img/hero.png" 
-               alt="LokaClean Hero" 
-               fetchPriority="high"
-               loading="eager"
-               decoding="async"
-               className="hidden sm:block w-full h-full object-contain sm:object-contain object-bottom sm:object-right-bottom transition-transform duration-[10s] ease-in-out group-hover:scale-105"
-             />
+            <img
+              src="/img/hero.png"
+              alt="LokaClean Hero"
+              width={1200}
+              height={720}
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
+              className="hidden sm:block w-full h-full object-contain sm:object-contain object-bottom sm:object-right-bottom transition-transform duration-500 ease-out group-hover:scale-105"
+            />
              {/* Gradient Overlay for Readability on Mobile */}
              <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/70 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/60 sm:to-transparent" />
           </div>
@@ -453,22 +511,25 @@ export function Home() {
           {/* 2. Mascot Integration (Sidekick style) - REMOVED to avoid duplication */}
           
           {/* 3. Content Overlay (Text on top of Image) */}
-          <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center sm:justify-end pb-8 sm:pb-12 lg:pb-20">
+          <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center sm:justify-center pb-8 sm:pb-10 lg:pb-14 sm:pt-4">
             <div className="max-w-5xl pt-0 sm:pt-0">
                 {/* Mobile Hero Image (Top Position) */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="w-full mb-1 sm:hidden flex justify-center will-change-transform"
+                  initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                  className="w-full mb-4 sm:mb-1 sm:hidden flex justify-center will-change-transform"
                 >
-                  <img
+                  <motion.img
                     src="/img/hero.png"
                     alt="LokaClean Hero"
-                    fetchPriority="high"
+                    width={520}
+                    height={260}
                     loading="eager"
                     decoding="async"
-                    className="h-[270px] w-auto object-contain drop-shadow-2xl filter contrast-110"
+                    className="h-[260px] w-auto object-contain drop-shadow-[0_24px_45px_rgba(15,23,42,0.18)] will-change-transform"
+                    animate={{ y: [-4, 0, -4] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                   />
                 </motion.div>
 
@@ -485,34 +546,60 @@ export function Home() {
                   </div>
                 ) : (
                   <>
+                    {greeting && (
+                      <motion.p
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05, duration: 0.4, ease: "easeOut" }}
+                        className="text-xs sm:text-sm text-slate-600/80 mb-1 sm:mb-2"
+                      >
+                        {greeting}
+                      </motion.p>
+                    )}
                     <motion.h2
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
-                      className="text-2xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
+                      transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+                      className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-slate-900 mb-3 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
                     >
-                      <span className="inline-block">
-                        {t("home.hero.titlePart1")}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
-                          {t("home.hero.titleHighlight1")}
-                        </span>
-                      </span>
-                      <br className="hidden lg:block" />
-                      <span className="inline-block">
-                        {t("home.hero.titlePart2")}
-                      </span>{" "}
-                      <br className="hidden lg:block" />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-500 via-tropical-500 to-sun-400">
-                        {t("home.hero.titleHighlight2")}
-                      </span>
-                      {t("home.hero.titlePart3")}
+                      <motion.span
+                        key={heroLocationTitle}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="inline-block"
+                      >
+                        {isEnglish ? (
+                          <>
+                            <span>
+                              {heroArea
+                                ? "Professional Cleaning in "
+                                : "LokaClean – Premium Cleaning Service in "}
+                            </span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
+                              {heroArea ?? "Lombok"}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span>
+                              {heroArea
+                                ? "Cleaning Profesional di "
+                                : "LokaClean – Solusi Cleaning Premium di "}
+                            </span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
+                              {heroArea ?? "Lombok"}
+                            </span>
+                          </>
+                        )}
+                      </motion.span>
                     </motion.h2>
 
                     <motion.p
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
-                      className="text-sm sm:text-lg text-slate-800 font-semibold leading-relaxed mb-3 sm:mb-8 max-w-lg drop-shadow-md bg-white/40 sm:bg-white/30 sm:backdrop-blur-md p-3.5 rounded-xl border border-white/40 text-center sm:text-left mx-auto sm:mx-0 will-change-transform"
+                      transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
+                      className="text-sm sm:text-lg text-slate-800/80 font-medium leading-relaxed mb-5 sm:mb-8 max-w-md sm:max-w-lg drop-shadow-md bg-white/70 sm:bg-white/40 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-white/50 text-center sm:text-left mx-auto sm:mx-0 will-change-transform"
                     >
                       {t("home.hero.subtitle")}
                     </motion.p>
@@ -521,28 +608,18 @@ export function Home() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
-                      className="flex flex-row gap-3 sm:gap-4 justify-center sm:justify-start mb-4 sm:mb-10 will-change-transform"
+                      className="flex flex-row gap-2.5 sm:gap-4 justify-center sm:justify-start mb-4 sm:mb-8 will-change-transform"
                     >
                       <Link
-                        to="/register"
-                        className="w-36 sm:w-64 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-white shadow-[0_8px_32px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_48px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-105 text-center flex items-center justify-center whitespace-nowrap"
+                        to="/home"
+                        className={`group relative overflow-hidden rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 sm:px-9 h-12 sm:h-14 text-xs sm:text-base font-semibold tracking-wide text-white shadow-md hover:shadow-lg transition-transform duration-300 hover:scale-105 active:scale-97 flex items-center justify-center whitespace-nowrap ${
+                          ctaHighlight ? "ring-2 ring-offset-2 ring-teal-300/80" : ""
+                        }`}
                       >
-                        <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
-                          {isEnglish ? "Book Cleaning Now" : "Pesan Cleaning Sekarang"}
-                          <ArrowRight className="h-3.5 w-3.5 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+                        <span className="relative z-10 flex items-center gap-1.5 sm:gap-2 will-change-transform">
+                          {isEnglish ? "Open App" : "Buka Aplikasi"}
+                          <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
                         </span>
-                        <motion.div
-                          className="hidden sm:block absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                          animate={{
-                            x: ["-100%", "200%"],
-                          }}
-                          transition={{
-                            duration: 2.5,
-                            repeat: Infinity,
-                            repeatDelay: 1.5,
-                            ease: "linear",
-                          }}
-                        />
                       </Link>
                       <button
                         type="button"
@@ -569,14 +646,28 @@ export function Home() {
                             setShowIOSPrompt(true);
                           }
                         }}
-                        className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-[14px] sm:rounded-[16px] bg-white/10 text-slate-50 font-bold backdrop-blur-md border border-white/15 transition-all duration-300 hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5"
+                        className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 h-12 sm:h-14 rounded-full border border-teal-500/70 bg-white/70 text-teal-700 font-semibold transition-transform duration-300 hover:bg-teal-50/90 hover:-translate-y-0.5"
                       >
-                        <Download className="w-4 h-4 sm:w-5 sm:h-5 text-teal-300 group-hover/btn:text-teal-200 transition-colors" />
-                        <span className="text-sm sm:text-base">
+                        <Download className="w-4 h-4 sm:w-5 sm:h-5 text-teal-500 group-hover/btn:text-teal-600 transition-colors" />
+                        <span className="text-xs sm:text-sm">
                           {isEnglish ? "Install Mobile App" : "Install Aplikasi Mobile"}
                         </span>
                       </button>
                     </motion.div>
+                    <div className="mt-2.5 sm:mt-3 flex flex-col sm:flex-row items-center gap-1.5 text-[10px] sm:text-xs text-slate-600/80">
+                      <div className="flex items-center gap-1.5">
+                        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                        <span>4.9/5 dari pelanggan Lombok</span>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-3">
+                        <span className="hidden sm:inline text-slate-400">•</span>
+                        <span>✔ Tim Terlatih</span>
+                        <span className="hidden sm:inline text-slate-400">•</span>
+                        <span>✔ Ramah & Profesional</span>
+                        <span className="hidden sm:inline text-slate-400">•</span>
+                        <span>✔ Tanpa Biaya Tersembunyi</span>
+                      </div>
+                    </div>
                   </>
                 )}
 
@@ -585,10 +676,10 @@ export function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
-                  className="grid grid-cols-3 gap-2 sm:gap-4 pb-2 sm:pb-0 mx-0 items-stretch w-full max-w-4xl will-change-transform"
+                  className="grid grid-cols-3 gap-2 sm:gap-4 mt-2 sm:mt-5 pb-2 sm:pb-0 mx-0 items-stretch w-full max-w-4xl will-change-transform"
                 >
                   {/* Item 1 */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 sm:backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
                     <div className="flex-shrink-0 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform duration-300">
                       <MapPin className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.5} />
                     </div>
@@ -599,7 +690,7 @@ export function Home() {
                   </div>
 
                   {/* Item 2 */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 sm:backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
                     <div className="flex-shrink-0 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl bg-green-50 text-green-600 group-hover:scale-110 transition-transform duration-300">
                       <Leaf className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.5} />
                     </div>
@@ -610,7 +701,7 @@ export function Home() {
                   </div>
 
                   {/* Item 3 */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 sm:backdrop-blur-xl shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
                     <div className="flex-shrink-0 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-2xl bg-purple-50 text-purple-600 group-hover:scale-110 transition-transform duration-300">
                       <Handshake className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.5} />
                     </div>
@@ -1318,7 +1409,35 @@ export function Home() {
         onClose={() => setShowAndroidPrompt(false)} 
       />
 
-      {/* Footer */}
+      <AnimatePresence>
+        {showExitBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="fixed bottom-4 left-4 right-4 z-40 hidden md:flex items-center justify-between gap-3 rounded-2xl bg-white/95 border border-slate-200 shadow-[0_18px_45px_rgba(15,23,42,0.18)] px-4 py-3"
+          >
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-slate-900">
+                Rumah masih butuh dibersihkan?
+              </span>
+              <span className="text-xs text-slate-500">
+                Jadwalkan tim LokaClean sebelum kamu menutup halaman ini.
+              </span>
+            </div>
+            <Link
+              to="/orders/new"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-teal-500 via-teal-600 to-sky-500 px-4 py-1.5 text-xs font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200"
+              onClick={() => setShowExitBanner(false)}
+            >
+              <span>Pesan Sekarang</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Footer variant="all" />
       
     </div>
