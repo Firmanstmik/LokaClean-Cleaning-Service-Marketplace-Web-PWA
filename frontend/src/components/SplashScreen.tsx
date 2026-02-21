@@ -37,7 +37,7 @@ export function SplashScreen({ visible, onFinished }: SplashScreenProps) {
               <div className="relative rounded-3xl bg-white/90 shadow-[0_18px_60px_rgba(15,23,42,0.18)] border border-white/80 px-6 py-4 flex items-center gap-3">
                 <div className="h-12 w-12 rounded-2xl bg-teal-50 flex items-center justify-center shadow-inner border border-teal-100 overflow-hidden">
                   <img
-                    src="/img/Logo_LokaClean.jpg"
+                    src="/img/Logo_LokaClean_fixed.jpg"
                     alt="LokaClean"
                     className="h-10 w-10 object-contain"
                     loading="eager"
@@ -83,4 +83,3 @@ export function SplashScreen({ visible, onFinished }: SplashScreenProps) {
     </AnimatePresence>
   );
 }
-
