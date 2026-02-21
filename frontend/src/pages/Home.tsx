@@ -36,6 +36,13 @@ export function Home() {
   const { token, actor } = useAuth();
   useCurrentLanguage(); // Force re-render on language change
   const currentLanguage = getLanguage();
+  const isEnglish = currentLanguage === "en";
+  const seoTitle = isEnglish
+    ? "Lombok Cleaning Service | Villa & Home Cleaning Kuta Mandalika – LokaClean"
+    : "Jasa Cleaning Service Terbaik di Lombok | Villa & Home Cleaning Kuta Mandalika";
+  const seoDescription = isEnglish
+    ? "LokaClean is a professional cleaning service in Lombok serving Kuta Mandalika, Praya, Mataram, and West Lombok. We specialize in villa cleaning, home cleaning, and daily housekeeping with 5-star hotel standards."
+    : "LokaClean adalah layanan kebersihan profesional di Lombok yang melayani Kuta Mandalika, Praya, Mataram, dan Lombok Barat. Spesialis villa cleaning, home cleaning, dan daily housekeeping dengan standar hotel bintang 5.";
 
   // PWA Standalone Mode Check
   const nav = window.navigator as Navigator & { standalone?: boolean };
@@ -153,29 +160,36 @@ export function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80 overflow-hidden relative">
       <Helmet>
-        <title>Jasa Kebersihan Kuta Mandalika & Lombok Tengah | LokaClean</title>
-        <meta name="description" content="Jasa cleaning service no.1 di Kuta Mandalika & Lombok Tengah. Spesialis Villa Cleaning, Home Cleaning, & Daily Housekeeping standar hotel. Pesan online sekarang!" />
-        <meta name="keywords" content="jasa kebersihan lombok, cleaning service kuta mandalika, villa cleaning lombok, home cleaning lombok tengah, daily housekeeping mandalika, jasa bersih rumah, cleaning service panggilan, lokaclean" />
-        
-        {/* OpenGraph / Social Media */}
-        <meta property="og:title" content="Jasa Kebersihan Kuta Mandalika & Lombok Tengah | LokaClean" />
-        <meta property="og:description" content="Solusi kebersihan profesional untuk Villa & Rumah di Lombok. Standar hotel, tim terlatih, peralatan lengkap. Melayani Kuta Mandalika & sekitarnya." />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta
+          name="keywords"
+          content="jasa kebersihan lombok, cleaning service kuta mandalika, villa cleaning lombok, home cleaning lombok tengah, daily housekeeping mandalika, jasa bersih rumah, cleaning service panggilan, lokaclean, lombok cleaning service, cleaning service lombok"
+        />
+
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
         <meta property="og:image" content="https://lokaclean.com/img/hero.png" />
         <meta property="og:url" content="https://lokaclean.com" />
         <meta property="og:type" content="website" />
-        <meta property="og:locale" content="id_ID" />
+        <meta property="og:locale" content={isEnglish ? "en_US" : "id_ID"} />
         <meta property="og:site_name" content="LokaClean" />
-        
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content="https://lokaclean.com/img/hero.png" />
+
         <link rel="canonical" href="https://lokaclean.com" />
-        
+
         <script type="application/ld+json">
           {`
             {
               "@context": "https://schema.org",
-              "@type": "LocalBusiness",
-              "name": "LokaClean Jasa Kebersihan",
+              "@type": ["LocalBusiness", "CleaningService"],
+              "name": "LokaClean Cleaning Service Lombok",
               "image": "https://lokaclean.com/img/logo.jpg",
-              "description": "Jasa cleaning service profesional di Kuta Mandalika dan Lombok Tengah. Melayani villa cleaning, home cleaning, dan daily housekeeping.",
+              "description": "LokaClean menyediakan jasa cleaning service profesional di Lombok untuk villa, rumah, dan daily housekeeping standar hotel bintang 5.",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "Jl. Pariwisata Pantai Kuta",
@@ -192,6 +206,25 @@ export function Home() {
               "url": "https://lokaclean.com",
               "telephone": "+6281234567890",
               "priceRange": "$$",
+              "areaServed": [
+                "Kuta Mandalika",
+                "Lombok Tengah",
+                "Praya",
+                "Lombok Barat",
+                "Mataram",
+                "Rembitan"
+              ],
+              "sameAs": [
+                "https://www.instagram.com/lokaclean",
+                "https://www.facebook.com/lokaclean",
+                "https://goo.gl/maps/xxxxxxxx"
+              ],
+              "serviceOffered": [
+                "Villa Cleaning",
+                "Home Cleaning",
+                "Deep Cleaning",
+                "Daily Housekeeping"
+              ],
               "openingHoursSpecification": {
                 "@type": "OpeningHoursSpecification",
                 "dayOfWeek": [
@@ -205,11 +238,10 @@ export function Home() {
                 ],
                 "opens": "08:00",
                 "closes": "18:00"
-              },
-              "areaServed": ["Kuta Mandalika", "Lombok Tengah", "Praya", "Lombok Barat", "Mataram", "Rembitan"]
-             }
-           `}
-         </script>
+              }
+            }
+          `}
+        </script>
       </Helmet>
       
       {/* Welcome Alert - Floating Top Right */}
@@ -394,6 +426,9 @@ export function Home() {
 
       {/* Main Content - Hero Section */}
       <main className="relative z-10 w-full pt-12 sm:pt-20 lg:pt-24 pb-0 mt-safe">
+        <h1 className="sr-only">
+          {seoTitle}
+        </h1>
         {/* Hero / Branding Section - Full Bleed */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -450,14 +485,28 @@ export function Home() {
                   </div>
                 ) : (
                   <>
-                    <motion.h1
+                    <motion.h2
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
                       className="text-2xl sm:text-4xl lg:text-5xl font-black leading-[1.1] text-slate-900 mb-1 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
                     >
-                      Jasa Cleaning Service Terbaik di Lombok | Villa &amp; Home Cleaning Kuta Mandalika
-                    </motion.h1>
+                      <span className="inline-block">
+                        {t("home.hero.titlePart1")}
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
+                          {t("home.hero.titleHighlight1")}
+                        </span>
+                      </span>
+                      <br className="hidden lg:block" />
+                      <span className="inline-block">
+                        {t("home.hero.titlePart2")}
+                      </span>{" "}
+                      <br className="hidden lg:block" />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-ocean-500 via-tropical-500 to-sun-400">
+                        {t("home.hero.titleHighlight2")}
+                      </span>
+                      {t("home.hero.titlePart3")}
+                    </motion.h2>
 
                     <motion.p
                       initial={{ opacity: 0, y: 10 }}
@@ -465,9 +514,7 @@ export function Home() {
                       transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
                       className="text-sm sm:text-lg text-slate-800 font-semibold leading-relaxed mb-3 sm:mb-8 max-w-lg drop-shadow-md bg-white/40 sm:bg-white/30 sm:backdrop-blur-md p-3.5 rounded-xl border border-white/40 text-center sm:text-left mx-auto sm:mx-0 will-change-transform"
                     >
-                      {currentLanguage === "en"
-                        ? "LokaClean is a professional cleaning service in Lombok serving Kuta Mandalika, Praya, Mataram, and West Lombok. We specialize in villa cleaning, home cleaning, and daily housekeeping with 5-star hotel standards."
-                        : "LokaClean adalah layanan kebersihan profesional di Lombok yang melayani Kuta Mandalika, Praya, Mataram, dan Lombok Barat. Spesialis villa cleaning, home cleaning, dan daily housekeeping dengan standar hotel bintang 5."}
+                      {t("home.hero.subtitle")}
                     </motion.p>
 
                     <motion.div
@@ -481,7 +528,7 @@ export function Home() {
                         className="w-36 sm:w-64 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-white shadow-[0_8px_32px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_48px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-105 text-center flex items-center justify-center whitespace-nowrap"
                       >
                         <span className="relative z-10 flex items-center gap-1.5 sm:gap-2">
-                          {t("home.hero.ctaRegister")}
+                          {isEnglish ? "Book Cleaning Now" : "Pesan Cleaning Sekarang"}
                           <ArrowRight className="h-3.5 w-3.5 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
                         </span>
                         <motion.div
@@ -497,18 +544,38 @@ export function Home() {
                           }}
                         />
                       </Link>
-                      <Link
-                        to="/login"
-                        className="w-36 sm:w-64 relative rounded-xl sm:rounded-2xl border-2 border-slate-300 bg-white/90 sm:backdrop-blur-xl px-3 sm:px-8 py-2.5 sm:py-3.5 text-xs sm:text-base font-bold text-slate-700 hover:bg-white hover:border-slate-400 hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden group text-center block whitespace-nowrap"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const ua = navigator.userAgent || navigator.vendor || "";
+                          const isIOSDevice = /iPad|iPhone|iPod/.test(ua);
+                          const isAndroidDevice = /android/i.test(ua);
+
+                          if (deferredPrompt) {
+                            deferredPrompt.prompt();
+                            deferredPrompt.userChoice.then((choice) => {
+                              if (choice.outcome === "accepted") {
+                                setDeferredPrompt(null);
+                              }
+                            });
+                            return;
+                          }
+
+                          if (isIOSDevice) {
+                            setShowIOSPrompt(true);
+                          } else if (isAndroidDevice) {
+                            setShowAndroidPrompt(true);
+                          } else {
+                            setShowIOSPrompt(true);
+                          }
+                        }}
+                        className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-[14px] sm:rounded-[16px] bg-white/10 text-slate-50 font-bold backdrop-blur-md border border-white/15 transition-all duration-300 hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5"
                       >
-                        <span className="relative z-10">{t("home.hero.ctaLogin")}</span>
-                        <motion.div
-                          className="absolute inset-0 bg-slate-100"
-                          initial={{ x: "-100%" }}
-                          whileHover={{ x: 0 }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      </Link>
+                        <Download className="w-4 h-4 sm:w-5 sm:h-5 text-teal-300 group-hover/btn:text-teal-200 transition-colors" />
+                        <span className="text-sm sm:text-base">
+                          {isEnglish ? "Install Mobile App" : "Install Aplikasi Mobile"}
+                        </span>
+                      </button>
                     </motion.div>
                   </>
                 )}
@@ -558,23 +625,44 @@ export function Home() {
             </div>
         </motion.section>
 
-        {/* SEO Text Section - Optimized for Local Search */}
+        {/* SEO Text Section - Cleaning Services in Lombok */}
         <section className="w-full bg-gradient-to-r from-white via-tropical-50/70 to-white border-y border-tropical-100/80 py-12 px-4 sm:px-6 lg:px-8 mb-12">
           <div className="max-w-5xl mx-auto text-center">
-             <h2 className="text-2xl font-black text-slate-900 mb-4">Jasa Kebersihan Terbaik di Kuta Mandalika & Lombok Tengah</h2>
-             <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-3xl mx-auto mb-8">
-               Mencari <strong>cleaning service terpercaya</strong>? LokaClean adalah solusi kebersihan nomor 1 di Lombok. 
-               Kami spesialis dalam <strong>Villa Cleaning</strong>, <strong>Home Cleaning</strong>, dan <strong>Daily Housekeeping</strong> dengan standar hotel bintang 5.
-             </p>
-             
-             {/* Service Areas - Keywords */}
-             <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                {["Kuta Mandalika", "Praya", "Lombok Barat", "Mataram", "Rembitan"].map((area) => (
-                  <span key={area} className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium shadow-sm">
-                    📍 {area}
-                  </span>
-                ))}
-             </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-4">
+              {isEnglish ? "Cleaning Services in Lombok" : "Jasa Cleaning Service di Lombok"}
+            </h2>
+            <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-3xl mx-auto mb-6">
+              {isEnglish
+                ? "LokaClean is a trusted cleaning service in Lombok for villas, private homes, and daily housekeeping. Our professional team follows 5-star hotel standards with clear pricing, flexible scheduling, and focus on Mandalika tourism area."
+                : "LokaClean adalah solusi cleaning service terpercaya di Lombok untuk villa, rumah pribadi, dan daily housekeeping. Tim profesional kami mengikuti standar hotel bintang 5 dengan harga transparan, jadwal fleksibel, dan fokus di kawasan wisata Mandalika."}
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4">
+              {[
+                "Jasa cleaning service Lombok",
+                "Cleaning service Kuta Mandalika",
+                "Villa cleaning Lombok",
+                "Home cleaning Lombok"
+              ].map((keyword) => (
+                <span
+                  key={keyword}
+                  className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 text-xs sm:text-sm font-medium shadow-sm"
+                >
+                  {keyword}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+              {["Kuta Mandalika", "Praya", "Lombok Barat", "Mataram", "Rembitan"].map((area) => (
+                <span
+                  key={area}
+                  className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium shadow-sm"
+                >
+                  📍 {area}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
