@@ -823,6 +823,11 @@ export const MapPicker = memo(function MapPicker({
     setGeoError(null);
     setAccuracyMeters(null);
     setForcedZoom(undefined); // Reset forced zoom on manual pick
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setLocating(false);
     onChange(v);
     onDetailsChange?.({ notes: "" });
   };
@@ -1000,6 +1005,11 @@ export const MapPicker = memo(function MapPicker({
   };
 
   const handleClearLocation = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setLocating(false);
     onChange(null);
     setAccuracyMeters(null);
     setResolvedAddress(null);

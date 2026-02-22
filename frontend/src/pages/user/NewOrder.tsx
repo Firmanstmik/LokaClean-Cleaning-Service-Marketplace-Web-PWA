@@ -91,6 +91,7 @@ export function NewOrderPage() {
   const [submitting, setSubmitting] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
+  const [debouncedAddress, setDebouncedAddress] = useState("");
 
   // --- Refs ---
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -170,6 +171,52 @@ export function NewOrderPage() {
 
     return () => window.clearTimeout(timer);
   }, [step]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setDebouncedAddress(address);
+    }, 800);
+    return () => window.clearTimeout(id);
+  }, [address]);
+
+  useEffect(() => {
+    if (step !== 3) return;
+    const query = debouncedAddress.trim();
+    if (!query) {
+      setLocation(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const params = new URLSearchParams({
+          q: query,
+          format: "jsonv2",
+          limit: "1",
+          addressdetails: "1",
+          "accept-language": isEnglish ? "en" : "id"
+        });
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`);
+        if (!res.ok) return;
+        const data = (await res.json()) as Array<{ lat: string; lon: string }>;
+        if (!data.length || cancelled) return;
+        const first = data[0];
+        const lat = parseFloat(first.lat);
+        const lon = parseFloat(first.lon);
+        if (Number.isFinite(lat) && Number.isFinite(lon)) {
+          setLocation({ lat, lng: lon });
+        }
+      } catch {
+        // ignore errors; map will stay at previous location
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedAddress, step, isEnglish]);
 
   // --- Handlers --- 
 
