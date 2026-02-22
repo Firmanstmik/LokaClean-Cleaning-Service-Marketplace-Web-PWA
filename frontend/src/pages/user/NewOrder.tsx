@@ -754,7 +754,7 @@ export function NewOrderPage() {
                           </p>
                           <button
                             type="button"
-                            onClick={() => navigate("/login")}
+                            onClick={() => navigate("/register")}
                             className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.98] transition-all"
                           >
                             <LogIn className="w-3 h-3" />

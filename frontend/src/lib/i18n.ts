@@ -619,8 +619,8 @@ const translations = {
       guestPhonePlaceholder: "Contoh: 0812xxxxxxx",
       guestLoginSuggestion: "Saran: Login agar nama, nomor WA, dan alamat tersimpan otomatis untuk pesanan berikutnya.",
       guestLoginCtaTitle: "Biar lebih mudah ke depannya",
-      guestLoginCtaDesc: "Jika Anda login, nama, nomor WhatsApp, dan alamat akan tersimpan otomatis sehingga pesanan berikutnya bisa dibuat lebih cepat tanpa perlu isi ulang data.",
-      guestLoginCtaButton: "Login dulu (opsional)",
+      guestLoginCtaDesc: "Kalau Anda punya akun dan login, nama, nomor WhatsApp, dan alamat akan tersimpan otomatis sehingga pesanan berikutnya bisa dibuat lebih cepat tanpa perlu isi ulang data.",
+      guestLoginCtaButton: "Daftar dulu yuk",
       guestValidationError: "Mohon isi nama dan nomor WhatsApp Anda."
     },
     // Order Detail
@@ -1461,10 +1461,10 @@ const translations = {
       guestNamePlaceholder: "Your name",
       guestPhoneLabel: "WhatsApp Number",
       guestPhonePlaceholder: "Example: 0812xxxxxxx",
-      guestLoginSuggestion: "Tip: Log in so your name, WhatsApp number, and address are saved for next orders.",
+      guestLoginSuggestion: "Tip: Create an account so your name, WhatsApp number, and address are saved for next orders.",
       guestLoginCtaTitle: "Make it easier next time",
-      guestLoginCtaDesc: "If you log in, your name, WhatsApp number, and address will be saved so the next orders can be created faster without re-typing your data.",
-      guestLoginCtaButton: "Log in first (optional)",
+      guestLoginCtaDesc: "If you create an account and log in, your name, WhatsApp number, and address will be saved so the next orders can be created faster without re-typing your data.",
+      guestLoginCtaButton: "Register first (optional)",
       guestValidationError: "Please fill in your name and WhatsApp number."
     },
     // Order Detail
