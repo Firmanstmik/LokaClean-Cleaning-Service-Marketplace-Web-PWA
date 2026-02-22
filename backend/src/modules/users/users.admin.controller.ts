@@ -311,12 +311,27 @@ export const deleteUserHandler = asyncHandler(async (req: Request, res: Response
       })
     ] : []),
 
-    // 3. Delete the orders themselves
+    // 3. Delete saved addresses for this user
+    prisma.savedAddress.deleteMany({
+      where: { user_id: userId }
+    }),
+
+    // 4. Delete cleaner profile (if any)
+    prisma.cleanerProfile.deleteMany({
+      where: { user_id: userId }
+    }),
+
+    // 5. Delete push subscriptions for this user (safe even if FK is SET NULL)
+    prisma.pushSubscription.deleteMany({
+      where: { user_id: userId }
+    }),
+
+    // 6. Delete the orders themselves
     prisma.pesanan.deleteMany({
       where: { user_id: userId }
     }),
 
-    // 4. Finally, delete the user
+    // 7. Finally, delete the user
     prisma.user.delete({
       where: { id: userId }
     })
