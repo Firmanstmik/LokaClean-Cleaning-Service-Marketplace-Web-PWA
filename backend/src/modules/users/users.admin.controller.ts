@@ -168,7 +168,9 @@ export const listUsersHandler = asyncHandler(async (req: Request, res: Response)
     };
   }));
 
-  return ok(res, { users });
+  const filteredUsers = users.filter(user => user.auth_type !== "GUEST_ONLY");
+
+  return ok(res, { users: filteredUsers });
 });
 
 export const createUserHandler = asyncHandler(async (req: Request, res: Response) => {
@@ -339,6 +341,18 @@ export const resetPasswordHandler = asyncHandler(async (req: Request, res: Respo
   });
   if (!existingUser) {
     throw new HttpError(404, "User not found");
+  }
+
+  const isGuestOnly =
+    !existingUser.password_hash &&
+    typeof existingUser.email === "string" &&
+    existingUser.email.endsWith("@guest.lokaclean.app");
+
+  if (isGuestOnly) {
+    throw new HttpError(
+      400,
+      "Customer ini adalah guest (pesan tanpa login) dan belum memiliki akun. Minta customer untuk register dengan nomor ini jika ingin bisa login."
+    );
   }
 
   const data = resetPasswordSchema.parse(req.body);

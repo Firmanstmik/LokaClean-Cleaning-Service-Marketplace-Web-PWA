@@ -22,4 +22,13 @@ export const adminLoginSchema = z.object({
   password: z.string().min(6)
 });
 
+export const userResetPasswordSchema = z.object({
+  phone_number: z.string().min(6),
+  new_password: z.string().min(6)
+});
+
+export const userCheckResetPhoneSchema = z.object({
+  phone_number: z.string().min(6)
+});
+
 

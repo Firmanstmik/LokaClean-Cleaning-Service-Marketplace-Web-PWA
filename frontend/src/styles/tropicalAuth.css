@@ -1,0 +1,125 @@
+/* Island Tropical Luxury – Lombok Branding */
+
+.tropical-bg {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #E6F7F5 0%, #D4EFEA 40%, #CDEAE4 100%);
+  position: relative;
+}
+.tropical-bg::before {
+  content: "";
+  position: absolute;
+  inset: -10% -10% auto -10%;
+  height: 50%;
+  background: radial-gradient(1200px 400px at 50% 0%, rgba(31, 175, 154, 0.12), transparent 60%);
+  pointer-events: none;
+}
+
+.lux-card {
+  position: relative;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(255,255,255,0.78) 100%);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0, 120, 110, 0.08);
+  border: 1px solid rgba(31,175,154,0.08);
+  border-top-color: rgba(255,255,255,0.5);
+}
+
+.lux-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: radial-gradient(600px 120px at 50% 0%, rgba(255,255,255,0.55), transparent 65%);
+  pointer-events: none;
+}
+
+.lux-heading {
+  color: #0E3B3A;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.lux-subtext {
+  color: #5F7F7D;
+}
+
+.mascot-wrap {
+  position: relative;
+  display: inline-block;
+  margin-top: -40px; /* overlap ~40% of card height on small screens */
+}
+.mascot-float {
+  animation: floatLuxury 3.5s ease-in-out infinite;
+  will-change: transform;
+  filter: drop-shadow(0 10px 20px rgba(28,140,132,0.25));
+}
+.mascot-glow {
+  position: absolute;
+  inset: 0;
+  transform: translateY(12px);
+  border-radius: 9999px;
+  background: radial-gradient(closest-side, rgba(64, 224, 208, 0.18), transparent 70%);
+  pointer-events: none;
+}
+@keyframes floatLuxury {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+.btn-primary-lux {
+  background-image: linear-gradient(135deg, #1FAF9A, #1C8C84);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 16px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(28, 140, 132, 0.25);
+  transition: transform .2s ease, filter .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+.btn-primary-lux:hover { 
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+.btn-primary-lux:active { 
+  transform: translateY(0);
+}
+.btn-primary-lux:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.btn-secondary-lux {
+  background: transparent;
+  color: #1FAF9A;
+  border: 1px solid #1FAF9A;
+  border-radius: 16px;
+  padding: 12px 16px;
+  font-weight: 700;
+  transition: background-color .2s ease, transform .2s ease;
+}
+.btn-secondary-lux:hover {
+  background-color: rgba(31,175,154,0.08);
+  transform: translateY(-1px);
+}
+.btn-secondary-lux:active {
+  transform: translateY(0);
+}
+
+.wave-divider {
+  width: 100%;
+  height: 12px;
+  background:
+    radial-gradient(10px 6px at 5px 6px, rgba(31,175,154,0.12) 50%, transparent 51%) repeat-x;
+  background-size: 12px 12px;
+  opacity: .6;
+}
+
+.tropical-up {
+  transform: translateY(-3.5vh);
+  will-change: transform;
+}
+@media (min-width: 640px) {
+  .tropical-up {
+    transform: translateY(-2.5vh);
+  }
+}

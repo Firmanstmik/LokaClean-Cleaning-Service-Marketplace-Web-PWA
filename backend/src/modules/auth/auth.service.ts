@@ -56,7 +56,15 @@ export async function registerUser(input: {
   if (!normalizedPhone) throw new HttpError(400, "Invalid phone number");
 
   const existingPhone = await prisma.user.findFirst({ where: { phone_number: normalizedPhone } });
-  if (existingPhone) throw new HttpError(409, "Phone number already registered");
+  const isGuestOnlyPhone =
+    existingPhone &&
+    !existingPhone.password_hash &&
+    typeof existingPhone.email === "string" &&
+    existingPhone.email.endsWith("@guest.lokaclean.app");
+
+  if (existingPhone && !isGuestOnlyPhone) {
+    throw new HttpError(409, "Phone number already registered");
+  }
 
   if (input.password.trim().length < 6) throw new HttpError(400, "Invalid password");
   const passwordHash = await bcrypt.hash(input.password, 12);
@@ -65,22 +73,39 @@ export async function registerUser(input: {
   if (input.email && input.email.trim().length > 0) {
     email = input.email.trim().toLowerCase();
     const existingEmail = await prisma.user.findUnique({ where: { email } });
-    if (existingEmail) throw new HttpError(409, "Email already registered");
+    if (existingEmail && (!existingPhone || existingEmail.id !== existingPhone.id)) {
+      throw new HttpError(409, "Email already registered");
+    }
   } else {
     const digits = normalizedPhone.replace(/\D/g, "");
     email = `user+${digits}@lokaclean.local`;
   }
 
-  const user = await prisma.user.create({
-    data: {
-      full_name: input.full_name,
-      email,
-      phone_number: normalizedPhone,
-      password_hash: passwordHash,
-      role: Role.USER
-    },
-    select: userSelect
-  });
+  let user;
+
+  if (isGuestOnlyPhone && existingPhone) {
+    user = await prisma.user.update({
+      where: { id: existingPhone.id },
+      data: {
+        full_name: input.full_name,
+        email,
+        password_hash: passwordHash,
+        role: Role.USER
+      },
+      select: userSelect
+    });
+  } else {
+    user = await prisma.user.create({
+      data: {
+        full_name: input.full_name,
+        email,
+        phone_number: normalizedPhone,
+        password_hash: passwordHash,
+        role: Role.USER
+      },
+      select: userSelect
+    });
+  }
 
   const token = signToken({ actor: "USER", role: "USER", id: user.id });
   return { token, user };
@@ -329,6 +354,95 @@ export async function loginAdmin(input: { login: string; password: string }) {
   };
 
   return { token, admin: safeAdmin };
+}
+
+export async function resetUserPassword(input: { phone_number: string; new_password: string }) {
+  const normalizedPhone = normalizeWhatsAppPhone(input.phone_number);
+  if (!normalizedPhone) {
+    throw new HttpError(
+      400,
+      "Nomor WhatsApp tidak valid. Pastikan format nomor benar (contoh: +628123456789 atau 08123456789)"
+    );
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { phone_number: normalizedPhone }
+  });
+
+  if (!user) {
+    throw new HttpError(
+      404,
+      "Nomor WhatsApp tidak terdaftar. Pastikan nomor yang Anda masukkan benar atau buat akun baru."
+    );
+  }
+
+  const isGuestOnly =
+    !user.password_hash &&
+    typeof user.email === "string" &&
+    user.email.endsWith("@guest.lokaclean.app");
+
+  if (isGuestOnly) {
+    throw new HttpError(
+      401,
+      "Nomor WhatsApp ini hanya digunakan untuk pesanan tanpa login. Silakan buat akun baru (register) dengan nomor ini untuk bisa login."
+    );
+  }
+
+  if (!user.password_hash) {
+    throw new HttpError(401, "Akun tidak memiliki password. Silakan hubungi admin.");
+  }
+
+  if (!input.new_password || input.new_password.trim().length < 6) {
+    throw new HttpError(400, "Password minimal 6 karakter");
+  }
+
+  const passwordHash = await bcrypt.hash(input.new_password, 12);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password_hash: passwordHash }
+  });
+
+  return { userId: user.id };
+}
+
+export async function checkUserPhoneForReset(input: { phone_number: string }) {
+  const normalizedPhone = normalizeWhatsAppPhone(input.phone_number);
+  if (!normalizedPhone) {
+    throw new HttpError(
+      400,
+      "Nomor WhatsApp tidak valid. Pastikan format nomor benar (contoh: +628123456789 atau 08123456789)"
+    );
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { phone_number: normalizedPhone }
+  });
+
+  if (!user) {
+    throw new HttpError(
+      404,
+      "Nomor WhatsApp tidak terdaftar. Silakan daftar terlebih dahulu untuk login."
+    );
+  }
+
+  const isGuestOnly =
+    !user.password_hash &&
+    typeof user.email === "string" &&
+    user.email.endsWith("@guest.lokaclean.app");
+
+  if (isGuestOnly) {
+    throw new HttpError(
+      401,
+      "Nomor WhatsApp ini hanya digunakan untuk pesanan tanpa login. Silakan buat akun baru (register) dengan nomor ini untuk bisa login."
+    );
+  }
+
+  if (!user.password_hash) {
+    throw new HttpError(401, "Akun tidak memiliki password. Silakan hubungi admin.");
+  }
+
+  return { ok: true, phone_number: normalizedPhone, userId: user.id };
 }
 
 
