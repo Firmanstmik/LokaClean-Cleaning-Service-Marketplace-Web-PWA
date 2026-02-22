@@ -27,12 +27,12 @@ const translations = {
         subtitle: "Pilih layanan kebersihan sesuai kebutuhan Anda."
       },
       premiumCTA: {
-        badge: "Aplikasi Mobile LokaClean",
+        badge: "Aplikasi Web LokaClean",
         title: {
           part1: "Upgrade ke",
           part2: "Pengalaman Premium"
         },
-        description: "Login sekarang untuk kemudahan pemesanan & pelacakan lokasi. Atau install aplikasi untuk pengalaman yang lebih cepat dan praktis!",
+        description: "Login sekarang untuk kemudahan pemesanan & pelacakan lokasi. Nikmati pengalaman pemesanan yang cepat dan praktis langsung dari web!",
         buttons: {
           login: "Login Member Web",
           install: "Install Aplikasi Mobile"
@@ -86,6 +86,23 @@ const translations = {
           desc: "Layanan deep cleaning menyeluruh untuk rumah baru atau pasca renovasi. Siap huni, bebas debu & bau cat.",
           cta: "Lihat Paket"
         }
+      },
+      landingFeatures: {
+        item1: { title: "Paket Transparan", desc: "Harga jelas & estimasi durasi di awal." },
+        item2: { title: "Lokasi via Peta", desc: "Tandai titik lokasi tepat untuk proses lebih cepat." },
+        item3: { title: "Verifikasi Foto", desc: "Foto sebelum & sesudah untuk cek kualitas." },
+        item4: { title: "Rating & Tip", desc: "Dukung pekerja lokal lewat rating & tip." }
+      },
+      rating: {
+        scoreText: "4.9/5 dari pelanggan Lombok",
+        pill1: "✔ Tim Terlatih",
+        pill2: "✔ Ramah & Profesional",
+        pill3: "✔ Tanpa Biaya Tersembunyi"
+      },
+      exitBanner: {
+        title: "Rumah masih butuh dibersihkan?",
+        subtitle: "Jadwalkan tim LokaClean sebelum kamu menutup halaman ini.",
+        cta: "Pesan Sekarang"
       },
       howItWorks: {
         title: "Cara Kerja",
@@ -316,6 +333,7 @@ const translations = {
     map: {
       useMyLocation: "Gunakan lokasi saya",
       locating: "Mencari lokasi...",
+      searchingLocationHint: "Tunggu sebentar, sedang mencari lokasi Anda...",
       coordinates: "Koordinat",
       tipUseMyLocation: "Tip: Gunakan 'Gunakan lokasi saya' untuk mendapatkan akurasi GPS.",
       approxAddress: "Alamat perkiraan:",
@@ -573,7 +591,7 @@ const translations = {
       locationPoint: "Titik Lokasi",
       infoLabel: "Info:",
       locationInfo: "Jika alamat sudah tepat, langkah ini boleh dilewati. Jika ingin mengubah, silakan pilih alamat lain di sini.",
-      addressPlaceholderDetail: "Detail alamat (Contoh: Villa Sunset No. 8, pagar putih...)",
+      addressPlaceholderDetail: "Klik Gunakan lokasi saya pada map untuk menentukan rute alamat Anda",
       roomPhoto: "Foto Ruangan (Opsional)",
       photoBtn: "Foto",
       paymentMethod: "Metode Pembayaran",
@@ -782,14 +800,14 @@ const translations = {
         subtitle: "Choose cleaning service according to your needs."
       },
       premiumCTA: {
-        badge: "LokaClean Mobile App",
+        badge: "LokaClean Web App",
         title: {
           part1: "Upgrade to",
           part2: "Premium Experience"
         },
-        description: "Login now for easy booking & location tracking. Or install the app for a faster and more practical experience!",
+        description: "Login now for easy booking & location tracking. Enjoy a fast and seamless experience directly from the web!",
         buttons: {
-          login: "Login Member Web",
+          login: "Login Web Member",
           install: "Install Mobile App"
         },
         socialProof: "Used by 1,000+ users in Lombok"
@@ -840,6 +858,23 @@ const translations = {
           desc: "Deep cleaning service for new or post-renovation homes. Move-in ready, dust-free & paint smell-free.",
           cta: "View Packages"
         }
+      },
+      landingFeatures: {
+        item1: { title: "Transparent packages", desc: "Clear pricing & estimated duration up front." },
+        item2: { title: "Map-based location", desc: "Pin the exact room location for faster ops." },
+        item3: { title: "Photo verification", desc: "Before & after photos to confirm quality." },
+        item4: { title: "Rating & tipping", desc: "Close the loop and support local workers." }
+      },
+      rating: {
+        scoreText: "4.9/5 from Lombok customers",
+        pill1: "✔ Trained Team",
+        pill2: "✔ Friendly & Professional",
+        pill3: "✔ No Hidden Fees"
+      },
+      exitBanner: {
+        title: "Still need your place cleaned?",
+        subtitle: "Schedule the LokaClean team before you close this page.",
+        cta: "Book Now"
       },
       howItWorks: {
         title: "How It Works",
@@ -1142,6 +1177,7 @@ const translations = {
     map: {
       useMyLocation: "Use my location",
       locating: "Locating...",
+      searchingLocationHint: "Please wait, we are searching for your location...",
       coordinates: "Coordinates",
       tipUseMyLocation: "Tip: Use 'Use my location' to get GPS accuracy.",
       approxAddress: "Approx. address:",
@@ -1399,7 +1435,7 @@ const translations = {
       locationPoint: "Location Point",
       infoLabel: "Info:",
       locationInfo: "If the address is correct, you can skip this step. To change, please select another address here.",
-      addressPlaceholderDetail: "Address details (E.g. Villa Sunset No. 8, white fence...)",
+      addressPlaceholderDetail: "Tap Use my location on the map to set your route",
       roomPhoto: "Room Photo (Optional)",
       photoBtn: "Photo",
       paymentMethod: "Payment Method",

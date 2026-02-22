@@ -31,6 +31,7 @@ import {
   ExternalLink,
   ArrowUpDown,
   MoreVertical,
+  Copy,
 } from "lucide-react";
 
 import { api } from "../../lib/api";
@@ -57,6 +58,12 @@ interface UserData {
   status?: UserStatus;
   total_orders?: number;
   orders_count?: number;
+  auth_type?: "REGISTERED" | "GUEST_ONLY" | "UNKNOWN" | string;
+  primary_address?: string | null;
+  primary_address_notes?: string | null;
+  primary_address_source?: "SAVED" | "ORDER" | string | null;
+  primary_address_latitude?: number | null;
+  primary_address_longitude?: number | null;
 }
 
 type SortField = "name" | "email" | "role" | "created_at";
@@ -79,6 +86,11 @@ function getUserStatusDisplay(user: UserData) {
     label: "Active",
     className: "border-emerald-300 text-emerald-700 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-900/20 dark:text-emerald-300",
   };
+}
+
+function formatUserDisplayId(id: number) {
+  const padded = id.toString().padStart(5, "0");
+  return `LC-${padded}`;
 }
 
 export function AdminUsersPage() {
@@ -116,6 +128,7 @@ export function AdminUsersPage() {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [bulkRole, setBulkRole] = useState<"USER" | "ADMIN">("USER");
   const [openActionUserId, setOpenActionUserId] = useState<number | null>(null);
+  const [authFilter, setAuthFilter] = useState<string>("ALL");
 
   const totalUsers = users.length;
   const totalAdmins = users.filter(user => user.role === "ADMIN").length;
@@ -128,34 +141,59 @@ export function AdminUsersPage() {
 
   const hasSelection = selectedUserIds.length > 0;
 
-  // Address state for detail modal
+  // Address state for detail modal (fallback only if no primary_address provided)
   const [addressName, setAddressName] = useState<string | null>(null);
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
 
-  // Fetch address when selected user changes
+  const primaryLatForSelected =
+    selectedUser?.primary_address_latitude ?? selectedUser?.default_latitude ?? null;
+  const primaryLngForSelected =
+    selectedUser?.primary_address_longitude ?? selectedUser?.default_longitude ?? null;
+  const selectedUserMapsUrl =
+    primaryLatForSelected != null && primaryLngForSelected != null
+      ? `https://www.google.com/maps/search/?api=1&query=${primaryLatForSelected},${primaryLngForSelected}`
+      : null;
+
   useEffect(() => {
-    if (selectedUser?.default_latitude && selectedUser?.default_longitude) {
+    if (!selectedUser) {
+      setAddressName(null);
+      setIsLoadingAddress(false);
+      return;
+    }
+
+    if (selectedUser.primary_address) {
+      setAddressName(selectedUser.primary_address);
+      setIsLoadingAddress(false);
+      return;
+    }
+
+    if (selectedUser.default_latitude && selectedUser.default_longitude) {
       setIsLoadingAddress(true);
-      // Use OpenStreetMap Nominatim for reverse geocoding
-      // NOTE: We do not set User-Agent header as it is forbidden in browser fetch and causes CORS issues.
-      // Instead we pass email param as requested by Nominatim usage policy.
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedUser.default_latitude}&lon=${selectedUser.default_longitude}&zoom=18&addressdetails=1&accept-language=id&email=admin@lokaclean.com`)
-        .then(res => {
-           if (!res.ok) throw new Error("Network response was not ok");
-           return res.json();
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedUser.default_latitude}&lon=${selectedUser.default_longitude}&zoom=18&addressdetails=1&accept-language=id&email=admin@lokaclean.com`
+      )
+        .then((res) => {
+          if (!res.ok) throw new Error("Network response was not ok");
+          return res.json();
         })
-        .then(data => {
+        .then((data) => {
           setAddressName(data.display_name || null);
         })
         .catch((err) => {
-           console.error("Address fetch error:", err);
-           setAddressName(null);
+          console.error("Address fetch error:", err);
+          setAddressName(null);
         })
         .finally(() => setIsLoadingAddress(false));
     } else {
       setAddressName(null);
+      setIsLoadingAddress(false);
     }
-  }, [selectedUser?.id, selectedUser?.default_latitude, selectedUser?.default_longitude]);
+  }, [
+    selectedUser?.id,
+    selectedUser?.primary_address,
+    selectedUser?.default_latitude,
+    selectedUser?.default_longitude
+  ]);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -193,6 +231,9 @@ export function AdminUsersPage() {
     const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
     const userStatus = (user.status || "ACTIVE").toString().toUpperCase();
     const matchesStatus = statusFilter === "ALL" || userStatus === statusFilter;
+
+    const authType = (user.auth_type || "UNKNOWN").toString().toUpperCase();
+    const matchesAuth = authFilter === "ALL" || authType === authFilter;
     
     // Date filters
     const userDate = new Date(user.created_at);
@@ -237,7 +278,7 @@ export function AdminUsersPage() {
       if (userTime > toTime) matchesDate = false;
     }
     
-    return matchesSearch && matchesRole && matchesStatus && matchesDate;
+    return matchesSearch && matchesRole && matchesStatus && matchesDate && matchesAuth;
   });
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
@@ -288,7 +329,7 @@ export function AdminUsersPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, roleFilter, statusFilter, dateFrom, dateTo, monthFilter, yearFilter, timeFrom, timeTo]);
+  }, [searchQuery, roleFilter, statusFilter, authFilter, dateFrom, dateTo, monthFilter, yearFilter, timeFrom, timeTo]);
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
@@ -1107,6 +1148,32 @@ export function AdminUsersPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <span className="uppercase tracking-wide">Tipe User</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { value: "ALL", label: "Semua" },
+                { value: "REGISTERED", label: "Punya akun (login)" },
+                { value: "GUEST_ONLY", label: "Guest (tanpa login)" },
+              ].map(item => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setAuthFilter(item.value)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    authFilter === item.value
+                      ? "bg-emerald-600 text-white"
+                      : "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
               <span className="uppercase tracking-wide">Status</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -1390,6 +1457,11 @@ export function AdminUsersPage() {
                       </span>
                     </th>
                     <th className="px-4 py-3 text-left align-middle">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-200">
+                        Alamat utama
+                      </span>
+                    </th>
+                    <th className="px-4 py-3 text-left align-middle">
                       <button
                         type="button"
                         onClick={() => handleSort("role")}
@@ -1445,15 +1517,21 @@ export function AdminUsersPage() {
                                 {user.full_name}
                               </div>
                               <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                                ID {user.id}
+                                ID {formatUserDisplayId(user.id)}
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-2.5 align-middle">
-                          <div className="truncate text-xs text-slate-700 dark:text-slate-100">
-                            {user.email}
-                          </div>
+                          {user.role === "ADMIN" ? (
+                            <div className="truncate text-xs text-slate-700 dark:text-slate-100">
+                              {user.email}
+                            </div>
+                          ) : (
+                            <div className="truncate text-xs text-slate-400 italic dark:text-slate-500">
+                              Email disembunyikan
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-2.5 align-middle">
                           <div className="truncate text-xs text-slate-700 dark:text-slate-100">
@@ -1461,15 +1539,38 @@ export function AdminUsersPage() {
                           </div>
                         </td>
                         <td className="px-4 py-2.5 align-middle">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                              user.role === "ADMIN"
-                                ? "border border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500 dark:bg-amber-900/30 dark:text-amber-200"
-                                : "border border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-200"
-                            }`}
-                          >
-                            {user.role}
-                          </span>
+                          {user.primary_address ? (
+                            <div className="truncate text-xs text-slate-700 dark:text-slate-100">
+                              {user.primary_address}
+                            </div>
+                          ) : (
+                            <div className="truncate text-[11px] text-slate-400 italic dark:text-slate-500">
+                              Belum ada alamat
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 align-middle">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                user.role === "ADMIN"
+                                  ? "border border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500 dark:bg-amber-900/30 dark:text-amber-200"
+                                  : "border border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/30 dark:text-blue-200"
+                              }`}
+                            >
+                              {user.role}
+                            </span>
+                            {user.role === "USER" && user.auth_type === "REGISTERED" && (
+                              <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-200">
+                                Login
+                              </span>
+                            )}
+                            {user.role === "USER" && user.auth_type === "GUEST_ONLY" && (
+                              <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-500 dark:bg-slate-800/40 dark:text-slate-200">
+                                Guest (tanpa login)
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-2.5 align-middle">
                           <span
@@ -1569,6 +1670,16 @@ export function AdminUsersPage() {
                               >
                                 {user.role}
                               </span>
+                              {user.role === "USER" && user.auth_type === "REGISTERED" && (
+                                <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-200">
+                                  Login
+                                </span>
+                              )}
+                              {user.role === "USER" && user.auth_type === "GUEST_ONLY" && (
+                                <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-500 dark:bg-slate-800/40 dark:text-slate-200">
+                                  Guest
+                                </span>
+                              )}
                               <span
                                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${statusInfo.className}`}
                               >
@@ -1589,10 +1700,12 @@ export function AdminUsersPage() {
                         </div>
 
                         <div className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                          <div className="flex items-center gap-1.5">
-                            <Mail className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="truncate">{user.email}</span>
-                          </div>
+                          {user.role === "ADMIN" && (
+                            <div className="flex items-center gap-1.5">
+                              <Mail className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="truncate">{user.email}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1.5">
                             <Phone className="h-3.5 w-3.5 text-slate-400" />
                             <span className="truncate">{user.phone_number}</span>
@@ -1603,6 +1716,14 @@ export function AdminUsersPage() {
                               Terdaftar {formatDateOnlyWITA(user.created_at)}
                             </span>
                           </div>
+                          {user.primary_address && (
+                            <div className="flex items-start gap-1.5">
+                              <MapPin className="mt-0.5 h-3.5 w-3.5 text-slate-400" />
+                              <span className="line-clamp-2 text-[11px]">
+                                {user.primary_address}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1870,7 +1991,7 @@ export function AdminUsersPage() {
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", stiffness: 260, damping: 26 }}
                 onClick={e => e.stopPropagation()}
-                className="pointer-events-auto flex max-h-[85vh] w-full flex-col rounded-t-3xl border-t bg-white shadow-xl sm:max-w-lg sm:rounded-2xl sm:border sm:bg-slate-950/95 sm:text-slate-50"
+                className="pointer-events-auto mb-20 flex max-h-[82vh] w-full flex-col rounded-t-3xl border-t bg-white shadow-xl sm:mb-0 sm:max-w-lg sm:rounded-2xl sm:border sm:bg-slate-950/95 sm:text-slate-50"
               >
                 <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3 sm:px-6 sm:py-4 sm:border-slate-800">
                   <div>
@@ -1891,8 +2012,8 @@ export function AdminUsersPage() {
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-5 pt-4 pb-2 sm:px-6 sm:pt-5 sm:pb-3 scrollbar-thin scrollbar-thumb-slate-200 sm:scrollbar-thumb-slate-700">
-                  <div className="space-y-3">
+                <div className="flex-1 overflow-y-auto px-5 pt-4 pb-4 sm:px-6 sm:pt-5 sm:pb-3 scrollbar-thin scrollbar-thumb-slate-200 sm:scrollbar-thumb-slate-700">
+                  <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700 sm:bg-slate-800 sm:text-slate-100">
                         {selectedUser.full_name[0]?.toUpperCase() || "?"}
@@ -1902,10 +2023,12 @@ export function AdminUsersPage() {
                           {selectedUser.full_name}
                         </div>
                         <div className="space-y-1 text-xs text-slate-600 sm:text-slate-300">
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-3.5 w-3.5" />
-                            <span className="truncate">{selectedUser.email}</span>
-                          </div>
+                          {selectedUser.role === "ADMIN" && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-3.5 w-3.5" />
+                              <span className="truncate">{selectedUser.email}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-2">
                             <Phone className="h-3.5 w-3.5" />
                             <span className="truncate">
@@ -1921,8 +2044,10 @@ export function AdminUsersPage() {
                         <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-slate-400">
                           Role
                         </div>
-                        <div className="mt-1 text-sm font-semibold text-slate-900 sm:text-slate-50">
-                          {selectedUser.role}
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="text-sm font-semibold text-slate-900 sm:text-slate-50">
+                            {selectedUser.role}
+                          </span>
                         </div>
                       </div>
                       <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs sm:border-slate-700 sm:bg-slate-900">
@@ -1935,7 +2060,7 @@ export function AdminUsersPage() {
                       </div>
                     </div>
 
-                    {(selectedUser.default_latitude && selectedUser.default_longitude) && (
+                    {(addressName || (selectedUser.primary_address_latitude && selectedUser.primary_address_longitude)) && (
                       <div className="rounded-lg border border-slate-200 bg-white text-xs sm:border-slate-700 sm:bg-slate-900 sm:text-slate-100">
                         <div className="flex items-center gap-2 border-b border-slate-200 px-3 py-2 sm:border-slate-700">
                           <MapPin className="h-3.5 w-3.5 text-slate-500" />
@@ -1953,20 +2078,44 @@ export function AdminUsersPage() {
                               <span>{addressName}</span>
                             ) : (
                               <span className="font-mono text-[11px] text-slate-500 sm:text-slate-400">
-                                {selectedUser.default_latitude.toFixed(6)},{" "}
-                                {selectedUser.default_longitude.toFixed(6)}
+                                {selectedUser.primary_address_latitude?.toFixed(6)},{" "}
+                                {selectedUser.primary_address_longitude?.toFixed(6)}
                               </span>
                             )}
                           </div>
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${selectedUser.default_latitude},${selectedUser.default_longitude}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 sm:border-slate-600 sm:bg-slate-800 sm:text-slate-100 sm:hover:bg-slate-700"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            Buka di Google Maps
-                          </a>
+                          {selectedUserMapsUrl && (
+                            <>
+                              <a
+                                href={selectedUserMapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 sm:border-slate-600 sm:bg-slate-800 sm:text-slate-100 sm:hover:bg-slate-700"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Buka di Google Maps
+                              </a>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(selectedUserMapsUrl);
+                                    setSuccessMessage("Link alamat disalin");
+                                  } catch {
+                                    setSuccessMessage("Gagal menyalin link alamat");
+                                  }
+                                }}
+                                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 sm:border-slate-600 sm:bg-slate-900 sm:text-slate-100 sm:hover:bg-slate-800"
+                              >
+                                <Copy className="h-3 w-3" />
+                                Salin link alamat
+                              </button>
+                            </>
+                          )}
+                          {selectedUser.primary_address_notes && (
+                            <div className="rounded-md bg-slate-50 px-3 py-2 text-[11px] text-slate-600 sm:bg-slate-800/40 sm:text-slate-200">
+                              Detail rumah: {selectedUser.primary_address_notes}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

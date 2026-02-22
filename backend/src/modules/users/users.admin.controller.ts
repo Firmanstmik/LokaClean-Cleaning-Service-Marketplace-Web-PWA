@@ -43,9 +43,109 @@ const updateUserSchema = z.object({
 });
 
 export const listUsersHandler = asyncHandler(async (req: Request, res: Response) => {
-  const users = await prisma.user.findMany({
-    select: userSelect,
+  const rows = await prisma.user.findMany({
+    select: {
+      ...userSelect,
+      password_hash: true,
+      savedAddresses: {
+        orderBy: [
+          { is_primary: "desc" },
+          { created_at: "desc" }
+        ],
+        take: 1,
+        select: {
+          id: true,
+          label: true,
+          address: true,
+          notes: true,
+          floor_number: true,
+          building_name: true,
+          latitude: true,
+          longitude: true
+        }
+      },
+      pesanan: {
+        orderBy: { created_at: "desc" },
+        take: 1,
+        select: {
+          id: true,
+          address: true,
+          location_latitude: true,
+          location_longitude: true
+        }
+      }
+    },
     orderBy: { created_at: "desc" }
+  });
+
+  const users = rows.map(row => {
+    const { password_hash, ...user } = row as typeof row & {
+      password_hash: string | null;
+      savedAddresses: Array<{
+        id: number;
+        label: string;
+        address: string;
+        notes: string | null;
+        floor_number: string | null;
+        building_name: string | null;
+        latitude: number;
+        longitude: number;
+      }>;
+      pesanan: Array<{
+        id: number;
+        address: string;
+        location_latitude: number;
+        location_longitude: number;
+      }>;
+    };
+
+    const email = (user.email || "").toString();
+    const hasPassword = !!password_hash;
+    const isGuestEmail = email.endsWith("@guest.lokaclean.app");
+
+    let auth_type: "REGISTERED" | "GUEST_ONLY" | "UNKNOWN" = "UNKNOWN";
+    if (hasPassword) {
+      auth_type = "REGISTERED";
+    } else if (isGuestEmail) {
+      auth_type = "GUEST_ONLY";
+    }
+
+    const primarySaved = user.savedAddresses[0] || null;
+    const latestOrder = user.pesanan[0] || null;
+
+    let primary_address: string | null = null;
+    let primary_address_notes: string | null = null;
+    let primary_address_source: "SAVED" | "ORDER" | null = null;
+    let primary_address_latitude: number | null = null;
+    let primary_address_longitude: number | null = null;
+
+    if (primarySaved) {
+      primary_address = primarySaved.address;
+      primary_address_notes =
+        primarySaved.notes ||
+        primarySaved.building_name ||
+        primarySaved.floor_number ||
+        null;
+      primary_address_source = "SAVED";
+      primary_address_latitude = primarySaved.latitude;
+      primary_address_longitude = primarySaved.longitude;
+    } else if (latestOrder) {
+      primary_address = latestOrder.address;
+      primary_address_notes = null;
+      primary_address_source = "ORDER";
+      primary_address_latitude = latestOrder.location_latitude;
+      primary_address_longitude = latestOrder.location_longitude;
+    }
+
+    return {
+      ...user,
+      auth_type,
+      primary_address,
+      primary_address_notes,
+      primary_address_source,
+      primary_address_latitude,
+      primary_address_longitude
+    };
   });
 
   return ok(res, { users });

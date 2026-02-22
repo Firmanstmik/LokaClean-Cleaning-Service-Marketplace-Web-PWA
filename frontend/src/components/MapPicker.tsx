@@ -446,9 +446,13 @@ export const MapPicker = memo(function MapPicker({
   const welcomeTimeoutRef = useRef<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  const [showApproxCard, setShowApproxCard] = useState(false);
+  const [showLocatingHint, setShowLocatingHint] = useState(false);
+
   const requestIdRef = useRef(0);
   const onAddressChangeRef = useRef<typeof onAddressChange>(onAddressChange);
   const mapKeyRef = useRef(`map-${Date.now()}-${Math.random()}`);
+  const locatingHintTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 640);
@@ -745,6 +749,37 @@ export const MapPicker = memo(function MapPicker({
 
   const primaryAddress = useMemo(() => savedAddresses.find(a => a.is_primary), [savedAddresses]);
 
+  useEffect(() => {
+    if (!value) {
+      setShowApproxCard(false);
+      return;
+    }
+    setShowApproxCard(true);
+  }, [value?.lat, value?.lng]);
+
+  useEffect(() => {
+    if (!value || !showApproxCard) return;
+    const timer = window.setTimeout(() => setShowApproxCard(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [value?.lat, value?.lng, showApproxCard]);
+
+  useEffect(() => {
+    if (locating) {
+      if (locatingHintTimeoutRef.current !== null) {
+        window.clearTimeout(locatingHintTimeoutRef.current);
+      }
+      locatingHintTimeoutRef.current = window.setTimeout(() => {
+        setShowLocatingHint(true);
+      }, 2000);
+    } else {
+      setShowLocatingHint(false);
+      if (locatingHintTimeoutRef.current !== null) {
+        window.clearTimeout(locatingHintTimeoutRef.current);
+        locatingHintTimeoutRef.current = null;
+      }
+    }
+  }, [locating]);
+
   // Reverse geocode whenever the pin changes.
   useEffect(() => {
     if (!value) {
@@ -962,6 +997,16 @@ export const MapPicker = memo(function MapPicker({
     });
 
     setTimeout(() => setLocating(false), 10000);
+  };
+
+  const handleClearLocation = () => {
+    onChange(null);
+    setAccuracyMeters(null);
+    setResolvedAddress(null);
+    setAddressDetails(null);
+    setResolveError(null);
+    setShowApproxCard(false);
+    onAddressChangeRef.current?.(null);
   };
 
   const watchIdRef = useRef<number | null>(null);
@@ -1383,6 +1428,14 @@ export const MapPicker = memo(function MapPicker({
           onSave={handleSimpleSave} 
         />
         <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between z-[1100]">
+          {locating && showLocatingHint && (
+            <div className="absolute top-4 left-0 right-0 flex items-center justify-center z-[400] pointer-events-none">
+              <div className="inline-flex items-center gap-2 rounded-full bg-slate-900/85 text-white px-3 py-1.5 text-[10px] sm:text-xs shadow-lg">
+                <Loader2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" />
+                <span>{t("map.searchingLocationHint")}</span>
+              </div>
+            </div>
+          )}
           
           {/* Center Hint: "Ketuk peta" */}
           {!value && (
@@ -1400,7 +1453,7 @@ export const MapPicker = memo(function MapPicker({
           <div className="mt-auto flex items-end justify-between w-full pointer-events-none pb-1 sm:pb-2">
             {/* Left: Address Card (Glassmorphism) */}
             <div className="flex-1 max-w-[calc(100%-60px)] pointer-events-auto">
-              {value && details ? (
+              {value && details && showApproxCard ? (
                 <div className="bg-white/95 backdrop-blur-xl p-2.5 sm:p-3 rounded-2xl shadow-lg border border-white/50 animate-in slide-in-from-top-4 fade-in duration-500 w-full max-w-xs sm:max-w-sm">
                    <div className="flex items-start gap-2">
                       <div className="flex-shrink-0 w-7 h-7 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mt-0.5">
@@ -1413,18 +1466,12 @@ export const MapPicker = memo(function MapPicker({
                           </div>
                           {!hideSaveButton && (
                             <button 
-                              disabled={resolving || !resolvedAddress}
-                              onClick={() => {
-                                setShowSimpleModal(true);
-                              }}
-                              className="group inline-flex items-center gap-1.5 rounded-full bg-indigo-50/90 px-2.5 py-1 text-[10px] font-semibold text-indigo-600 shadow-sm border border-indigo-100 hover:bg-indigo-100 hover:text-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              type="button"
+                              onClick={handleClearLocation}
+                              className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 transition-colors"
+                              title={t("common.delete")}
                             >
-                              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-white text-indigo-600 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                <Save className="w-3 h-3" />
-                              </span>
-                              <span className="leading-tight">
-                                {t("map.saveAddress.save")}
-                              </span>
+                              <X className="w-3.5 h-3.5" />
                             </button>
                           )}
                         </div>

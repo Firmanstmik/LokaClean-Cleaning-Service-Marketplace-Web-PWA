@@ -214,29 +214,29 @@ export function Home() {
   const features = [
     {
       icon: Shield,
-      title: "Transparent packages",
-      description: "Clear pricing & estimated duration up front.",
+      title: t("home.landingFeatures.item1.title"),
+      description: t("home.landingFeatures.item1.desc"),
       gradient: "from-tropical-500 to-tropical-600",
       delay: 0.1
     },
     {
       icon: MapPin,
-      title: "Map-based location",
-      description: "Pin the exact room location for faster ops.",
+      title: t("home.landingFeatures.item2.title"),
+      description: t("home.landingFeatures.item2.desc"),
       gradient: "from-ocean-500 to-ocean-600",
       delay: 0.2
     },
     {
       icon: Camera,
-      title: "Photo verification",
-      description: "Before & after photos to confirm quality.",
+      title: t("home.landingFeatures.item3.title"),
+      description: t("home.landingFeatures.item3.desc"),
       gradient: "from-sun-400 to-sun-500",
       delay: 0.3
     },
     {
       icon: Heart,
-      title: "Rating & tipping",
-      description: "Close the loop and support local workers.",
+      title: t("home.landingFeatures.item4.title"),
+      description: t("home.landingFeatures.item4.desc"),
       gradient: "from-pink-500 to-rose-500",
       delay: 0.4
     }
@@ -608,7 +608,7 @@ export function Home() {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
-                      className="flex flex-row gap-2.5 sm:gap-4 justify-center sm:justify-start mb-4 sm:mb-8 will-change-transform"
+                      className="flex flex-row justify-center sm:justify-start mb-4 sm:mb-8 will-change-transform"
                     >
                       <Link
                         to="/home"
@@ -621,51 +621,19 @@ export function Home() {
                           <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                       </Link>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const ua = navigator.userAgent || navigator.vendor || "";
-                          const isIOSDevice = /iPad|iPhone|iPod/.test(ua);
-                          const isAndroidDevice = /android/i.test(ua);
-
-                          if (deferredPrompt) {
-                            deferredPrompt.prompt();
-                            deferredPrompt.userChoice.then((choice) => {
-                              if (choice.outcome === "accepted") {
-                                setDeferredPrompt(null);
-                              }
-                            });
-                            return;
-                          }
-
-                          if (isIOSDevice) {
-                            setShowIOSPrompt(true);
-                          } else if (isAndroidDevice) {
-                            setShowAndroidPrompt(true);
-                          } else {
-                            setShowIOSPrompt(true);
-                          }
-                        }}
-                        className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-6 sm:px-8 h-12 sm:h-14 rounded-full border border-teal-500/70 bg-white/70 text-teal-700 font-semibold transition-transform duration-300 hover:bg-teal-50/90 hover:-translate-y-0.5"
-                      >
-                        <Download className="w-4 h-4 sm:w-5 sm:h-5 text-teal-500 group-hover/btn:text-teal-600 transition-colors" />
-                        <span className="text-xs sm:text-sm">
-                          {isEnglish ? "Install Mobile App" : "Install Aplikasi Mobile"}
-                        </span>
-                      </button>
                     </motion.div>
                     <div className="mt-2.5 sm:mt-3 flex flex-col sm:flex-row items-center gap-1.5 text-[10px] sm:text-xs text-slate-600/80">
                       <div className="flex items-center gap-1.5">
                         <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                        <span>4.9/5 dari pelanggan Lombok</span>
+                        <span>{t("home.rating.scoreText")}</span>
                       </div>
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-3">
                         <span className="hidden sm:inline text-slate-400">•</span>
-                        <span>✔ Tim Terlatih</span>
+                        <span>{t("home.rating.pill1")}</span>
                         <span className="hidden sm:inline text-slate-400">•</span>
-                        <span>✔ Ramah & Profesional</span>
+                        <span>{t("home.rating.pill2")}</span>
                         <span className="hidden sm:inline text-slate-400">•</span>
-                        <span>✔ Tanpa Biaya Tersembunyi</span>
+                        <span>{t("home.rating.pill3")}</span>
                       </div>
                     </div>
                   </>
@@ -1097,36 +1065,6 @@ export function Home() {
                     <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-slate-900 relative z-10" />
                     <span className="relative z-10 text-sm sm:text-base">{t("home.premiumCTA.buttons.login")}</span>
                   </Link>
-                  
-                  <button
-                    onClick={() => {
-                      const ua = navigator.userAgent || navigator.vendor || "";
-                      const isIOS = /iPad|iPhone|iPod/.test(ua);
-                      const isAndroid = /android/i.test(ua);
-
-                      if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                        deferredPrompt.userChoice.then((choice) => {
-                          if (choice.outcome === "accepted") {
-                            setDeferredPrompt(null);
-                          }
-                        });
-                        return;
-                      }
-
-                      if (isIOS) {
-                        setShowIOSPrompt(true);
-                      } else if (isAndroid) {
-                        setShowAndroidPrompt(true);
-                      } else {
-                        setShowIOSPrompt(true);
-                      }
-                    }}
-                    className="group/btn relative flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-[14px] sm:rounded-[16px] bg-white/10 text-slate-50 font-bold backdrop-blur-md border border-white/15 transition-all duration-300 hover:bg-white/15 hover:border-white/25 hover:-translate-y-0.5"
-                  >
-                    <Download className="w-4 h-4 sm:w-5 sm:h-5 text-teal-300 group-hover/btn:text-teal-200 transition-colors" />
-                    <span className="text-sm sm:text-base">{t("home.premiumCTA.buttons.install")}</span>
-                  </button>
                 </div>
                 
                 <div className="flex items-center gap-4 pt-4 border-t border-slate-800/50">
@@ -1420,10 +1358,10 @@ export function Home() {
           >
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-slate-900">
-                Rumah masih butuh dibersihkan?
+                {t("home.exitBanner.title")}
               </span>
               <span className="text-xs text-slate-500">
-                Jadwalkan tim LokaClean sebelum kamu menutup halaman ini.
+                {t("home.exitBanner.subtitle")}
               </span>
             </div>
             <Link
@@ -1431,7 +1369,7 @@ export function Home() {
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-teal-500 via-teal-600 to-sky-500 px-4 py-1.5 text-xs font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200"
               onClick={() => setShowExitBanner(false)}
             >
-              <span>Pesan Sekarang</span>
+              <span>{t("home.exitBanner.cta")}</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
           </motion.div>
