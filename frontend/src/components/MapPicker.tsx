@@ -247,7 +247,7 @@ const markerStyle = `
 function WelcomeOverlay({ visible }: { visible: boolean }) {
   if (!visible) return null;
   return (
-      <div className="absolute bottom-8 left-0 right-0 z-[2000] pointer-events-none w-full px-4 flex justify-center">
+      <div className="absolute inset-0 z-[2000] pointer-events-none w-full px-4 flex items-center justify-center">
         <div className="bg-white/90 backdrop-blur-md px-3 py-2 sm:px-5 sm:py-3 rounded-full shadow-xl border border-white/50 animate-in slide-in-from-bottom-4 fade-in duration-500 max-w-xs sm:max-w-sm text-center">
           <p className="text-xs sm:text-sm font-medium text-slate-700 leading-tight">
             {t("map.welcomeOverlay")}
@@ -443,6 +443,7 @@ export const MapPicker = memo(function MapPicker({
   const [forcedZoom, setForcedZoom] = useState<number | undefined>(undefined);
   const [showWelcome, setShowWelcome] = useState(false);
   const welcomeShownRef = useRef(false);
+  const welcomeTimeoutRef = useRef<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   const requestIdRef = useRef(0);
@@ -460,15 +461,25 @@ export const MapPicker = memo(function MapPicker({
     onAddressChangeRef.current = onAddressChange;
   }, [onAddressChange]);
 
-  // Welcome Overlay Logic
-  useEffect(() => {
-    if (isOpen !== false && !value && !welcomeShownRef.current) {
-      setShowWelcome(true);
-      welcomeShownRef.current = true;
-      const timer = setTimeout(() => setShowWelcome(false), 4500);
-      return () => clearTimeout(timer);
+  const triggerWelcomeOverlay = () => {
+    if (welcomeShownRef.current || value) return;
+    welcomeShownRef.current = true;
+    setShowWelcome(true);
+    if (welcomeTimeoutRef.current !== null) {
+      window.clearTimeout(welcomeTimeoutRef.current);
     }
-  }, [isOpen, value]);
+    welcomeTimeoutRef.current = window.setTimeout(() => {
+      setShowWelcome(false);
+    }, 3500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (welcomeTimeoutRef.current !== null) {
+        window.clearTimeout(welcomeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Simple Flow State
   const [showSimpleModal, setShowSimpleModal] = useState(false);
@@ -1237,7 +1248,11 @@ export const MapPicker = memo(function MapPicker({
       )}
 
       {/* Main Map Card */}
-      <div className="relative group rounded-3xl overflow-hidden border-4 border-white shadow-2xl ring-1 ring-slate-900/5 transition-all hover:shadow-indigo-500/10">
+      <div
+        className="relative group rounded-3xl overflow-hidden border-4 border-white shadow-2xl ring-1 ring-slate-900/5 transition-all hover:shadow-indigo-500/10"
+        onPointerEnter={triggerWelcomeOverlay}
+        onPointerDown={triggerWelcomeOverlay}
+      >
         
         <MapContainer
           key={mapKeyRef.current}

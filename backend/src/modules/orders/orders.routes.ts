@@ -9,6 +9,7 @@ import { requireActor } from "../../middleware/requireActor";
 import { imageUpload, mediaUpload } from "../../middleware/upload";
 import {
   createOrderHandler,
+  createGuestOrderHandler,
   createRatingHandler,
   createTipHandler,
   getMyOrderHandler,
@@ -20,9 +21,10 @@ import {
 
 export const ordersRouter = Router();
 
+ordersRouter.post("/guest", mediaUpload.array("room_photo_before", 4), createGuestOrderHandler);
+
 ordersRouter.use(authenticate, requireActor("USER"));
 
-// Create order with BEFORE photo upload (multipart/form-data, supports multiple photos, max 4).
 ordersRouter.post("/", mediaUpload.array("room_photo_before", 4), createOrderHandler);
 
 ordersRouter.get("/", listMyOrdersHandler);

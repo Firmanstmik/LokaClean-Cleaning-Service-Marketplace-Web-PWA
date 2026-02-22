@@ -569,12 +569,6 @@ function CustomerCard({ order, onCopy }: CustomerCardProps) {
             </button>
           </div>
         </div>
-        <div>
-          <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Email</div>
-          <div className="truncate text-xs font-semibold text-slate-900 sm:text-sm dark:text-slate-50">
-            {order.user.email || "-"}
-          </div>
-        </div>
       </div>
     </section>
   );

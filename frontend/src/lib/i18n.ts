@@ -592,7 +592,18 @@ const translations = {
       extraRequestExample2: "Alat pembersih tambahan di lokasi",
       extraRequestExample3: "Kebutuhan khusus lain (jam fleksibel, area tertentu, dll.)",
       extraRequestPlaceholder: "",
-      extraRequestHint: ""
+      extraRequestHint: "",
+      guestNoteTitle: "Pesan tanpa login",
+      guestNoteDesc: "Karena Anda ingin pesan layanan kami tanpa login, isi nama, nomor WhatsApp aktif, dan alamat agar admin bisa menghubungi Anda.",
+      guestNameLabel: "Nama Lengkap",
+      guestNamePlaceholder: "Nama Anda",
+      guestPhoneLabel: "Nomor WhatsApp",
+      guestPhonePlaceholder: "Contoh: 0812xxxxxxx",
+      guestLoginSuggestion: "Saran: Login agar nama, nomor WA, dan alamat tersimpan otomatis untuk pesanan berikutnya.",
+      guestLoginCtaTitle: "Biar lebih mudah ke depannya",
+      guestLoginCtaDesc: "Jika Anda login, nama, nomor WhatsApp, dan alamat akan tersimpan otomatis sehingga pesanan berikutnya bisa dibuat lebih cepat tanpa perlu isi ulang data.",
+      guestLoginCtaButton: "Login dulu (opsional)",
+      guestValidationError: "Mohon isi nama dan nomor WhatsApp Anda."
     },
     // Order Detail
     orderDetail: {
@@ -1407,7 +1418,18 @@ const translations = {
       extraRequestExample2: "Extra cleaning tools at location",
       extraRequestExample3: "Other preferences (flexible time, specific areas, etc.)",
       extraRequestPlaceholder: "",
-      extraRequestHint: ""
+      extraRequestHint: "",
+      guestNoteTitle: "Order without login",
+      guestNoteDesc: "Because you want to order our service without logging in, please fill in your full name, active WhatsApp number, and address so our admin can contact you.",
+      guestNameLabel: "Full Name",
+      guestNamePlaceholder: "Your name",
+      guestPhoneLabel: "WhatsApp Number",
+      guestPhonePlaceholder: "Example: 0812xxxxxxx",
+      guestLoginSuggestion: "Tip: Log in so your name, WhatsApp number, and address are saved for next orders.",
+      guestLoginCtaTitle: "Make it easier next time",
+      guestLoginCtaDesc: "If you log in, your name, WhatsApp number, and address will be saved so the next orders can be created faster without re-typing your data.",
+      guestLoginCtaButton: "Log in first (optional)",
+      guestValidationError: "Please fill in your name and WhatsApp number."
     },
     // Order Detail
     orderDetail: {

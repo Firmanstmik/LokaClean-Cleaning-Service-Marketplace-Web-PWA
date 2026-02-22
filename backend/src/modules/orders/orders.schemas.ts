@@ -26,18 +26,66 @@ export const createOrderInputSchema = z.object({
     if (typeof val === "string" || val instanceof Date) return new Date(val);
     return val;
   }, z.date()),
-  extras: z.string().optional().transform((val) => {
-    if (!val) return [];
-    try {
-      return JSON.parse(val);
-    } catch {
-      return [];
-    }
-  }).pipe(z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    price: z.number()
-  })).optional().default([]))
+  extras: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return [];
+      try {
+        return JSON.parse(val);
+      } catch {
+        return [];
+      }
+    })
+    .pipe(
+      z
+        .array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            price: z.number()
+          })
+        )
+        .optional()
+        .default([])
+    )
+});
+
+export const createGuestOrderInputSchema = z.object({
+  full_name: z.string().min(1),
+  phone_number: z.string().min(6),
+  paket_id: intField,
+  payment_method: z.enum(["QRIS", "DANA", "TRANSFER", "CASH"]),
+  location_latitude: floatField,
+  location_longitude: floatField,
+  address: z.string().min(1),
+  scheduled_date: z.preprocess((val) => {
+    if (typeof val === "string" || val instanceof Date) return new Date(val);
+    return val;
+  }, z.date()),
+  extras: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return [];
+      try {
+        return JSON.parse(val);
+      } catch {
+        return [];
+      }
+    })
+    .pipe(
+      z
+        .array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            price: z.number()
+          })
+        )
+        .optional()
+        .default([])
+    )
 });
 
 export const createRatingSchema = z.object({

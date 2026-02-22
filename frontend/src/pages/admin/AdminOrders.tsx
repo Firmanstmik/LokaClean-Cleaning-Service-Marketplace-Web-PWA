@@ -45,8 +45,10 @@ type OrdersSearchProps = {
 type OrdersFilterBarProps = {
   statusFilter: string;
   paymentFilter: string;
+  userTypeFilter: string;
   onStatusChange: (value: string) => void;
   onPaymentChange: (value: string) => void;
+  onUserTypeChange: (value: string) => void;
 };
 
 type OrdersDateFilterProps = {
@@ -148,6 +150,7 @@ export function AdminOrdersPage() {
   const [items, setItems] = useState<Pesanan[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<DeleteState>({
@@ -162,6 +165,7 @@ export function AdminOrdersPage() {
     searchParams.get("filter") || "ALL",
   );
   const [paymentFilter, setPaymentFilter] = useState<string>("ALL");
+  const [userTypeFilter, setUserTypeFilter] = useState<string>("ALL");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showDateFilters, setShowDateFilters] = useState(false);
@@ -179,7 +183,12 @@ export function AdminOrdersPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get("/admin/orders");
+      const params = new URLSearchParams();
+      if (userTypeFilter !== "ALL") {
+        params.append("user_type", userTypeFilter);
+      }
+      const query = params.toString();
+      const response = await api.get(`/admin/orders${query ? `?${query}` : ""}`);
       const data = response.data?.data?.items as Pesanan[] | undefined;
       setItems(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -187,7 +196,7 @@ export function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userTypeFilter]);
 
   useEffect(() => {
     fetchOrders();
@@ -224,6 +233,12 @@ export function AdminOrdersPage() {
       const paymentMatch =
         paymentFilter === "ALL" || paymentStatus === paymentFilter;
 
+      const isGuest = item.user.email.endsWith("@guest.lokaclean.app");
+      const userTypeMatch =
+        userTypeFilter === "ALL" ||
+        (userTypeFilter === "GUEST" && isGuest) ||
+        (userTypeFilter === "REGISTERED" && !isGuest);
+
       let dateMatch = true;
       if (dateFrom || dateTo) {
         const createdAt = new Date(item.created_at);
@@ -243,7 +258,7 @@ export function AdminOrdersPage() {
         }
       }
 
-      return searchMatch && statusMatch && paymentMatch && dateMatch;
+      return searchMatch && statusMatch && paymentMatch && userTypeMatch && dateMatch;
     });
   }, [items, debouncedSearch, statusFilter, paymentFilter, dateFrom, dateTo]);
 
@@ -269,6 +284,22 @@ export function AdminOrdersPage() {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(start, start + itemsPerPage);
   }, [filteredItems, currentPage, itemsPerPage]);
+
+  const handleToggleSelectAllCurrentPage = useCallback(() => {
+    if (!paginatedItems.length) return;
+    const pageIds = paginatedItems.map((order) => order.id);
+    const allSelected = pageIds.every((id) => selectedOrders.has(id));
+
+    setSelectedOrders((prev) => {
+      const next = new Set(prev);
+      if (allSelected) {
+        pageIds.forEach((id) => next.delete(id));
+      } else {
+        pageIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }, [paginatedItems, selectedOrders]);
 
   const handleToggleSelect = useCallback((id: number) => {
     setSelectedOrders((prev) => {
@@ -340,6 +371,33 @@ export function AdminOrdersPage() {
     }
   }, [deleteConfirm, fetchOrders]);
 
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedOrders.size === 0) return;
+
+    const confirmed = window.confirm(
+      `Hapus ${selectedOrders.size} pesanan terpilih? Tindakan ini tidak dapat dibatalkan.`,
+    );
+    if (!confirmed) return;
+
+    setBulkBusy(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    const ids = Array.from(selectedOrders);
+
+    try {
+      await api.post("/admin/orders/bulk-delete", { ids });
+      setSuccessMessage(`Berhasil menghapus ${ids.length} pesanan.`);
+      setSelectedOrders(new Set());
+      await fetchOrders();
+      window.setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setBulkBusy(false);
+    }
+  }, [selectedOrders, fetchOrders]);
+
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
       <OrdersHeader
@@ -362,14 +420,39 @@ export function AdminOrdersPage() {
         </div>
       )}
 
+      {selectedOrders.size > 0 && (
+        <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-700 sm:text-xs dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-6 items-center rounded-full bg-slate-900 px-2.5 text-[11px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
+              {selectedOrders.size} dipilih
+            </span>
+            <span className="hidden sm:inline">
+              Aksi bulk: hapus beberapa pesanan sekaligus.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleBulkDelete}
+            disabled={bulkBusy || loading}
+            className="inline-flex items-center gap-1.5 rounded-full border border-rose-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-500/60 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-rose-500/10"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Delete Selected</span>
+            <span className="sm:hidden">Hapus</span>
+          </button>
+        </div>
+      )}
+
       <div className="space-y-3">
         <OrdersSearch value={searchQuery} onChange={setSearchQuery} />
         <div className="space-y-2">
           <OrdersFilterBar
             statusFilter={statusFilter}
             paymentFilter={paymentFilter}
+          userTypeFilter={userTypeFilter}
             onStatusChange={setStatusFilter}
             onPaymentChange={setPaymentFilter}
+          onUserTypeChange={setUserTypeFilter}
           />
           <OrdersDateFilter
             open={showDateFilters}
@@ -407,9 +490,25 @@ export function AdminOrdersPage() {
               Menampilkan {paginatedItems.length} dari {filteredItems.length}{" "}
               pesanan
             </span>
-            <span>
-              Halaman {currentPage} dari {totalPages}
-            </span>
+            <div className="flex items-center gap-3">
+              <span>
+                Halaman {currentPage} dari {totalPages}
+              </span>
+              <label className="inline-flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 dark:border-slate-600"
+                  onChange={handleToggleSelectAllCurrentPage}
+                  checked={
+                    paginatedItems.length > 0 &&
+                    paginatedItems.every((order) => selectedOrders.has(order.id))
+                  }
+                  aria-label="Pilih semua pesanan di halaman ini"
+                />
+                <span className="hidden sm:inline">Pilih semua di halaman ini</span>
+                <span className="sm:hidden">Pilih semua</span>
+              </label>
+            </div>
           </div>
 
           <div className="space-y-2.5">
@@ -527,8 +626,10 @@ function OrdersSearch({ value, onChange }: OrdersSearchProps) {
 function OrdersFilterBar({
   statusFilter,
   paymentFilter,
+  userTypeFilter,
   onStatusChange,
   onPaymentChange,
+  onUserTypeChange,
 }: OrdersFilterBarProps) {
   const statusOptions: { value: string; label: string }[] = [
     { value: "ALL", label: "Semua Status" },
@@ -542,6 +643,12 @@ function OrdersFilterBar({
     { value: "PAID", label: "Lunas" },
     { value: "PENDING", label: "Menunggu" },
     { value: "FAILED", label: "Gagal" },
+  ];
+
+  const userTypeOptions: { value: string; label: string }[] = [
+    { value: "ALL", label: "Semua Pelanggan" },
+    { value: "REGISTERED", label: "User Terdaftar" },
+    { value: "GUEST", label: "Guest (Tidak Login)" },
   ];
 
   return (
@@ -580,6 +687,25 @@ function OrdersFilterBar({
               className={`whitespace-nowrap rounded-full px-3 text-[11px] font-medium transition-colors h-8 ${
                 active
                   ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-900"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {userTypeOptions.map((option) => {
+          const active = userTypeFilter === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onUserTypeChange(option.value)}
+              className={`whitespace-nowrap rounded-full px-3 text-[11px] font-medium transition-colors h-8 ${
+                active
+                  ? "bg-amber-500 text-white dark:bg-amber-400 dark:text-slate-900"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
               }`}
             >
@@ -677,6 +803,7 @@ const OrderCard = memo(function OrderCard({
   busy,
 }: OrderCardProps) {
   const paymentStatus = order.pembayaran?.status ?? "PENDING";
+  const isGuest = order.user.email.endsWith("@guest.lokaclean.app");
 
   const cardBase =
     "group relative overflow-hidden rounded-[14px] border border-slate-200 bg-white px-3 py-3 sm:px-4 sm:py-3.5 transition-colors dark:border-slate-700 dark:bg-slate-900";
@@ -709,8 +836,13 @@ const OrderCard = memo(function OrderCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <div className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                ORDER {formatOrderNumber(order.order_number)}
+              <div className="mb-0.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <span>ORDER {formatOrderNumber(order.order_number)}</span>
+                {isGuest && (
+                  <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
+                    Guest
+                  </span>
+                )}
               </div>
               <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-[15px] dark:text-slate-50">
                 {order.paket.name}

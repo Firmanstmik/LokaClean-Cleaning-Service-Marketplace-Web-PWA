@@ -12,7 +12,7 @@ import {
   MapPin, Camera, Calendar, CheckCircle2, 
   AlertCircle, ChevronRight, ChevronLeft, 
   Banknote, Info, Sparkles, Palmtree,
-  Clock, ArrowRight, X, Hand, MessageCircle
+  Clock, ArrowRight, X, Hand, MessageCircle, LogIn
 } from "lucide-react";
 
 import { MapPicker, type LatLng } from "../../components/MapPicker";
@@ -84,10 +84,13 @@ export function NewOrderPage() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [location, setLocation] = useState<LatLng | null>(null);
   const [address, setAddress] = useState("");
+  const [houseNotes, setHouseNotes] = useState("");
   const [beforePhotos, setBeforePhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<typeof EXTRA_SERVICES>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
 
   // --- Refs ---
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -208,6 +211,11 @@ export function NewOrderPage() {
       return;
     }
 
+    if (isGuest && (!guestName.trim() || !guestPhone.trim())) {
+      setError(t("newOrder.guestValidationError"));
+      return;
+    }
+
     try {
       setSubmitting(true);
       setError(null);
@@ -228,9 +236,17 @@ export function NewOrderPage() {
       const finalScheduledDate = dateObj.toISOString();
 
       const formData = new FormData();
+      if (isGuest) {
+        formData.append("full_name", guestName.trim());
+        formData.append("phone_number", guestPhone.trim());
+      }
       formData.append("paket_id", String(paketId));
       formData.append("scheduled_date", finalScheduledDate);
-      formData.append("address", address);
+      const combinedAddress = houseNotes.trim()
+        ? `${address}${address ? " — " : ""}${houseNotes.trim()}`
+        : address;
+
+      formData.append("address", combinedAddress);
       formData.append("location_latitude", String(location.lat));
       formData.append("location_longitude", String(location.lng));
       
@@ -246,13 +262,26 @@ export function NewOrderPage() {
         formData.append("room_photo_before", file);
       });
 
-      const resp = await api.post("/orders", formData, {
+      const endpoint = isGuest ? "/orders/guest" : "/orders";
+
+      const resp = await api.post(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       playOrderNotificationSound();
-      const newOrderId = resp.data.data.order.id;
-      navigate(`/orders/${newOrderId}`);
+      const createdOrder = resp.data.data.order;
+      const newOrderId = createdOrder.id;
+
+      if (isGuest) {
+        navigate(`/orders/${newOrderId}`, {
+          state: {
+            order: createdOrder,
+            fromGuest: true
+          }
+        });
+      } else {
+        navigate(`/orders/${newOrderId}`);
+      }
       
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -263,6 +292,7 @@ export function NewOrderPage() {
   // --- Derived State ---
   const selectedPackage = packages.find(p => p.id === paketId);
   const calendarDates = useMemo(() => generateCurrentMonthDates(), []);
+  const isGuest = !user;
 
   // --- Render Helpers ---
 
@@ -628,6 +658,67 @@ export function NewOrderPage() {
                   <p className="text-xs text-slate-500">{t("newOrder.step3Desc")}</p>
                 </div>
 
+                {isGuest && (
+                  <div className="space-y-4">
+                    <div className="bg-amber-50 px-3 py-2.5 rounded-xl border border-amber-100 flex gap-2">
+                      <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-800 leading-snug">
+                        <span className="font-semibold">{t("newOrder.guestNoteTitle")}</span>{" "}
+                        {t("newOrder.guestNoteDesc")}
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          {t("newOrder.guestNameLabel")}
+                        </label>
+                        <input
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                          placeholder={t("newOrder.guestNamePlaceholder")}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:text-slate-400"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          {t("newOrder.guestPhoneLabel")}
+                        </label>
+                        <input
+                          type="tel"
+                          value={guestPhone}
+                          onChange={(e) => setGuestPhone(e.target.value)}
+                          placeholder={t("newOrder.guestPhonePlaceholder")}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:text-slate-400"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          {t("newOrder.guestLoginSuggestion")}
+                        </p>
+                      </div>
+                      <div className="bg-white border border-emerald-100 rounded-xl px-3 py-2.5 flex items-start gap-2">
+                        <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                          <LogIn className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[11px] font-semibold text-emerald-700">
+                            {t("newOrder.guestLoginCtaTitle")}
+                          </div>
+                          <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                            {t("newOrder.guestLoginCtaDesc")}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => navigate("/login")}
+                            className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.98] transition-all"
+                          >
+                            <LogIn className="w-3 h-3" />
+                            <span>{t("newOrder.guestLoginCtaButton")}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Map Picker */}
                 <div className="space-y-3">
                    <div className="flex items-center gap-2 px-1">
@@ -635,12 +726,14 @@ export function NewOrderPage() {
                     <span className="text-sm font-bold text-slate-700">{t("newOrder.locationPoint")}</span>
                   </div>
 
-                  <div className="bg-blue-50 px-3 py-2.5 rounded-xl border border-blue-100 flex gap-2">
-                    <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-blue-700 leading-snug">
-                      <span className="font-semibold">{t("newOrder.infoLabel")}</span> {t("newOrder.locationInfo")}
-                    </p>
-                  </div>
+                  {!isGuest && (
+                    <div className="bg-blue-50 px-3 py-2.5 rounded-xl border border-blue-100 flex gap-2">
+                      <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                      <p className="text-xs text-blue-700 leading-snug">
+                        <span className="font-semibold">{t("newOrder.infoLabel")}</span> {t("newOrder.locationInfo")}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="rounded-2xl overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-200">
                     <MapPicker 
@@ -651,13 +744,29 @@ export function NewOrderPage() {
                       hideSearch={true}
                     />
                   </div>
-                  <textarea
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder={t("newOrder.addressPlaceholderDetail")}
-                    className="w-full p-4 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:text-slate-400"
-                    rows={3}
-                  />
+                  <div className="space-y-2">
+                    <textarea
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder={t("newOrder.addressPlaceholderDetail")}
+                      className="w-full p-4 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:text-slate-400"
+                      rows={3}
+                    />
+                    <div className="group bg-white rounded-xl border border-slate-200/80 px-3 py-2.5 focus-within:border-emerald-300 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+                      <label className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-slate-700 group-focus-within:text-emerald-700">
+                        {t("completeProfile.houseDetailLabel")}
+                        <span className="text-[10px] font-normal text-slate-400">
+                          {t("completeProfile.optional")}
+                        </span>
+                      </label>
+                      <textarea
+                        value={houseNotes}
+                        onChange={(e) => setHouseNotes(e.target.value)}
+                        placeholder={t("completeProfile.houseDetailPlaceholder")}
+                        className="w-full bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none resize-none leading-relaxed min-h-[60px]"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Photo Upload */}

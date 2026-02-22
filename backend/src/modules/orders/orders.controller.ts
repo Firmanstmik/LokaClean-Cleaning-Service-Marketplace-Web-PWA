@@ -19,9 +19,11 @@ import { fileToPublicPath } from "../../middleware/upload";
 import { sendPushToUser, sendPushToAllAdmins } from "../push/push.controller";
 import { checkServiceArea, findNearestCleaners } from "../geo/geo.service";
 import { getIO } from "../../socket";
+import { normalizeWhatsAppPhone } from "../../utils/phone";
 import {
   adminUpdateStatusSchema,
   createOrderInputSchema,
+  createGuestOrderInputSchema,
   createRatingSchema,
   createTipSchema,
   updatePaymentMethodSchema
@@ -87,6 +89,35 @@ async function getOrderOrThrow(orderId: number) {
   return order;
 }
 
+async function findOrCreateGuestUser(fullName: string, phoneNumber: string) {
+  const normalizedPhone = normalizeWhatsAppPhone(phoneNumber);
+  if (!normalizedPhone) {
+    throw new HttpError(400, "Nomor WhatsApp tidak valid");
+  }
+
+  const existingUser = await prisma.user.findFirst({
+    where: { phone_number: normalizedPhone }
+  });
+
+  if (existingUser) {
+    return existingUser.id;
+  }
+
+  const digits = normalizedPhone.replace(/[^\d]/g, "");
+  const email = `guest.${digits || Date.now()}@guest.lokaclean.app`;
+
+  const user = await prisma.user.create({
+    data: {
+      full_name: fullName,
+      email,
+      phone_number: normalizedPhone,
+      role: Role.USER
+    }
+  });
+
+  return user.id;
+}
+
 /**
  * Resolve Shadow Admin ID for a User (Cleaner or Admin).
  * If not exists, create a shadow admin record for FK linkage.
@@ -136,8 +167,7 @@ async function resolveAdminId(input: { id: number; origin?: "USER" | "ADMIN"; ac
  */
 export const createOrderHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.auth) throw new HttpError(401, "Unauthenticated");
-  const files = req.files as Express.Multer.File[];
-  // if (!files || files.length === 0) throw new HttpError(400, "room_photo_before is required (at least 1 photo)");
+  const files = (req.files as Express.Multer.File[]) || [];
 
   const input = createOrderInputSchema.parse(req.body);
 
@@ -315,6 +345,172 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
         order_id: order.id,
         order_number: order.order_number,
         distance_km: (cleaners[0].distance_meters/1000).toFixed(1)
+      });
+    } catch (err) {
+      console.error("[Socket] Failed to emit new_order:", err);
+    }
+  }
+
+  return created(res, { order });
+});
+
+export const createGuestOrderHandler = asyncHandler(async (req: Request, res: Response) => {
+  const files = (req.files as Express.Multer.File[]) || [];
+
+  const input = createGuestOrderInputSchema.parse(req.body);
+
+  const serviceArea = await checkServiceArea(input.location_latitude, input.location_longitude);
+  if (!serviceArea) {
+    throw new HttpError(400, "Maaf, lokasi ini belum terjangkau layanan LokaClean (Hanya area Lombok).");
+  }
+
+  const beforePhotos = files.map(file => fileToPublicPath(file));
+  const beforePhotosJson = JSON.stringify(beforePhotos);
+
+  const paket = await prisma.paketCleaning.findUnique({
+    where: { id: input.paket_id },
+    select: { id: true, price: true }
+  });
+  if (!paket) throw new HttpError(404, "PaketCleaning not found");
+
+  let cleaners: any[] = [];
+  try {
+    cleaners = await findNearestCleaners(input.location_latitude, input.location_longitude, 1);
+  } catch (err) {
+    console.warn("[createGuestOrder] Failed to find nearest cleaners (likely missing PostGIS column):", err);
+  }
+
+  let assignedAdminId: number | null = null;
+  let distanceMeters = 0;
+
+  if (cleaners.length > 0) {
+    const bestCleaner = cleaners[0];
+    assignedAdminId = await resolveAdminId({
+      id: bestCleaner.user_id,
+      origin: "USER",
+      actor: "SYSTEM_DISPATCH"
+    });
+    distanceMeters = bestCleaner.distance_meters;
+  }
+
+  const DISTANCE_RATE_PER_KM = 2000;
+  const distancePrice = Math.ceil(distanceMeters / 1000) * DISTANCE_RATE_PER_KM;
+  const surgeMultiplier = 1.0;
+  const basePrice = paket.price;
+
+  const extraServices = input.extras || [];
+  const extraPrice = extraServices.reduce((sum, item) => sum + item.price, 0);
+
+  const totalPrice = Math.ceil((basePrice + distancePrice + extraPrice) * surgeMultiplier);
+
+  const estimatedEta = distanceMeters > 0 ? Math.ceil(distanceMeters / 500) : 30;
+
+  const maxOrder = await prisma.pesanan.findFirst({
+    orderBy: { order_number: "desc" },
+    select: { order_number: true }
+  });
+  const nextOrderNumber = maxOrder ? maxOrder.order_number + 1 : 1;
+
+  const userId = await findOrCreateGuestUser(input.full_name, input.phone_number);
+
+  const order = await prisma.pesanan.create({
+    data: {
+      order_number: nextOrderNumber,
+      user_id: userId,
+      admin_id: assignedAdminId,
+      paket_id: input.paket_id,
+      status: OrderStatus.PENDING,
+      room_photo_before: beforePhotosJson,
+      room_photo_after: null,
+      location_latitude: input.location_latitude,
+      location_longitude: input.location_longitude,
+      address: input.address,
+      scheduled_date: input.scheduled_date,
+      base_price: basePrice,
+      distance_price: distancePrice,
+      extra_price: extraPrice,
+      surge_multiplier: surgeMultiplier,
+      total_price: totalPrice,
+      estimated_eta: estimatedEta,
+      extra_services: extraServices,
+      pembayaran: {
+        create: {
+          method: input.payment_method as PaymentMethod,
+          amount: totalPrice,
+          status: PaymentStatus.PENDING
+        }
+      }
+    },
+    include: orderInclude
+  });
+
+  try {
+    await prisma.$executeRaw`
+      UPDATE "Pesanan"
+      SET location = ST_SetSRID(ST_MakePoint(${input.location_longitude}, ${input.location_latitude}), 4326)
+      WHERE id = ${order.id}
+    `;
+  } catch (err) {
+    console.warn("[createGuestOrder] Failed to update order location (likely missing PostGIS column):", err);
+  }
+
+  try {
+    const io = getIO();
+
+    if (assignedAdminId) {
+      io.to(`admin_${assignedAdminId}`).emit("admin_new_order", { order });
+    }
+
+    io.to("admin_dashboard").emit("admin_new_order", { order });
+
+    io.to(`user_${userId}`).emit("order_created", { order });
+  } catch (err) {
+    console.warn("[createGuestOrder] Failed to emit socket event:", err);
+  }
+
+  try {
+    const userName = order.user?.full_name ?? "Customer";
+    const paketName = order.paket?.name ?? "Paket Cleaning";
+    await sendPushToAllAdmins({
+      title: "Pesanan Baru Masuk",
+      message: `Order #${order.order_number} dari ${userName} untuk ${paketName}`,
+      url: `/admin/orders/${order.id}`,
+      tag: `admin-order-${order.id}`
+    });
+  } catch (err) {
+    console.warn("[createGuestOrder] Failed to send admin push notification:", err);
+  }
+
+  if (order.pembayaran?.method && order.pembayaran.method !== PaymentMethod.CASH) {
+    await prisma.notification.create({
+      data: {
+        user_id: order.user_id,
+        pesanan_id: order.id,
+        title: "Segera Lakukan Pembayaran",
+        message:
+          "Kamu memilih metode pembayaran non-tunai. Segera selesaikan pembayaran dalam 1 jam agar pesanan bisa diproses. Pesanan akan dibatalkan otomatis jika belum dibayar."
+      }
+    });
+  }
+
+  if (assignedAdminId && cleaners.length > 0) {
+    const cleanerUserId = cleaners[0].user_id;
+    await prisma.notification.create({
+      data: {
+        user_id: cleanerUserId,
+        pesanan_id: order.id,
+        title: "Pesanan Baru Masuk!",
+        message: `Order #${order.order_number} baru saja masuk di dekatmu (${(cleaners[0].distance_meters / 1000).toFixed(
+          1
+        )} km).`
+      }
+    });
+
+    try {
+      getIO().to(`user_${cleanerUserId}`).emit("new_order", {
+        order_id: order.id,
+        order_number: order.order_number,
+        distance_km: (cleaners[0].distance_meters / 1000).toFixed(1)
       });
     } catch (err) {
       console.error("[Socket] Failed to emit new_order:", err);
@@ -658,31 +854,54 @@ export const updatePaymentMethodHandler = asyncHandler(async (req: Request, res:
 
 /**
  * ADMIN: View all orders.
+ * Optional query params:
+ * - user_type: 'ALL' | 'REGISTERED' | 'GUEST'
  */
-export const listAllOrdersAdminHandler = asyncHandler(async (_req: Request, res: Response) => {
-  const items = await prisma.pesanan.findMany({
-    where: {
-      OR: [
-        // All CASH orders (whatever their payment status)
-        {
-          pembayaran: {
-            method: PaymentMethod.CASH
-          }
-        },
-        // Non-CASH orders that have been PAID
-        {
-          pembayaran: {
-            method: {
-              not: PaymentMethod.CASH
-            },
-            status: PaymentStatus.PAID
-          }
+export const listAllOrdersAdminHandler = asyncHandler(async (req: Request, res: Response) => {
+  const userType = (req.query.user_type as string | undefined)?.toUpperCase() || "ALL";
+
+  const baseWhere = {
+    OR: [
+      {
+        pembayaran: {
+          method: PaymentMethod.CASH
         }
-      ]
-    },
+      },
+      {
+        pembayaran: {
+          method: {
+            not: PaymentMethod.CASH
+          },
+          status: PaymentStatus.PAID
+        }
+      }
+    ]
+  } as const;
+
+  const where: any = { ...baseWhere };
+
+  if (userType === "GUEST") {
+    where.user = {
+      email: {
+        endsWith: "@guest.lokaclean.app"
+      }
+    };
+  } else if (userType === "REGISTERED") {
+    where.user = {
+      email: {
+        not: {
+          endsWith: "@guest.lokaclean.app"
+        }
+      }
+    };
+  }
+
+  const items = await prisma.pesanan.findMany({
+    where,
     orderBy: { created_at: "desc" },
     include: orderInclude
   });
+
   return ok(res, { items });
 });
 

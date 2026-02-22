@@ -18,6 +18,7 @@ import { StarRating } from "../../components/StarRating";
 import { ThankYouAnimation } from "../../components/ThankYouAnimation";
 import { initializeSnapPayment } from "../../lib/midtrans";
 import type { Pesanan } from "../../types/api";
+import { useAuth } from "../../lib/auth";
 
 // New Modular Components
 import { OrderSuccessHeader } from "../../components/order/OrderSuccessHeader";
@@ -47,6 +48,9 @@ export function OrderDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const orderId = Number(id);
+  const { token } = useAuth();
+  const isGuest = !token;
+  const navigationState = location.state as { order?: Pesanan; fromGuest?: boolean } | null;
 
   const [language, setLanguage] = useState(getLanguage());
   useEffect(() => {
@@ -86,9 +90,10 @@ export function OrderDetailPage() {
 
   const refresh = useCallback(async () => {
     if (!Number.isFinite(orderId)) return;
+    if (!token) return;
     const resp = await api.get(`/orders/${orderId}`);
     setOrder(resp.data.data.order as Pesanan);
-  }, [orderId]);
+  }, [orderId, token]);
 
   const handlePayment = useCallback(async () => {
     if (!order || paymentLoading) return;
@@ -220,6 +225,16 @@ export function OrderDetailPage() {
         setLoading(false);
         return;
       }
+      if (!token && navigationState?.order) {
+        setOrder(navigationState.order);
+        setLoading(false);
+        return;
+      }
+      if (!token && !navigationState?.order) {
+        setLoadError(t("orderDetail.couldNotLoad"));
+        setLoading(false);
+        return;
+      }
       try {
         const resp = await api.get(`/orders/${orderId}`);
         if (alive) {
@@ -237,10 +252,11 @@ export function OrderDetailPage() {
       }
     })();
     return () => { alive = false; };
-  }, [orderId]);
+  }, [orderId, token, navigationState]);
 
   useEffect(() => {
     if (!order || order.status === 'COMPLETED' || !Number.isFinite(orderId)) return;
+    if (!token) return;
     const interval = setInterval(async () => {
       try {
         const resp = await api.get(`/orders/${orderId}`);
@@ -253,7 +269,7 @@ export function OrderDetailPage() {
       } catch (err) { console.error(err); }
     }, 3000);
     return () => clearInterval(interval);
-  }, [order, orderId]);
+  }, [order, orderId, token]);
 
   useEffect(() => {
     if (!order) return;
