@@ -171,8 +171,13 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
 
   const input = createOrderInputSchema.parse(req.body);
 
-  // 1. Check Service Area (Lombok)
-  const serviceArea = await checkServiceArea(input.location_latitude, input.location_longitude);
+  const [serviceArea, paket] = await Promise.all([
+    checkServiceArea(input.location_latitude, input.location_longitude),
+    prisma.paketCleaning.findUnique({
+      where: { id: input.paket_id },
+      select: { id: true, price: true }
+    })
+  ]);
   if (!serviceArea) {
     throw new HttpError(400, "Maaf, lokasi ini belum terjangkau layanan LokaClean (Hanya area Lombok).");
   }
@@ -181,10 +186,6 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
   const beforePhotos = files.map(file => fileToPublicPath(file));
   const beforePhotosJson = JSON.stringify(beforePhotos);
 
-  const paket = await prisma.paketCleaning.findUnique({
-    where: { id: input.paket_id },
-    select: { id: true, price: true }
-  });
   if (!paket) throw new HttpError(404, "PaketCleaning not found");
 
   // 2. Smart Dispatch: Find nearest cleaner
@@ -282,74 +283,72 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
     // Ignore error so order creation succeeds
   }
 
-  // 5. Realtime Notification
   try {
     const io = getIO();
-    
-    // Notify the assigned cleaner (Shadow Admin)
     if (assignedAdminId) {
       io.to(`admin_${assignedAdminId}`).emit("admin_new_order", { order });
     }
-    
-    // Notify global admin dashboard (for monitoring)
     io.to("admin_dashboard").emit("admin_new_order", { order });
-
-    // Notify user
     io.to(`user_${req.auth.id}`).emit("order_created", { order });
   } catch (err) {
     console.warn("[createOrder] Failed to emit socket event:", err);
-    // Don't fail the request just because socket failed
   }
 
-  try {
-    const userName = order.user?.full_name ?? "Customer";
-    const paketName = order.paket?.name ?? "Paket Cleaning";
-    await sendPushToAllAdmins({
-      title: "Pesanan Baru Masuk",
-      message: `Order #${order.order_number} dari ${userName} untuk ${paketName}`,
-      url: `/admin/orders/${order.id}`,
-      tag: `admin-order-${order.id}`
-    });
-  } catch (err) {
-    console.warn("[createOrder] Failed to send admin push notification:", err);
-  }
-
-  // For NON-CASH payments, create a notification reminding user to pay.
-  if (order.pembayaran?.method && order.pembayaran.method !== PaymentMethod.CASH) {
-    await prisma.notification.create({
-      data: {
-        user_id: order.user_id,
-        pesanan_id: order.id,
-        title: "Segera Lakukan Pembayaran",
-        message:
-          "Kamu memilih metode pembayaran non-tunai. Segera selesaikan pembayaran dalam 1 jam agar pesanan bisa diproses. Pesanan akan dibatalkan otomatis jika belum dibayar."
-      }
-    });
-  }
-
-  // Notify Cleaner if assigned
-  if (assignedAdminId && cleaners.length > 0) {
-    const cleanerUserId = cleaners[0].user_id;
-    await prisma.notification.create({
-      data: {
-        user_id: cleanerUserId,
-        pesanan_id: order.id,
-        title: "Pesanan Baru Masuk!",
-        message: `Order #${order.order_number} baru saja masuk di dekatmu (${(cleaners[0].distance_meters/1000).toFixed(1)} km).`
-      }
-    });
-
-    // Emit Socket Event
+  void (async () => {
     try {
-      getIO().to(`user_${cleanerUserId}`).emit("new_order", {
-        order_id: order.id,
-        order_number: order.order_number,
-        distance_km: (cleaners[0].distance_meters/1000).toFixed(1)
+      const userName = order.user?.full_name ?? "Customer";
+      const paketName = order.paket?.name ?? "Paket Cleaning";
+      await sendPushToAllAdmins({
+        title: "Pesanan Baru Masuk",
+        message: `Order #${order.order_number} dari ${userName} untuk ${paketName}`,
+        url: `/admin/orders/${order.id}`,
+        tag: `admin-order-${order.id}`
       });
     } catch (err) {
-      console.error("[Socket] Failed to emit new_order:", err);
+      console.warn("[createOrder] Failed to send admin push notification:", err);
     }
-  }
+
+    if (order.pembayaran?.method && order.pembayaran.method !== PaymentMethod.CASH) {
+      try {
+        await prisma.notification.create({
+          data: {
+            user_id: order.user_id,
+            pesanan_id: order.id,
+            title: "Segera Lakukan Pembayaran",
+            message:
+              "Kamu memilih metode pembayaran non-tunai. Segera selesaikan pembayaran dalam 1 jam agar pesanan bisa diproses. Pesanan akan dibatalkan otomatis jika belum dibayar."
+          }
+        });
+      } catch (err) {
+        console.warn("[createOrder] Failed to create payment reminder notification:", err);
+      }
+    }
+
+    if (assignedAdminId && cleaners.length > 0) {
+      const cleanerUserId = cleaners[0].user_id;
+      try {
+        await prisma.notification.create({
+          data: {
+            user_id: cleanerUserId,
+            pesanan_id: order.id,
+            title: "Pesanan Baru Masuk!",
+            message: `Order #${order.order_number} baru saja masuk di dekatmu (${(cleaners[0].distance_meters/1000).toFixed(1)} km).`
+          }
+        });
+      } catch (err) {
+        console.warn("[createOrder] Failed to create cleaner notification:", err);
+      }
+      try {
+        getIO().to(`user_${cleanerUserId}`).emit("new_order", {
+          order_id: order.id,
+          order_number: order.order_number,
+          distance_km: (cleaners[0].distance_meters/1000).toFixed(1)
+        });
+      } catch (err) {
+        console.error("[Socket] Failed to emit new_order:", err);
+      }
+    }
+  })();
 
   return created(res, { order });
 });
@@ -359,7 +358,13 @@ export const createGuestOrderHandler = asyncHandler(async (req: Request, res: Re
 
   const input = createGuestOrderInputSchema.parse(req.body);
 
-  const serviceArea = await checkServiceArea(input.location_latitude, input.location_longitude);
+  const [serviceArea, paket] = await Promise.all([
+    checkServiceArea(input.location_latitude, input.location_longitude),
+    prisma.paketCleaning.findUnique({
+      where: { id: input.paket_id },
+      select: { id: true, price: true }
+    })
+  ]);
   if (!serviceArea) {
     throw new HttpError(400, "Maaf, lokasi ini belum terjangkau layanan LokaClean (Hanya area Lombok).");
   }
@@ -367,10 +372,6 @@ export const createGuestOrderHandler = asyncHandler(async (req: Request, res: Re
   const beforePhotos = files.map(file => fileToPublicPath(file));
   const beforePhotosJson = JSON.stringify(beforePhotos);
 
-  const paket = await prisma.paketCleaning.findUnique({
-    where: { id: input.paket_id },
-    select: { id: true, price: true }
-  });
   if (!paket) throw new HttpError(404, "PaketCleaning not found");
 
   let cleaners: any[] = [];
@@ -468,54 +469,63 @@ export const createGuestOrderHandler = asyncHandler(async (req: Request, res: Re
     console.warn("[createGuestOrder] Failed to emit socket event:", err);
   }
 
-  try {
-    const userName = order.user?.full_name ?? "Customer";
-    const paketName = order.paket?.name ?? "Paket Cleaning";
-    await sendPushToAllAdmins({
-      title: "Pesanan Baru Masuk",
-      message: `Order #${order.order_number} dari ${userName} untuk ${paketName}`,
-      url: `/admin/orders/${order.id}`,
-      tag: `admin-order-${order.id}`
-    });
-  } catch (err) {
-    console.warn("[createGuestOrder] Failed to send admin push notification:", err);
-  }
-
-  if (order.pembayaran?.method && order.pembayaran.method !== PaymentMethod.CASH) {
-    await prisma.notification.create({
-      data: {
-        user_id: order.user_id,
-        pesanan_id: order.id,
-        title: "Segera Lakukan Pembayaran",
-        message:
-          "Kamu memilih metode pembayaran non-tunai. Segera selesaikan pembayaran dalam 1 jam agar pesanan bisa diproses. Pesanan akan dibatalkan otomatis jika belum dibayar."
-      }
-    });
-  }
-
-  if (assignedAdminId && cleaners.length > 0) {
-    const cleanerUserId = cleaners[0].user_id;
-    await prisma.notification.create({
-      data: {
-        user_id: cleanerUserId,
-        pesanan_id: order.id,
-        title: "Pesanan Baru Masuk!",
-        message: `Order #${order.order_number} baru saja masuk di dekatmu (${(cleaners[0].distance_meters / 1000).toFixed(
-          1
-        )} km).`
-      }
-    });
-
+  void (async () => {
     try {
-      getIO().to(`user_${cleanerUserId}`).emit("new_order", {
-        order_id: order.id,
-        order_number: order.order_number,
-        distance_km: (cleaners[0].distance_meters / 1000).toFixed(1)
+      const userName = order.user?.full_name ?? "Customer";
+      const paketName = order.paket?.name ?? "Paket Cleaning";
+      await sendPushToAllAdmins({
+        title: "Pesanan Baru Masuk",
+        message: `Order #${order.order_number} dari ${userName} untuk ${paketName}`,
+        url: `/admin/orders/${order.id}`,
+        tag: `admin-order-${order.id}`
       });
     } catch (err) {
-      console.error("[Socket] Failed to emit new_order:", err);
+      console.warn("[createGuestOrder] Failed to send admin push notification:", err);
     }
-  }
+
+    if (order.pembayaran?.method && order.pembayaran.method !== PaymentMethod.CASH) {
+      try {
+        await prisma.notification.create({
+          data: {
+            user_id: order.user_id,
+            pesanan_id: order.id,
+            title: "Segera Lakukan Pembayaran",
+            message:
+              "Kamu memilih metode pembayaran non-tunai. Segera selesaikan pembayaran dalam 1 jam agar pesanan bisa diproses. Pesanan akan dibatalkan otomatis jika belum dibayar."
+          }
+        });
+      } catch (err) {
+        console.warn("[createGuestOrder] Failed to create payment reminder notification:", err);
+      }
+    }
+
+    if (assignedAdminId && cleaners.length > 0) {
+      const cleanerUserId = cleaners[0].user_id;
+      try {
+        await prisma.notification.create({
+          data: {
+            user_id: cleanerUserId,
+            pesanan_id: order.id,
+            title: "Pesanan Baru Masuk!",
+            message: `Order #${order.order_number} baru saja masuk di dekatmu (${(cleaners[0].distance_meters / 1000).toFixed(
+              1
+            )} km).`
+          }
+        });
+      } catch (err) {
+        console.warn("[createGuestOrder] Failed to create cleaner notification:", err);
+      }
+      try {
+        getIO().to(`user_${cleanerUserId}`).emit("new_order", {
+          order_id: order.id,
+          order_number: order.order_number,
+          distance_km: (cleaners[0].distance_meters / 1000).toFixed(1)
+        });
+      } catch (err) {
+        console.error("[Socket] Failed to emit new_order:", err);
+      }
+    }
+  })();
 
   return created(res, { order });
 });
