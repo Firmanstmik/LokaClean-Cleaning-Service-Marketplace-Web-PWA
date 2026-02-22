@@ -12,6 +12,7 @@ import { created, ok } from "../../utils/respond";
 import { HttpError } from "../../utils/httpError";
 import { normalizeWhatsAppPhone } from "../../utils/phone";
 import { z } from "zod";
+import { reverseGeocode } from "../geo/geo.service";
 
 const userSelect = {
   id: true,
@@ -78,7 +79,7 @@ export const listUsersHandler = asyncHandler(async (req: Request, res: Response)
     orderBy: { created_at: "desc" }
   });
 
-  const users = rows.map(row => {
+  const users = await Promise.all(rows.map(async row => {
     const { password_hash, ...user } = row as typeof row & {
       password_hash: string | null;
       savedAddresses: Array<{
@@ -137,6 +138,25 @@ export const listUsersHandler = asyncHandler(async (req: Request, res: Response)
       primary_address_longitude = latestOrder.location_longitude;
     }
 
+    const isPlaceholder = (addr: string | null) => {
+      const a = (addr || "").trim().toLowerCase();
+      return a === "" || a === "default address" || a.length < 6;
+    };
+
+    if (isPlaceholder(primary_address) && primary_address_latitude != null && primary_address_longitude != null) {
+      try {
+        const r = await reverseGeocode({
+          lat: primary_address_latitude,
+          lng: primary_address_longitude,
+          lang: "id"
+        });
+        if (r?.display_name) {
+          primary_address = r.display_name;
+        }
+      } catch {
+      }
+    }
+
     return {
       ...user,
       auth_type,
@@ -146,7 +166,7 @@ export const listUsersHandler = asyncHandler(async (req: Request, res: Response)
       primary_address_latitude,
       primary_address_longitude
     };
-  });
+  }));
 
   return ok(res, { users });
 });

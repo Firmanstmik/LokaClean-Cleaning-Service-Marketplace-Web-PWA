@@ -1,5 +1,6 @@
 import { prisma } from "../../db/prisma";
 import { HttpError } from "../../utils/httpError";
+import { reverseGeocode } from "../geo/geo.service";
 
 interface AddressData {
   label: string;
@@ -43,6 +44,22 @@ export async function saveAddress(userId: number, data: AddressData) {
       });
     }
 
+    const isPlaceholder = (addr: string | undefined) => {
+      const a = (addr || "").trim().toLowerCase();
+      return a === "" || a === "default address" || a.length < 6;
+    };
+
+    let finalAddress = data.address;
+    if (isPlaceholder(finalAddress)) {
+      try {
+        const r = await reverseGeocode({ lat: data.lat, lng: data.lng, lang: "id" });
+        if (r?.display_name) finalAddress = r.display_name;
+      } catch {
+        const parts = [data.street, data.village, data.district, data.city].filter(Boolean) as string[];
+        finalAddress = parts.length ? parts.join(", ") : `${data.lat}, ${data.lng}`;
+      }
+    }
+
     // Use raw query for PostGIS insert
     const result = await tx.$queryRaw`
       INSERT INTO "SavedAddress" (
@@ -52,7 +69,7 @@ export async function saveAddress(userId: number, data: AddressData) {
         location, created_at, updated_at
       )
       VALUES (
-        ${userId}, ${data.label}, ${data.address}, ${data.lat}, ${data.lng}, 
+        ${userId}, ${data.label}, ${finalAddress}, ${data.lat}, ${data.lng}, 
         ${data.street || null}, ${data.village || null}, ${data.district || null}, ${data.city || null},
         ${isPrimary}, ${data.notes || null}, ${data.floor_number || null}, ${data.building_name || null}, ${data.gate_photo_url || null},
         ST_SetSRID(ST_MakePoint(${data.lng}, ${data.lat}), 4326), 
@@ -83,12 +100,45 @@ export async function updateAddress(userId: number, addressId: number, data: Par
     // Construct update data for Prisma (excluding lat/lng/location if not provided)
     const hasLocationUpdate = (data.lat !== undefined && data.lng !== undefined);
 
+    const isPlaceholder = (addr: string | undefined) => {
+      const a = (addr || "").trim().toLowerCase();
+      return a === "" || a === "default address" || a.length < 6;
+    };
+
+    let addrParam: string | undefined = data.address;
+    if (data.address !== undefined && isPlaceholder(data.address)) {
+      const latForAddr = data.lat ?? existing.latitude;
+      const lngForAddr = data.lng ?? existing.longitude;
+      try {
+        const r = await reverseGeocode({ lat: latForAddr, lng: lngForAddr, lang: "id" });
+        if (r?.display_name) {
+          addrParam = r.display_name;
+        } else {
+          const parts = [
+            data.street ?? existing.street ?? undefined,
+            data.village ?? existing.village ?? undefined,
+            data.district ?? existing.district ?? undefined,
+            data.city ?? existing.city ?? undefined
+          ].filter(Boolean) as string[];
+          addrParam = parts.length ? parts.join(", ") : `${latForAddr}, ${lngForAddr}`;
+        }
+      } catch {
+        const parts = [
+          data.street ?? existing.street ?? undefined,
+          data.village ?? existing.village ?? undefined,
+          data.district ?? existing.district ?? undefined,
+          data.city ?? existing.city ?? undefined
+        ].filter(Boolean) as string[];
+        addrParam = parts.length ? parts.join(", ") : `${latForAddr}, ${lngForAddr}`;
+      }
+    }
+
     if (hasLocationUpdate) {
        const result = await tx.$queryRaw`
         UPDATE "SavedAddress"
         SET 
           label = COALESCE(${data.label}, label),
-          address = COALESCE(${data.address}, address),
+          address = COALESCE(${addrParam}, address),
           street = COALESCE(${data.street}, street),
           village = COALESCE(${data.village}, village),
           district = COALESCE(${data.district}, district),
@@ -112,7 +162,7 @@ export async function updateAddress(userId: number, addressId: number, data: Par
         where: { id: addressId },
         data: {
           label: data.label,
-          address: data.address,
+          address: addrParam ?? data.address,
           street: data.street,
           village: data.village,
           district: data.district,
