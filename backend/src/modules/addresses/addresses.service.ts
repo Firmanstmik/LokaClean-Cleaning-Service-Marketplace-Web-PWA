@@ -149,43 +149,29 @@ export async function setPrimaryAddress(userId: number, addressId: number) {
 }
 
 export async function getAddresses(userId: number) {
-  // Use queryRaw to avoid potential Prisma/PostGIS mapping issues with findMany.
-  // Wrapped in try/catch so it remains compatible with older DBs that may not yet
-  // have all optional columns (notes, floor_number, building_name, gate_photo_url).
-  try {
-    const result = await prisma.$queryRaw`
-      SELECT 
-        id, label, address, street, village, district, city, 
-        latitude, longitude, is_primary, notes, floor_number, 
-        building_name, gate_photo_url
-      FROM "SavedAddress"
-      WHERE user_id = ${userId}
-      ORDER BY is_primary DESC, created_at DESC
-    `;
-    return result;
-  } catch {
-    const fallback = await prisma.$queryRaw`
-      SELECT 
-        id,
-        label,
-        address,
-        NULL::text as street,
-        NULL::text as village,
-        NULL::text as district,
-        NULL::text as city,
-        latitude,
-        longitude,
-        is_primary,
-        NULL::text as notes,
-        NULL::text as floor_number,
-        NULL::text as building_name,
-        NULL::text as gate_photo_url
-      FROM "SavedAddress"
-      WHERE user_id = ${userId}
-      ORDER BY is_primary DESC, created_at DESC
-    `;
-    return fallback;
-  }
+  return await prisma.savedAddress.findMany({
+    where: { user_id: userId },
+    orderBy: [
+      { is_primary: "desc" },
+      { created_at: "desc" }
+    ],
+    select: {
+      id: true,
+      label: true,
+      address: true,
+      street: true,
+      village: true,
+      district: true,
+      city: true,
+      latitude: true,
+      longitude: true,
+      is_primary: true,
+      notes: true,
+      floor_number: true,
+      building_name: true,
+      gate_photo_url: true
+    }
+  });
 }
 
 export async function deleteAddress(userId: number, addressId: number) {
