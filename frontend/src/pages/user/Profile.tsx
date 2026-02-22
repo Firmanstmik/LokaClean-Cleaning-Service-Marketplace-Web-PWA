@@ -13,7 +13,7 @@ import {
   User as UserIcon, Phone, MapPin, Camera, Save, CheckCircle2, 
   AlertCircle, Lightbulb, Eye, EyeOff, Lock, Mail, Sparkles, 
   Globe, Trash2, LogOut, ChevronRight, History, Users, Gift, 
-  Bell, Smartphone, Edit2, ArrowLeft, Ticket, Package, Gamepad2, X, Download
+  Bell, Smartphone, Edit2, ArrowLeft, Ticket, Package, Gamepad2, X, Download, Home
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -29,6 +29,7 @@ import { normalizeWhatsAppPhone } from "../../lib/phone";
 import { toAbsoluteUrl } from "../../lib/urls";
 import { getLanguage, setLanguage, t } from "../../lib/i18n";
 import type { User } from "../../types/api";
+import type { SavedAddress } from "../../types/address";
 import { IOSInstallPrompt } from "../../components/IOSInstallPrompt";
 import { AndroidInstallPrompt } from "../../components/AndroidInstallPrompt";
 
@@ -70,13 +71,14 @@ export function ProfilePage() {
   // Form State
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [defaultLoc, setDefaultLoc] = useState<LatLng | null>(null);
+  const [houseNotes, setHouseNotes] = useState("");
+  const [primaryAddress, setPrimaryAddress] = useState<SavedAddress | null>(null);
 
   const navigate = useNavigate();
   const { logout, token } = useAuth();
@@ -132,7 +134,6 @@ export function ProfilePage() {
         setUser(me);
         setFullName(me.full_name);
         setPhone(me.phone_number);
-        setEmail(me.email);
         if (me.default_latitude != null && me.default_longitude != null) {
           setDefaultLoc({ lat: me.default_latitude, lng: me.default_longitude });
         }
@@ -146,6 +147,30 @@ export function ProfilePage() {
       alive = false;
     };
   }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    let alive = true;
+    (async () => {
+      try {
+        const res = await api.get("/address/list");
+        if (!alive) return;
+        const list = res.data.data as SavedAddress[];
+        if (!Array.isArray(list) || list.length === 0) return;
+        const primary = list.find(a => a.is_primary) ?? list[0];
+        setPrimaryAddress(primary);
+        setHouseNotes(primary.notes ?? "");
+        if (!defaultLoc && primary.latitude && primary.longitude) {
+          setDefaultLoc({ lat: primary.latitude, lng: primary.longitude });
+        }
+      } catch {
+        void 0;
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [token, defaultLoc]);
 
   // Photo URL logic
   const photoPreviewUrl = useMemo(() => {
@@ -190,13 +215,47 @@ export function ProfilePage() {
       const fd = new FormData();
       fd.append("full_name", fullName);
       fd.append("phone_number", normalizedPhone);
-      fd.append("email", email);
       if (password) fd.append("password", password);
       if (defaultLoc) {
         fd.append("default_latitude", String(defaultLoc.lat));
         fd.append("default_longitude", String(defaultLoc.lng));
       }
       if (profilePhoto) fd.append("profile_photo", profilePhoto);
+
+      const trimmedNotes = houseNotes.trim();
+      try {
+        if (primaryAddress || trimmedNotes) {
+          if (primaryAddress) {
+            await api.put(`/address/${primaryAddress.id}`, {
+              label: primaryAddress.label || "Home",
+              address: primaryAddress.address || "Default Address",
+              lat: defaultLoc?.lat ?? primaryAddress.latitude,
+              lng: defaultLoc?.lng ?? primaryAddress.longitude,
+              is_primary: true,
+              notes: trimmedNotes || undefined,
+              floor_number: primaryAddress.floor_number || undefined,
+              building_name: primaryAddress.building_name || undefined,
+              gate_photo_url: primaryAddress.gate_photo_url || undefined
+            });
+            setPrimaryAddress(prev => prev ? { ...prev, notes: trimmedNotes || undefined } : prev);
+          } else if (defaultLoc) {
+            const createdRes = await api.post("/address/save", {
+              label: "Home",
+              address: "Default Address",
+              lat: defaultLoc.lat,
+              lng: defaultLoc.lng,
+              is_primary: true,
+              notes: trimmedNotes || undefined
+            });
+            const created = createdRes.data?.data as SavedAddress | undefined;
+            if (created) {
+              setPrimaryAddress(created);
+            }
+          }
+        }
+      } catch {
+        void 0;
+      }
 
       const resp = await api.put("/users/me", fd);
       const updated = resp.data.data.user as User;
@@ -207,12 +266,14 @@ export function ProfilePage() {
       setProfilePhoto(null);
       setPassword("");
       setConfirmPassword("");
+      setHouseNotes(trimmedNotes);
 
       setSuccessMessage(t("profile.profileUpdated"));
-      setTimeout(() => setSuccessMessage(null), 5000);
-      setIsEditing(false); // Return to view mode on success
-
       window.dispatchEvent(new Event("profileUpdated"));
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setIsEditing(false);
+      }, 1600);
     } catch (err) {
       setActionError(getApiErrorMessage(err));
     } finally {
@@ -566,17 +627,34 @@ export function ProfilePage() {
        </div>
 
       <div className="max-w-xl mx-auto px-4 py-6">
-        {/* Success Message */}
         <AnimatePresence>
           {successMessage && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-6 flex items-center gap-2 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center px-6"
             >
-              <CheckCircle2 className="h-5 w-5" />
-              <span>{successMessage}</span>
+              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+              <motion.div
+                initial={{ scale: 0.9, y: 10, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.9, y: 10, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="relative z-10 w-full max-w-sm rounded-3xl border border-emerald-100 bg-gradient-to-b from-white via-emerald-50/60 to-white shadow-2xl shadow-emerald-500/20 px-6 py-7 text-center"
+              >
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 shadow-inner shadow-emerald-100">
+                  <CheckCircle2 className="h-8 w-8" />
+                </div>
+                <h2 className="text-sm font-bold text-slate-900 mb-1">
+                  {t("profile.profileUpdated")}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {currentLanguage === "id"
+                    ? "Perubahan profil dan lokasi default kamu sudah disimpan."
+                    : "Your profile and default location have been updated."}
+                </p>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -616,7 +694,7 @@ export function ProfilePage() {
         </div>
 
         {/* Form Fields */}
-        <div className="space-y-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div className="space-y-5 bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-100">
            <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">{t("profile.fullName")}</label>
               <input
@@ -635,18 +713,36 @@ export function ProfilePage() {
               />
            </div>
 
-           <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">{t("profile.email")}</label>
-              <input
-                className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium focus:border-emerald-500 focus:bg-white focus:outline-none transition-all"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-           </div>
-           
-           <div className="pt-4 border-t border-slate-100">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3 block">{t("profile.defaultLocation")}</label>
-              <MapPicker value={defaultLoc} onChange={setDefaultLoc} />
+           <div className="pt-4 border-t border-slate-100 space-y-3">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2 block">
+                {t("profile.defaultLocation")}
+              </label>
+              <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm bg-slate-50/80">
+                <MapPicker 
+                  value={defaultLoc} 
+                  onChange={setDefaultLoc} 
+                  hideSearch 
+                  hideSaveButton 
+                  mapHeight="h-[260px]"
+                />
+              </div>
+              <div className="group bg-slate-50/80 rounded-2xl p-4 border border-slate-100 focus-within:bg-white focus-within:border-emerald-200 focus-within:shadow-md focus-within:shadow-emerald-100/60 transition-all duration-300">
+                <label className="mb-2 block text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 group-focus-within:text-emerald-600 transition-colors">
+                  {t("completeProfile.houseDetailLabel")}
+                  <span className="ml-1 text-[10px] font-normal normal-case text-slate-400">
+                    {t("completeProfile.optional")}
+                  </span>
+                </label>
+                <div className="relative">
+                  <Home className="absolute left-0 top-3 h-5 w-5 text-slate-300 group-focus-within:text-emerald-600 transition-colors" />
+                  <textarea
+                    className="w-full min-h-[70px] bg-transparent pl-8 py-2 text-xs sm:text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none resize-none leading-relaxed"
+                    value={houseNotes}
+                    onChange={(e) => setHouseNotes(e.target.value)}
+                    placeholder={t("completeProfile.houseDetailPlaceholder")}
+                  />
+                </div>
+              </div>
            </div>
         </div>
 
@@ -677,8 +773,26 @@ export function ProfilePage() {
            </div>
         </div>
 
+        {/* Save Button */}
+        <div className="mt-6">
+           <button
+             onClick={handleSave}
+             disabled={saving}
+             className="w-full shadow-lg shadow-emerald-500/30 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-70 disabled:scale-100"
+           >
+              {saving ? (
+                 <CircularLoader size="sm" variant="white" />
+              ) : (
+                 <>
+                   <Save className="h-5 w-5" />
+                   <span>{t("profile.saveChanges")}</span>
+                 </>
+              )}
+           </button>
+        </div>
+
         {/* Delete Account */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-6 flex justify-center">
            <button 
              onClick={() => setShowDeleteDialog(true)}
              className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-rose-50"
@@ -705,23 +819,6 @@ export function ProfilePage() {
           )}
         </AnimatePresence>
 
-        {/* Save Button FAB */}
-        <div className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-8 sm:w-auto z-40">
-           <button
-             onClick={handleSave}
-             disabled={saving}
-             className="w-full sm:w-auto shadow-xl shadow-emerald-500/30 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-70 disabled:scale-100"
-           >
-              {saving ? (
-                 <CircularLoader size="sm" variant="white" />
-              ) : (
-                 <>
-                   <Save className="h-5 w-5" />
-                   <span>{t("profile.saveChanges")}</span>
-                 </>
-              )}
-           </button>
-        </div>
       </div>
 
       <ConfirmDialog

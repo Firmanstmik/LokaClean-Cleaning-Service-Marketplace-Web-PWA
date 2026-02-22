@@ -1049,11 +1049,11 @@ export const MapPicker = memo(function MapPicker({
       </div>
       )}
 
-      {/* Main Location Pill (Redesigned) */}
+      {/* Main Location Pill (Premium Card) */}
       {mainLocation && (
          <div className="animate-in slide-in-from-top-2 fade-in duration-500 mb-2">
             <div 
-               className="w-full bg-white/95 backdrop-blur-md border border-slate-100/80 rounded-xl p-3 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex items-center gap-3 relative overflow-hidden cursor-pointer hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-100/50 transition-all group"
+               className="w-full bg-gradient-to-r from-white via-indigo-50/40 to-white border border-indigo-100/70 rounded-2xl p-3.5 shadow-[0_8px_30px_rgba(15,23,42,0.10)] flex items-center gap-3 relative overflow-hidden cursor-pointer hover:shadow-lg hover:shadow-indigo-500/20 hover:border-indigo-200/80 transition-all group"
                onClick={() => {
                   setForcedZoom(18);
                   onChange({ lat: mainLocation.latitude, lng: mainLocation.longitude });
@@ -1068,11 +1068,11 @@ export const MapPicker = memo(function MapPicker({
                }}
             >
                {/* Elegant Left Accent */}
-               <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>
+               <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-400 via-indigo-500 to-sky-400"></div>
 
                {/* Icon Container */}
-               <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-105 transition-transform border border-indigo-100">
-                  <span className="text-lg">
+               <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 group-hover:scale-110 transition-transform border border-indigo-100 shadow-sm">
+                  <span className="text-xl">
                     {getIconForLabel(mainLocation.label) ? (
                       // Convert Lucide icon to emoji or just use the icon?
                       // The design uses emoji in the span.
@@ -1096,18 +1096,22 @@ export const MapPicker = memo(function MapPicker({
 
                {/* Content */}
                <div className="flex-1 min-w-0">
-                  <div className="flex items-center flex-wrap gap-2 mb-0.5">
-                     <span className="font-bold text-slate-800 text-sm tracking-tight">{mainLocation.label}</span>
-                     <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded-md shadow-sm tracking-wide">
+                  <div className="flex items-center flex-wrap gap-2 mb-1">
+                     <span className="font-semibold text-slate-900 text-sm tracking-tight">
+                       {mainLocation.label}
+                     </span>
+                     <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-[9px] font-bold tracking-wide uppercase shadow-sm">
                        {t("map.saveAddress.primaryBadge")}
                      </span>
-                     {mainLocation.notes && (
-                       <span className="text-[10px] text-slate-500 italic truncate max-w-[150px] border-l border-slate-200 pl-2">
-                         "{mainLocation.notes}"
-                       </span>
-                     )}
                   </div>
-                  <div className="text-[11px] text-slate-500 truncate font-medium opacity-80">{mainLocation.address}</div>
+                  {mainLocation.notes && (
+                    <div className="text-[11px] text-slate-600 italic mb-0.5 leading-snug line-clamp-1">
+                      {"\"" + mainLocation.notes + "\""}
+                    </div>
+                  )}
+                  <div className="text-[11px] text-slate-500 truncate font-medium opacity-80">
+                    {mainLocation.address}
+                  </div>
                </div>
 
                {/* Delete Action (Subtle) */}

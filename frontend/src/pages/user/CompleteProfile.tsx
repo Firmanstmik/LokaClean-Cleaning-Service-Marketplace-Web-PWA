@@ -311,7 +311,6 @@ export function CompleteProfilePage() {
             value={defaultLoc}
             onChange={setDefaultLoc}
             onAddressChange={handleAddressChange}
-            onDetailsChange={(details) => setHouseNotes(details.notes || "")}
             hideLabel
             isOpen={activeSection === "location"}
             hideSearch
