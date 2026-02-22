@@ -105,24 +105,19 @@ export async function updateAddress(userId: number, addressId: number, data: Par
       return a === "" || a === "default address" || a.length < 6;
     };
 
-    let addrParam: string | undefined = data.address;
-    if (data.address !== undefined && isPlaceholder(data.address)) {
-      const latForAddr = data.lat ?? existing.latitude;
-      const lngForAddr = data.lng ?? existing.longitude;
-      try {
-        const r = await reverseGeocode({ lat: latForAddr, lng: lngForAddr, lang: "id" });
-        if (r?.display_name) {
-          addrParam = r.display_name;
-        } else {
-          const parts = [
-            data.street ?? existing.street ?? undefined,
-            data.village ?? existing.village ?? undefined,
-            data.district ?? existing.district ?? undefined,
-            data.city ?? existing.city ?? undefined
-          ].filter(Boolean) as string[];
-          addrParam = parts.length ? parts.join(", ") : `${latForAddr}, ${lngForAddr}`;
-        }
-      } catch {
+  // Determine final address to persist
+  const latForAddr = data.lat ?? existing.latitude;
+  const lngForAddr = data.lng ?? existing.longitude;
+  let addrParam: string | undefined = data.address;
+  
+  // If pin/location changed and user didn't type a specific address,
+  // or they provided a placeholder, auto-resolve via reverse geocode.
+  if (hasLocationUpdate && (data.address === undefined || isPlaceholder(data.address))) {
+    try {
+      const r = await reverseGeocode({ lat: latForAddr, lng: lngForAddr, lang: "id" });
+      if (r?.display_name) {
+        addrParam = r.display_name;
+      } else {
         const parts = [
           data.street ?? existing.street ?? undefined,
           data.village ?? existing.village ?? undefined,
@@ -131,7 +126,26 @@ export async function updateAddress(userId: number, addressId: number, data: Par
         ].filter(Boolean) as string[];
         addrParam = parts.length ? parts.join(", ") : `${latForAddr}, ${lngForAddr}`;
       }
+    } catch {
+      const parts = [
+        data.street ?? existing.street ?? undefined,
+        data.village ?? existing.village ?? undefined,
+        data.district ?? existing.district ?? undefined,
+        data.city ?? existing.city ?? undefined
+      ].filter(Boolean) as string[];
+      addrParam = parts.length ? parts.join(", ") : `${latForAddr}, ${lngForAddr}`;
     }
+  } else if (data.address !== undefined && isPlaceholder(data.address)) {
+    // No location change but provided placeholder: still attempt to resolve using existing coords
+    try {
+      const r = await reverseGeocode({ lat: latForAddr, lng: lngForAddr, lang: "id" });
+      if (r?.display_name) {
+        addrParam = r.display_name;
+      }
+    } catch {
+      // keep provided placeholder; frontend may update later
+    }
+  }
 
     if (hasLocationUpdate) {
        const result = await tx.$queryRaw`
