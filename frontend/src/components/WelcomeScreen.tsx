@@ -1,3 +1,4 @@
+
 /**
  * Welcome/Splash Screen - Interactive logo animation for mobile app experience.
  * Shows when user logs in or returns to the app.
@@ -5,11 +6,10 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CircularLoader } from "./ui/CircularLoader";
 
 const STORAGE_KEY = "lokaclean_welcome_shown";
 const EXIT_DURATION = 500; // Slower smooth exit animation (0.5s)
-const WELCOME_DURATION = 2500; // 2.5s visible + 0.5s exit = exactly 3 seconds total
+const WELCOME_DURATION = 2000; // 2s visible (faster)
 
 export function WelcomeScreen({ onComplete }: { onComplete: () => void }) {
   const [show, setShow] = useState(true);
@@ -55,142 +55,45 @@ export function WelcomeScreen({ onComplete }: { onComplete: () => void }) {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: EXIT_DURATION / 1000, ease: "easeOut" }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-tropical-500 via-ocean-500 to-sun-400"
+          transition={{ duration: EXIT_DURATION / 1000, ease: "easeInOut" }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950"
         >
-          {/* Animated background particles */}
-          <div className="absolute inset-0 overflow-hidden">
-            {[...Array(20)].map((_, i) => (
-              <motion.div
-                key={`particle-${i}`}
-                className="absolute rounded-full bg-white/20"
-                style={{
-                  width: Math.random() * 20 + 10,
-                  height: Math.random() * 20 + 10,
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  y: [0, -100, 0],
-                  x: [0, Math.random() * 50 - 25, 0],
-                  opacity: [0.2, 0.5, 0.2],
-                  scale: [1, 1.5, 1],
-                }}
-                transition={{
-                  duration: Math.random() * 3 + 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.1,
-                }}
-              />
-            ))}
-          </div>
+          {/* Subtle Gradient Background - Static & Fast */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-950" />
+          
+          {/* Simple Radial Glow behind logo */}
+          <div className="absolute w-[300px] h-[300px] bg-teal-500/10 rounded-full blur-[80px]" />
 
           {/* Logo container */}
           <motion.div
-            initial={{ scale: 0.85, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.98, opacity: 0 }}
+            exit={{ scale: 1.05, opacity: 0 }}
             transition={{
-              scale: {
-                type: "spring",
-                stiffness: 600,
-                damping: 35,
-                duration: EXIT_DURATION / 1000,
-              },
-              opacity: { duration: EXIT_DURATION / 1000, ease: "easeOut" },
+              duration: 0.8,
+              ease: "easeOut"
             }}
-            className="relative z-10 flex flex-col items-center justify-center w-full"
+            className="relative z-10 flex flex-col items-center"
           >
-            {/* Glow effect behind logo */}
-            <motion.div
-              className="absolute -inset-8 rounded-3xl bg-white/20 blur-3xl"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.2, 0.4, 0.2],
-              }}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-
-            {/* Logo */}
-            <motion.div
-              className="relative h-32 w-32 sm:h-40 sm:w-40 rounded-3xl bg-white shadow-2xl flex items-center justify-center"
-              animate={{
-                y: [0, -6, 0],
-              }}
-              transition={{
-                y: {
-                  duration: 2.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                },
-              }}
-            >
-              <div className="relative w-full h-full flex items-center justify-center p-3 sm:p-4">
-                <img
-                  src="/img/Logo_LokaClean.jpg"
-                  alt="LokaClean Logo"
-                  className="max-w-full max-h-full w-auto h-auto object-contain"
-                  style={{ 
-                    objectPosition: 'center center'
-                  }}
-                />
-              </div>
-              
-              {/* Shimmer effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent"
-                animate={{
-                  x: ["-100%", "200%"],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatDelay: 1,
-                  ease: "linear",
-                }}
+            <div className="relative w-24 h-24 mb-4 rounded-3xl overflow-hidden shadow-2xl shadow-teal-900/20 ring-1 ring-white/10 bg-slate-900">
+              <img 
+                src="/img/Logo_LokaClean_fixed.jpg" 
+                alt="LokaClean" 
+                className="w-full h-full object-cover"
               />
-            </motion.div>
-
-            {/* App name */}
-            <motion.div
-              initial={{ y: 15, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.4 }}
-              className="mt-6 text-center"
+            </div>
+            
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="text-2xl font-bold text-white tracking-tight"
             >
-              <motion.h1
-                className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg"
-              >
-                LokaClean
-              </motion.h1>
-              <motion.p
-                initial={{ y: 8, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.25, duration: 0.4 }}
-                className="mt-2 text-base sm:text-lg text-white/90 font-medium"
-              >
-                Clean Comfort, Island Style
-              </motion.p>
-            </motion.div>
-
-            {/* Circular Loader */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.35 }}
-              className="mt-8"
-            >
-              <CircularLoader size="lg" variant="white" />
-            </motion.div>
+              Loka<span className="text-teal-400">Clean</span>
+            </motion.h1>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
-
