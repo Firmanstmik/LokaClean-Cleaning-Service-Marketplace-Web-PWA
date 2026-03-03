@@ -35,6 +35,7 @@ function isStandaloneDisplay() {
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [bannerVisible, setBannerVisible] = useState(false);
+  const [userDismissed, setUserDismissed] = useState(false);
   const [installed, setInstalled] = useState(() => {
     if (typeof window === "undefined") return false;
     return isStandaloneDisplay();
@@ -65,17 +66,17 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const dismissedRecently = false;
+  const dismissedRecently = userDismissed;
 
   const isInstallable =
     !!deferredPrompt && !installed && !dismissedRecently && platform === "android-chrome";
 
   useEffect(() => {
-    if (isInstallable && !bannerVisible) {
+    if (isInstallable && !bannerVisible && !userDismissed) {
       setBannerVisible(true);
       trackEvent("install_banner_shown");
     }
-  }, [isInstallable, bannerVisible]);
+  }, [isInstallable, bannerVisible, userDismissed]);
 
   const requestInstall = async () => {
     if (!deferredPrompt) {
@@ -102,6 +103,7 @@ export function usePWAInstall() {
 
   const dismissBanner = () => {
     setBannerVisible(false);
+    setUserDismissed(true);
     trackEvent("install_dismissed");
   };
 
