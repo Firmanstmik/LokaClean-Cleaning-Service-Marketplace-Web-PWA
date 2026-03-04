@@ -11,6 +11,7 @@ import { usePushNotificationOnboarding } from "./hooks/usePushNotification";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { PushOnboardingModal } from "./components/PushOnboardingModal";
 import { IOSInstallPrompt } from "./components/IOSInstallPrompt";
+import { AndroidManualInstallPrompt } from "./components/AndroidManualInstallPrompt";
 import { SplashScreen } from "./components/SplashScreen";
 import { StickyMobileCTA } from "./components/StickyMobileCTA";
 
@@ -55,6 +56,8 @@ function PWAExperienceLayer() {
     requestInstall,
     dismissBanner,
     shouldShowIosInstructions,
+    showManualInstructions,
+    closeManualInstructions,
   } = usePWAInstall();
 
   const {
@@ -92,6 +95,10 @@ function PWAExperienceLayer() {
       <IOSInstallPrompt
         isOpen={shouldShowIosInstructions}
         onClose={dismissBanner}
+      />
+      <AndroidManualInstallPrompt
+        isOpen={showManualInstructions}
+        onClose={closeManualInstructions}
       />
       {showInstallToast && (
         <div className="fixed inset-x-0 bottom-16 z-[85] flex justify-center px-4">

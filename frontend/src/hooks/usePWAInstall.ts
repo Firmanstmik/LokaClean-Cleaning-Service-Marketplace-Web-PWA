@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { trackEvent } from "../utils/analytics";
 
-export type InstallPlatform = "android-chrome" | "ios-safari" | "desktop" | "unknown";
+export type InstallPlatform = "android-chrome" | "ios-safari" | "android-other" | "desktop" | "unknown";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -15,12 +15,15 @@ function getPlatform(): InstallPlatform {
 
   const win = window as Window & { MSStream?: unknown };
   const isIOS = /iPad|iPhone|iPod/.test(ua) && !win.MSStream;
-  const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|Edg/.test(ua);
   const isAndroid = /Android/.test(ua);
   const isChrome = /Chrome/.test(ua) && !/Edg|OPR/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|Edg|Chrome/.test(ua);
 
-  if (isIOS && isSafari) return "ios-safari";
-  if (isAndroid && isChrome) return "android-chrome";
+  if (isIOS) return "ios-safari";
+  if (isAndroid) {
+    if (isChrome) return "android-chrome";
+    return "android-other"; // Google App, Firefox, Samsung Internet, etc.
+  }
   if (!isAndroid && !isIOS) return "desktop";
   return "unknown";
 }
@@ -36,6 +39,7 @@ export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [bannerVisible, setBannerVisible] = useState(false);
   const [userDismissed, setUserDismissed] = useState(false);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
   const [installed, setInstalled] = useState(() => {
     if (typeof window === "undefined") return false;
     return isStandaloneDisplay();
@@ -68,8 +72,14 @@ export function usePWAInstall() {
 
   const dismissedRecently = userDismissed;
 
+  // More permissive installable check:
+  // 1. If we have a prompt (Chrome/Edge/Samsung), it's installable.
+  // 2. If we are on Android (any browser) and not standalone, it's installable (manual or auto).
+  // 3. iOS is handled separately usually, but we can include it here if we want a banner too.
   const isInstallable =
-    !!deferredPrompt && !installed && !dismissedRecently && platform === "android-chrome";
+    !installed &&
+    !dismissedRecently &&
+    (!!deferredPrompt || platform === "android-chrome" || platform === "android-other");
 
   useEffect(() => {
     if (isInstallable && !bannerVisible && !userDismissed) {
@@ -80,7 +90,11 @@ export function usePWAInstall() {
 
   const requestInstall = async () => {
     if (!deferredPrompt) {
-      if (isStandaloneDisplay()) {
+      // If no prompt event, but we are on a supported mobile platform, show manual instructions
+      if (platform === "android-chrome" || platform === "android-other") {
+         setShowManualInstructions(true);
+         trackEvent("install_manual_instructions_shown");
+      } else if (isStandaloneDisplay()) {
         trackEvent("install_already_installed");
       }
       return;
@@ -107,6 +121,10 @@ export function usePWAInstall() {
     trackEvent("install_dismissed");
   };
 
+  const closeManualInstructions = () => {
+    setShowManualInstructions(false);
+  };
+
   const shouldShowIosInstructions =
     platform === "ios-safari" && !installed && !dismissedRecently;
 
@@ -123,5 +141,7 @@ export function usePWAInstall() {
     requestInstall,
     dismissBanner,
     shouldShowIosInstructions,
+    showManualInstructions,
+    closeManualInstructions
   };
 }
