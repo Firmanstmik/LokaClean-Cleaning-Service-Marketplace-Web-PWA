@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Package, Plus, List, User as UserIcon, LogOut, Sparkles, Bell, X, CheckCheck, Star, Heart, ArrowRight, Zap, MapPin, CheckCircle2, MessageCircle, Instagram, Facebook, Phone, Mail, Clock, AlertTriangle, Home, History, LayoutGrid, Scan, Wallet, House, ScanLine, FileClock, UserRound, Box, ClipboardList, LayoutDashboard, Cuboid, Receipt, ScanFace, Compass, Layers, Fingerprint, Store, SprayCan, Brush } from "lucide-react";
 
 import { api } from "../lib/api";
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useAuth } from "../lib/auth";
 import { toAbsoluteUrl } from "../lib/urls";
 import { formatDateTimeWITA } from "../utils/date";
@@ -361,8 +362,8 @@ export function UserLayout() {
                     navigator.serviceWorker.ready.then((registration) => {
                       registration.showNotification(friendlyMsg.title, {
                         body: friendlyMsg.message,
-                        icon: '/img/Logo_LokaClean_fixed.jpg',
-                        badge: '/img/Logo_LokaClean_fixed.jpg',
+                        icon: '/img/logo_full.png',
+                        badge: '/img/logo_full.png',
                         tag: `notification-${notif.id}`,
                         requireInteraction: false,
                         data: {
@@ -377,8 +378,8 @@ export function UserLayout() {
                       // Fallback to direct Notification API if service worker not ready
                   const browserNotification = new Notification(friendlyMsg.title, {
                     body: friendlyMsg.message,
-                    icon: '/img/Logo_LokaClean_fixed.jpg',
-                    badge: '/img/Logo_LokaClean_fixed.jpg',
+                    icon: '/img/logo_full.png',
+                    badge: '/img/logo_full.png',
                     tag: `notification-${notif.id}`,
                     requireInteraction: false,
                     data: {
@@ -401,8 +402,8 @@ export function UserLayout() {
                     // Fallback to direct Notification API if service worker not supported
                     const browserNotification = new Notification(friendlyMsg.title, {
                       body: friendlyMsg.message,
-                      icon: '/img/Logo_LokaClean_fixed.jpg',
-                      badge: '/img/Logo_LokaClean_fixed.jpg',
+                      icon: '/img/logo_full.png',
+                      badge: '/img/logo_full.png',
                       tag: `notification-${notif.id}`,
                       requireInteraction: false,
                       data: {
@@ -520,56 +521,68 @@ export function UserLayout() {
     setDismissedToastIds(prev => new Set(prev).add(id));
   }, []);
 
-  // Register Service Worker and request notification permission
-  useEffect(() => {
-    const urlBase64ToUint8Array = (base64String: string) => {
-      const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-      const rawData = atob(base64);
-      const outputArray = new Uint8Array(rawData.length);
-      for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-      }
-      return outputArray;
-    };
+  // PWA Auto Update & Push Notification Registration
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegistered(registration) {
+      console.log('Service Worker registered:', registration);
+      if (!registration) return;
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered:', registration);
-          // Try to set up push subscription (if VAPID is configured)
-          api.get("/push/public-key")
-            .then(async (resp) => {
-              const publicKey = resp.data?.data?.publicKey ?? import.meta.env.VITE_VAPID_PUBLIC_KEY;
-              if (!publicKey) {
-                console.log("[Push] VAPID public key not configured; skipping push subscription");
-                return;
-              }
-              try {
-                let subscription = await registration.pushManager.getSubscription();
-                if (!subscription) {
-                  subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(publicKey)
-                  });
-                }
-                // Send subscription to backend
-                await api.post("/push/subscribe", subscription);
-                console.log("[Push] Subscription active");
-              } catch (err) {
-                console.warn("[Push] Failed to subscribe:", err);
-              }
-            })
-            .catch((err) => {
-              console.warn("[Push] Failed to fetch public key:", err);
-            });
+      // Try to set up push subscription (if VAPID is configured)
+      const urlBase64ToUint8Array = (base64String: string) => {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      };
+
+      api.get("/push/public-key")
+        .then(async (resp) => {
+          const publicKey = resp.data?.data?.publicKey ?? import.meta.env.VITE_VAPID_PUBLIC_KEY;
+          if (!publicKey) {
+            console.log("[Push] VAPID public key not configured; skipping push subscription");
+            return;
+          }
+          try {
+            let subscription = await registration.pushManager.getSubscription();
+            if (!subscription) {
+              subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+              });
+            }
+            // Send subscription to backend
+            await api.post("/push/subscribe", subscription);
+            console.log("[Push] Subscription active");
+          } catch (err) {
+            console.warn("[Push] Failed to subscribe:", err);
+          }
         })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error);
+        .catch((err) => {
+          console.warn("[Push] Failed to fetch public key:", err);
         });
-    }
+    },
+    onRegisterError(error) {
+      console.error('Service Worker registration failed:', error);
+    },
+  });
 
-    // Request notification permission
+  // Auto-update Service Worker when new content is available
+  useEffect(() => {
+    if (needRefresh) {
+      console.log("[PWA] New content available, updating...");
+      updateServiceWorker(true);
+    }
+  }, [needRefresh, updateServiceWorker]);
+
+  // Request notification permission
+  useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
         console.log('Notification permission:', permission);
@@ -998,7 +1011,7 @@ export function UserLayout() {
                   className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-center border border-white"
                 >
                   <motion.img
-                    src="/img/logo.jpg"
+                    src="/img/Logo_LokaClean_fixed.jpg"
                     alt="LokaClean Logo"
                     className="h-full w-full object-cover mix-blend-multiply"
                   />

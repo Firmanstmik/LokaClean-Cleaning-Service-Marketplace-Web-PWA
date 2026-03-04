@@ -265,6 +265,22 @@ export function Home() {
     }
   ];
 
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slides = [
+    "/img/herolokacleanutama.png",
+    "/img/3ruangan.png",
+    "/img/kamartidur.png",
+    "/img/rumahbaru.png",
+    "/img/kamarmandi.png"
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80 overflow-hidden relative">
       <Helmet>
@@ -481,7 +497,7 @@ export function Home() {
       </motion.header>
 
       {/* Main Content - Hero Section */}
-      <main className="relative z-10 w-full pt-12 sm:pt-20 lg:pt-24 pb-0 mt-safe">
+      <main className="relative z-10 w-full pt-24 sm:pt-20 lg:pt-24 pb-0 mt-safe">
         <h1 className="sr-only">
           {seoTitle}
         </h1>
@@ -492,46 +508,42 @@ export function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="relative w-full mb-8 sm:mb-12 min-h-[calc(100vh-80px)] sm:min-h-0 sm:h-[700px] overflow-visible sm:overflow-hidden group"
         >
-          {/* 1. Full Background Image (Covering Everything) */}
-          <div className="absolute inset-0 z-0 bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80">
-            <img
-              src="/img/hero.png"
-              alt="LokaClean Hero"
-              width={1200}
-              height={720}
-              fetchPriority="high"
-              loading="eager"
-              decoding="async"
-              className="hidden sm:block w-full h-full object-contain sm:object-contain object-bottom sm:object-right-bottom transition-transform duration-500 ease-out group-hover:scale-105"
-            />
-             {/* Gradient Overlay for Readability on Mobile */}
-             <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/70 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/60 sm:to-transparent" />
+          {/* 1. Full Background Slider (Desktop) */}
+          <div className="absolute inset-0 z-0 bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80 overflow-hidden">
+            <AnimatePresence>
+              <motion.img
+                key={slides[currentSlide]}
+                src={slides[currentSlide]}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.0, ease: "easeInOut" }}
+                alt="LokaClean Hero"
+                className="hidden sm:block w-full h-full object-contain object-center absolute inset-0"
+              />
+            </AnimatePresence>
+            {/* Gradient Overlay for Readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/70 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/60 sm:to-transparent" />
           </div>
 
-          {/* 2. Mascot Integration (Sidekick style) - REMOVED to avoid duplication */}
-          
-          {/* 3. Content Overlay (Text on top of Image) */}
+          {/* 2. Content Overlay */}
           <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center sm:justify-center pb-8 sm:pb-10 lg:pb-14 sm:pt-4">
             <div className="max-w-5xl pt-0 sm:pt-0">
-                {/* Mobile Hero Image (Top Position) */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className="w-full mb-4 sm:mb-1 sm:hidden flex justify-center will-change-transform"
-                >
-                  <motion.img
-                    src="/img/hero.png"
-                    alt="LokaClean Hero"
-                    width={520}
-                    height={260}
-                    loading="eager"
-                    decoding="async"
-                    className="h-[260px] w-auto object-contain drop-shadow-[0_24px_45px_rgba(15,23,42,0.18)] will-change-transform"
-                    animate={{ y: [-4, 0, -4] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                </motion.div>
+                {/* Mobile Hero Slider (Top Position) */}
+                <div className="w-full mb-6 sm:mb-1 sm:hidden flex justify-center relative h-[260px] rounded-2xl overflow-hidden shadow-lg bg-white/50 backdrop-blur-sm border border-white/40">
+                  <AnimatePresence>
+                    <motion.img
+                      key={`mobile-${slides[currentSlide]}`}
+                      src={slides[currentSlide]}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 1.0, ease: "easeInOut" }}
+                      alt="LokaClean Hero"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </AnimatePresence>
+                </div>
 
                 {showHeroSkeleton ? (
                   <div className="w-full max-w-lg mx-auto sm:mx-0 space-y-4">

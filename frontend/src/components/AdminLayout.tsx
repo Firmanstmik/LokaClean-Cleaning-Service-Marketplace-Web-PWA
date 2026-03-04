@@ -20,6 +20,7 @@ import {
   Palette,
 } from "lucide-react";
 
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useAuth } from "../lib/auth";
 import { ScrollToTop } from "./ScrollToTop";
 import { api } from "../lib/api";
@@ -160,8 +161,8 @@ function AdminLayoutInner() {
                 .then((registration) => {
                   registration.showNotification(title, {
                     body,
-                    icon: "/img/Logo_LokaClean_fixed.jpg",
-                    badge: "/img/Logo_LokaClean_fixed.jpg",
+                    icon: "/img/logo_full.png",
+                    badge: "/img/logo_full.png",
                     tag: `admin-order-${order.id}`,
                     requireInteraction: false,
                     data: {
@@ -175,8 +176,8 @@ function AdminLayoutInner() {
                 .catch(() => {
                   const browserNotification = new Notification(title, {
                     body,
-                    icon: "/img/Logo_LokaClean_fixed.jpg",
-                    badge: "/img/Logo_LokaClean_fixed.jpg",
+                    icon: "/img/logo_full.png",
+                    badge: "/img/logo_full.png",
                     tag: `admin-order-${order.id}`,
                     requireInteraction: false,
                     data: {
@@ -196,8 +197,8 @@ function AdminLayoutInner() {
             } else {
               const browserNotification = new Notification(title, {
                 body,
-                icon: "/img/Logo_LokaClean_fixed.jpg",
-                badge: "/img/Logo_LokaClean_fixed.jpg",
+                icon: "/img/logo_full.png",
+                badge: "/img/logo_full.png",
                 tag: `admin-order-${order.id}`,
                 requireInteraction: false,
                 data: {
@@ -354,16 +355,16 @@ function AdminLayoutInner() {
     }
   }, [effectiveMode]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  // PWA Auto Update & Push Notification Registration (Admin)
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegistered(registration) {
+      console.log('[Admin] Service Worker registered:', registration);
+      if (!registration) return;
 
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission().then((permission) => {
-        console.log("[Admin Notifications] Notification permission (admin):", permission);
-      });
-    }
-
-    if ("serviceWorker" in navigator) {
+      // Try to set up push subscription (if VAPID is configured)
       const urlBase64ToUint8Array = (base64String: string) => {
         const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
         const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -375,37 +376,52 @@ function AdminLayoutInner() {
         return outputArray;
       };
 
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration) => {
-          api
-            .get("/push/public-key")
-            .then(async (resp) => {
-              const publicKey =
-                resp.data?.data?.publicKey || import.meta.env.VITE_VAPID_PUBLIC_KEY;
-              if (!publicKey) return;
-
-              try {
-                let subscription = await registration.pushManager.getSubscription();
-                if (!subscription) {
-                  subscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: urlBase64ToUint8Array(publicKey),
-                  });
-                }
-
-                await api.post("/push/admin/subscribe", subscription);
-              } catch (err) {
-                console.warn("[Admin Push] Failed to subscribe push:", err);
-              }
-            })
-            .catch((err) => {
-              console.warn("[Admin Push] Failed to get public key:", err);
-            });
+      api.get("/push/public-key")
+        .then(async (resp) => {
+          const publicKey = resp.data?.data?.publicKey ?? import.meta.env.VITE_VAPID_PUBLIC_KEY;
+          if (!publicKey) {
+            console.log("[Admin Push] VAPID public key not configured; skipping push subscription");
+            return;
+          }
+          try {
+            let subscription = await registration.pushManager.getSubscription();
+            if (!subscription) {
+              subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+              });
+            }
+            // Send subscription to backend (Admin endpoint)
+            await api.post("/push/admin/subscribe", subscription);
+            console.log("[Admin Push] Subscription active");
+          } catch (err) {
+            console.warn("[Admin Push] Failed to subscribe:", err);
+          }
         })
-        .catch((error) => {
-          console.error("[Admin Push] Service worker registration failed:", error);
+        .catch((err) => {
+          console.warn("[Admin Push] Failed to fetch public key:", err);
         });
+    },
+    onRegisterError(error) {
+      console.error('[Admin] Service Worker registration failed:', error);
+    },
+  });
+
+  // Auto-update Service Worker when new content is available
+  useEffect(() => {
+    if (needRefresh) {
+      console.log("[Admin PWA] New content available, updating...");
+      updateServiceWorker(true);
+    }
+  }, [needRefresh, updateServiceWorker]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        console.log("[Admin Notifications] Notification permission (admin):", permission);
+      });
     }
   }, []);
 
@@ -422,7 +438,7 @@ function AdminLayoutInner() {
             <div className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:h-11 sm:w-11 dark:border-slate-700 dark:bg-slate-800">
               <div className="relative z-10 flex h-full w-full items-center justify-center">
                 <img
-                  src="/img/logo.jpg"
+                  src="/img/Logo_LokaClean_fixed.jpg"
                   alt="LokaClean Logo"
                   loading="lazy"
                   className="h-full w-full object-cover mix-blend-multiply"

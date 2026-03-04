@@ -12,7 +12,9 @@ interface ServiceWorkerGlobalScopeWithManifest extends ServiceWorkerGlobalScope 
 declare const self: ServiceWorkerGlobalScopeWithManifest;
 
 self.skipWaiting();
-self.addEventListener('activate', () => self.clients.claim());
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
 
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
@@ -45,8 +47,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'LokaClean';
   const options = {
     body: data.message || 'You have a new notification',
-    icon: '/img/Logo_LokaClean.jpg',
-    badge: '/img/Logo_LokaClean.jpg',
+    icon: '/img/logo_full.png',
+    badge: '/img/logo_full.png',
     tag: data.tag || 'notification',
     requireInteraction: false,
     silent: false,
@@ -57,7 +59,7 @@ self.addEventListener('push', (event) => {
       {
         action: 'view',
         title: 'View Order',
-        icon: '/img/Logo_LokaClean.jpg'
+        icon: '/img/logo_full.png'
       }
     ] : []
   };

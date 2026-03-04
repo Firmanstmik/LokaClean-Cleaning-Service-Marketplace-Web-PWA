@@ -73,7 +73,7 @@ export function UserRegister() {
               transition={{ type: "spring", stiffness: 300 }}
               className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/15 backdrop-blur-xl border border-white/30 mb-8 shadow-[0_8px_32px_rgba(0,0,0,0.2)] ring-1 ring-white/20"
             >
-              <img src="/img/logo.jpg" alt="Logo" className="h-20 w-20 object-contain drop-shadow-lg rounded-2xl" />
+              <img src="/img/Logo_LokaClean_fixed.jpg" alt="Logo" className="h-20 w-20 object-contain drop-shadow-lg rounded-2xl" />
             </motion.div>
             <h1 className="text-5xl font-bold leading-tight mb-6">
               {t("auth.hero.joinRevolution")} <br/>
@@ -155,7 +155,7 @@ export function UserRegister() {
               >
                 <div className="flex items-center gap-4 mb-6">
                   <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 sm:backdrop-blur-md border border-white/30 shadow-lg">
-                    <img src="/img/logo.jpg" alt="Logo" className="h-16 w-16 object-contain rounded-xl" />
+                    <img src="/img/Logo_LokaClean_fixed.jpg" alt="Logo" className="h-16 w-16 object-contain rounded-xl" />
                   </div>
                 </div>
                 
