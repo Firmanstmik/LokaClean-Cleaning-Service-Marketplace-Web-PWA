@@ -79,6 +79,14 @@ export async function registerUser(input: {
   } else {
     const digits = normalizedPhone.replace(/\D/g, "");
     email = `user+${digits}@lokaclean.local`;
+    
+    // Check if this generated email already exists (orphaned user or mismatch phone format)
+    const existingGeneratedEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingGeneratedEmail && (!existingPhone || existingGeneratedEmail.id !== existingPhone.id)) {
+       // If we found a user with this derived email, it means the phone number is effectively registered
+       // even if the exact string match on phone_number failed earlier.
+       throw new HttpError(409, "Phone number already registered");
+    }
   }
 
   let user;
