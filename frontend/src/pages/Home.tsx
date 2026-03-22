@@ -1094,22 +1094,29 @@ export function Home() {
 
                     {/* Price Section below description */}
                     <div className="mb-3">
-                      {displayPrice > 0 ? (
-                        <div className="flex flex-col leading-tight">
-                          {hasDiscount && (
-                            <span className="text-[10px] font-bold text-slate-400 line-through">
-                              Rp {pkg.base_price.toLocaleString("id-ID")}
+                      <div className="flex flex-wrap items-baseline gap-2 leading-tight">
+                        {displayPrice > 0 ? (
+                          <>
+                            <span className="text-base font-black text-teal-700 tracking-tight">
+                              Rp {displayPrice.toLocaleString("id-ID")}
                             </span>
-                          )}
-                          <span className="text-base font-black text-teal-700 tracking-tight">
-                            Rp {displayPrice.toLocaleString("id-ID")}
-                          </span>
-                        </div>
-                      ) : (
-                        <p className="text-[10px] font-black text-slate-700">
-                          {pkg.pricing_note || "Hubungi kami untuk harga"}
-                        </p>
-                      )}
+                            {hasDiscount && (
+                              <span className="text-[10px] font-bold text-slate-400 line-through">
+                                Rp {pkg.base_price.toLocaleString("id-ID")}
+                              </span>
+                            )}
+                            {pkg.pricing_note && (
+                              <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded italic">
+                                {pkg.pricing_note}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-[11px] font-black text-teal-700 italic bg-teal-50 px-2 py-1 rounded-lg border border-teal-100">
+                            {pkg.pricing_note || "Hubungi kami untuk harga"}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <button

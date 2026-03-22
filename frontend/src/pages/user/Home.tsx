@@ -431,23 +431,30 @@ export function UserHomePage() {
                           
                           <div className="mt-auto pt-3 border-t border-slate-50 flex items-end justify-between">
                             <div>
-                              {displayPrice > 0 ? (
-                                <div className="flex flex-col leading-tight">
-                                  {hasDiscount && (
-                                    <span className="text-[10px] font-bold text-slate-400 line-through">
-                                      Rp {pkg.base_price.toLocaleString("id-ID")}
-                                    </span>
-                                  )}
-                                  <p className="text-xl font-black text-teal-700 tracking-tight">
-                                    <span className="text-xs font-bold align-top mr-0.5">Rp</span>
-                                    {displayPrice.toLocaleString("id-ID")}
+                              <div className="flex flex-wrap items-baseline gap-1.5 leading-tight">
+                                {displayPrice > 0 ? (
+                                  <>
+                                    <p className="text-xl font-black text-teal-700 tracking-tight">
+                                      <span className="text-xs font-bold align-top mr-0.5">Rp</span>
+                                      {displayPrice.toLocaleString("id-ID")}
+                                    </p>
+                                    {hasDiscount && (
+                                      <span className="text-[10px] font-bold text-slate-400 line-through">
+                                        Rp {pkg.base_price.toLocaleString("id-ID")}
+                                      </span>
+                                    )}
+                                    {pkg.pricing_note && (
+                                      <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded italic">
+                                        {pkg.pricing_note}
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <p className="text-[10px] font-black text-teal-700 italic bg-teal-50 px-2 py-1 rounded-lg border border-teal-100">
+                                    {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
                                   </p>
-                                </div>
-                              ) : (
-                                <p className="text-[10px] font-bold text-slate-700">
-                                  {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
-                                </p>
-                              )}
+                                )}
+                              </div>
                             </div>
                             <div className="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-lg shadow-teal-600/20 group-active:scale-95 transition-transform">
                               <Plus className="w-5 h-5" />
@@ -566,23 +573,30 @@ export function UserHomePage() {
 
                            <div className="mt-auto flex items-end justify-between border-t border-slate-50 pt-5">
                              <div>
-                               {displayPrice > 0 ? (
-                                 <div className="flex flex-col">
-                                   {hasDiscount && (
-                                     <span className="text-sm font-bold text-slate-400 line-through">
-                                       Rp {pkg.base_price.toLocaleString("id-ID")}
-                                     </span>
-                                   )}
-                                   <p className="text-3xl font-black text-teal-700 tracking-tight">
-                                     <span className="text-base font-bold align-top mr-0.5">Rp</span>
-                                     {displayPrice.toLocaleString("id-ID")}
+                               <div className="flex flex-wrap items-baseline gap-2 leading-tight">
+                                 {displayPrice > 0 ? (
+                                   <>
+                                     <p className="text-3xl font-black text-teal-700 tracking-tight">
+                                       <span className="text-base font-bold align-top mr-0.5">Rp</span>
+                                       {displayPrice.toLocaleString("id-ID")}
+                                     </p>
+                                     {hasDiscount && (
+                                       <span className="text-sm font-bold text-slate-400 line-through">
+                                         Rp {pkg.base_price.toLocaleString("id-ID")}
+                                       </span>
+                                     )}
+                                     {pkg.pricing_note && (
+                                       <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded italic">
+                                         {pkg.pricing_note}
+                                       </span>
+                                     )}
+                                   </>
+                                 ) : (
+                                   <p className="text-sm font-black text-teal-700 italic bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-100">
+                                     {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
                                    </p>
-                                 </div>
-                               ) : (
-                                 <p className="text-sm font-bold text-slate-700">
-                                   {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
-                                 </p>
-                               )}
+                                 )}
+                               </div>
                              </div>
                              <div className="w-14 h-14 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-xl shadow-teal-600/20 hover:bg-teal-500 hover:scale-105 transition-all cursor-pointer">
                                <Plus className="w-8 h-8" />

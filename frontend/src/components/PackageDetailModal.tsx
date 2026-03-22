@@ -199,25 +199,34 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
               {/* Price Section below Title */}
               <div className="mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-100">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{isEnglish ? "Price starting from" : "Harga mulai dari"}</p>
-                {displayPrice > 0 ? (
-                  <div className="flex flex-col">
-                    {hasDiscount && (
-                      <span className="text-sm font-bold text-slate-400 line-through">
-                        Rp {pkg.base_price.toLocaleString("id-ID")}
-                      </span>
-                    )}
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-lg font-bold text-teal-700">Rp</span>
-                      <span className="text-4xl font-black text-teal-700 tracking-tight">
-                        {displayPrice.toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-lg font-black text-slate-700">
-                    {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
-                  </p>
-                )}
+                <div className="flex flex-wrap items-baseline gap-3">
+                  {displayPrice > 0 ? (
+                    <>
+                      <div className="flex flex-col">
+                        {hasDiscount && (
+                          <span className="text-sm font-bold text-slate-400 line-through">
+                            Rp {pkg.base_price.toLocaleString("id-ID")}
+                          </span>
+                        )}
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-lg font-bold text-teal-700">Rp</span>
+                          <span className="text-4xl font-black text-teal-700 tracking-tight">
+                            {displayPrice.toLocaleString("id-ID")}
+                          </span>
+                        </div>
+                      </div>
+                      {pkg.pricing_note && (
+                        <span className="text-sm font-bold text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200 italic">
+                          {pkg.pricing_note}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xl font-black text-teal-700 italic">
+                      {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">

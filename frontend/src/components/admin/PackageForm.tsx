@@ -76,10 +76,8 @@ export function PackageForm({
     formData.append("name", name);
     formData.append("description", description);
 
-    if (basePrice > 0) {
-      formData.append("base_price", String(basePrice));
-      formData.append("discount_percentage", String(resolvedDiscount));
-    }
+    formData.append("base_price", String(basePrice));
+    formData.append("discount_percentage", String(resolvedDiscount));
 
     formData.append("discount_edition", discountEdition.trim());
     formData.append("pricing_note", pricingNote.trim());
