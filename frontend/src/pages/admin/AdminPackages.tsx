@@ -1219,6 +1219,11 @@ export function AdminPackagesPage() {
                                     <div className="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
                                       {pkg.name}
                                     </div>
+                                    {pkg.name_en && pkg.name_en !== pkg.name && (
+                                      <div className="text-[10px] text-slate-400 font-medium italic">
+                                        EN: {pkg.name_en}
+                                      </div>
+                                    )}
                                     <div className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
                                       {pkg.description}
                                     </div>
