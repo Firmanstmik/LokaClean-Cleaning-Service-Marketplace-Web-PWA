@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   AlertCircle,
@@ -52,6 +52,7 @@ export function AdminPackagesPage() {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const formRef = useRef<HTMLDivElement | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; package: PaketCleaning | null }>({
     show: false,
     package: null,
@@ -72,6 +73,16 @@ export function AdminPackagesPage() {
     const resp = await api.get("/admin/packages");
     setItems(resp.data.data.items as PaketCleaning[]);
   }
+
+  useEffect(() => {
+    if (!showAddForm && editingId === null) return;
+    if (!window.matchMedia("(min-width: 768px)").matches) return;
+    const el = formRef.current;
+    if (!el) return;
+    window.requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [editingId, showAddForm]);
 
   useEffect(() => {
     let alive = true;
@@ -1461,7 +1472,10 @@ export function AdminPackagesPage() {
 
           {(showAddForm || editingPackage) && (
             <>
-              <div className="hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:block">
+              <div
+                ref={formRef}
+                className="hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:block"
+              >
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <h2 className="text-sm font-medium text-slate-900 dark:text-slate-50">

@@ -27,6 +27,14 @@ import { Skeleton } from "../components/ui/Skeleton";
 
 import { Helmet } from "react-helmet-async";
 
+const HERO_SLIDES = [
+  "/img/herolokacleanutama.png",
+  "/img/3ruangan.png",
+  "/img/kamartidur.png",
+  "/img/rumahbaru.png",
+  "/img/kamarmandi.png"
+] as const;
+
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
@@ -65,6 +73,7 @@ export function Home() {
   const [selectedPackage, setSelectedPackage] = useState<PaketCleaning | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showHeroSkeleton, setShowHeroSkeleton] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -173,6 +182,13 @@ export function Home() {
   }, []);
 
   useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     api.get("/packages").then((res) => {
       if (res.data?.data?.items) {
         setPackages((res.data.data.items as PaketCleaning[]).slice(0, 4));
@@ -264,22 +280,6 @@ export function Home() {
       icon: Star
     }
   ];
-
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const slides = [
-    "/img/herolokacleanutama.png",
-    "/img/3ruangan.png",
-    "/img/kamartidur.png",
-    "/img/rumahbaru.png",
-    "/img/kamarmandi.png"
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80 overflow-hidden relative">
@@ -506,35 +506,34 @@ export function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative w-full mb-8 sm:mb-12 min-h-[calc(100vh-80px)] sm:min-h-0 sm:h-[700px] overflow-visible sm:overflow-hidden group"
+          className="relative w-full mb-8 sm:mb-12 min-h-[calc(100vh-80px)] sm:min-h-0 sm:h-auto overflow-visible sm:overflow-visible group"
         >
-          {/* 1. Full Background Slider (Desktop) */}
-          <div className="absolute inset-0 z-0 bg-gradient-to-br from-white via-tropical-50/70 to-tropical-100/80 overflow-hidden">
-            <AnimatePresence>
-              <motion.img
-                key={slides[currentSlide]}
-                src={slides[currentSlide]}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.0, ease: "easeInOut" }}
-                alt="LokaClean Hero"
-                className="hidden sm:block w-full h-full object-contain object-center absolute inset-0"
-              />
-            </AnimatePresence>
-            {/* Gradient Overlay for Readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/70 to-transparent sm:bg-gradient-to-r sm:from-white/95 sm:via-white/60 sm:to-transparent" />
+          <div className="hidden sm:block w-full">
+            <div className="relative w-full h-[300px] md:h-[340px] lg:h-[380px] overflow-hidden bg-slate-900/5">
+              <AnimatePresence>
+                <motion.img
+                  key={HERO_SLIDES[currentSlide]}
+                  src={HERO_SLIDES[currentSlide]}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.0, ease: "easeInOut" }}
+                  alt="LokaClean Hero"
+                  className="block w-full h-full object-contain object-center"
+                />
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* 2. Content Overlay */}
-          <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center sm:justify-center pb-8 sm:pb-10 lg:pb-14 sm:pt-4">
-            <div className="max-w-5xl pt-0 sm:pt-0">
+          <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center pb-8 sm:hidden">
+            <div className="max-w-5xl pt-0">
                 {/* Mobile Hero Slider (Top Position) */}
                 <div className="w-full mb-6 sm:mb-1 sm:hidden flex justify-center relative h-[260px] rounded-2xl overflow-hidden shadow-lg bg-white/50 backdrop-blur-sm border border-white/40">
                   <AnimatePresence>
                     <motion.img
-                      key={`mobile-${slides[currentSlide]}`}
-                      src={slides[currentSlide]}
+                      key={`mobile-${HERO_SLIDES[currentSlide]}`}
+                      src={HERO_SLIDES[currentSlide]}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
@@ -558,69 +557,86 @@ export function Home() {
                   </div>
                 ) : (
                   <>
-                    {greeting && (
-                      <motion.p
-                        initial={{ opacity: 0, y: 4 }}
+                    <div className="block sm:hidden">
+                      {greeting && (
+                        <motion.p
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.05, duration: 0.4, ease: "easeOut" }}
+                          className="text-xs sm:text-sm text-slate-600/80 mb-1 sm:mb-2"
+                        >
+                          {greeting}
+                        </motion.p>
+                      )}
+                      <motion.h2
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05, duration: 0.4, ease: "easeOut" }}
-                        className="text-xs sm:text-sm text-slate-600/80 mb-1 sm:mb-2"
+                        transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+                        className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-slate-900 mb-3 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
                       >
-                        {greeting}
-                      </motion.p>
-                    )}
-                    <motion.h2
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-                      className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-slate-900 mb-3 sm:mb-6 drop-shadow-xl text-center sm:text-left will-change-transform"
-                    >
-                      <motion.span
-                        key={heroLocationTitle}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35, ease: "easeOut" }}
-                        className="inline-block"
-                      >
-                        {isEnglish ? (
-                          <>
-                            <span>
-                              {heroArea
-                                ? "Professional Cleaning in "
-                                : "LokaClean – Premium Cleaning Service in "}
-                            </span>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
-                              {heroArea ?? "Lombok"}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span>
-                              {heroArea
-                                ? "Cleaning Profesional di "
-                                : "LokaClean – Solusi Cleaning Premium di "}
-                            </span>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
-                              {heroArea ?? "Lombok"}
-                            </span>
-                          </>
-                        )}
-                      </motion.span>
-                    </motion.h2>
+                        <motion.span
+                          key={heroLocationTitle}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.35, ease: "easeOut" }}
+                          className="inline-block"
+                        >
+                          {isEnglish ? (
+                            <>
+                              <span>
+                                {heroArea
+                                  ? "Professional Cleaning in "
+                                  : "LokaClean – Premium Cleaning Service in "}
+                              </span>
+                              <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
+                                {heroArea ?? "Lombok"}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span>
+                                {heroArea
+                                  ? "Cleaning Profesional di "
+                                  : "LokaClean – Solusi Cleaning Premium di "}
+                              </span>
+                              <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
+                                {heroArea ?? "Lombok"}
+                              </span>
+                            </>
+                          )}
+                        </motion.span>
+                      </motion.h2>
 
-                    <motion.p
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
-                      className="text-sm sm:text-lg text-slate-800/80 font-medium leading-relaxed mb-5 sm:mb-8 max-w-md sm:max-w-lg drop-shadow-md bg-white/70 sm:bg-white/40 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-white/50 text-center sm:text-left mx-auto sm:mx-0 will-change-transform"
-                    >
-                      {t("home.hero.subtitle")}
-                    </motion.p>
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.4, ease: "easeOut" }}
+                        className="text-sm sm:text-lg text-slate-800/80 font-medium leading-relaxed mb-5 sm:mb-8 max-w-md sm:max-w-lg drop-shadow-md bg-white/70 sm:bg-white/40 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-white/50 text-center sm:text-left mx-auto sm:mx-0 will-change-transform"
+                      >
+                        {t("home.hero.subtitle")}
+                      </motion.p>
+
+                      <div className="mt-2.5 sm:mt-3 flex flex-col sm:flex-row items-center gap-1.5 text-[10px] sm:text-xs text-slate-600/80">
+                        <div className="flex items-center gap-1.5">
+                          <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                          <span>{t("home.rating.scoreText")}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-3">
+                          <span className="hidden sm:inline text-slate-400">•</span>
+                          <span>{t("home.rating.pill1")}</span>
+                          <span className="hidden sm:inline text-slate-400">•</span>
+                          <span>{t("home.rating.pill2")}</span>
+                          <span className="hidden sm:inline text-slate-400">•</span>
+                          <span>{t("home.rating.pill3")}</span>
+                        </div>
+                      </div>
+                    </div>
 
                     <motion.div
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
-                      className="flex flex-row justify-center sm:justify-start mb-4 sm:mb-8 will-change-transform"
+                      className="flex flex-row justify-center sm:hidden mb-4 sm:mb-8 will-change-transform"
                     >
                       <Link
                         to="/home"
@@ -634,20 +650,6 @@ export function Home() {
                         </span>
                       </Link>
                     </motion.div>
-                    <div className="mt-2.5 sm:mt-3 flex flex-col sm:flex-row items-center gap-1.5 text-[10px] sm:text-xs text-slate-600/80">
-                      <div className="flex items-center gap-1.5">
-                        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                        <span>{t("home.rating.scoreText")}</span>
-                      </div>
-                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-3">
-                        <span className="hidden sm:inline text-slate-400">•</span>
-                        <span>{t("home.rating.pill1")}</span>
-                        <span className="hidden sm:inline text-slate-400">•</span>
-                        <span>{t("home.rating.pill2")}</span>
-                        <span className="hidden sm:inline text-slate-400">•</span>
-                        <span>{t("home.rating.pill3")}</span>
-                      </div>
-                    </div>
                   </>
                 )}
 
@@ -656,7 +658,7 @@ export function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
-                  className="grid grid-cols-3 gap-2 sm:gap-4 mt-2 sm:mt-5 pb-2 sm:pb-0 mx-0 items-stretch w-full max-w-4xl will-change-transform"
+                  className="grid grid-cols-3 gap-2 sm:gap-4 mt-2 sm:mt-5 pb-2 sm:pb-0 mx-0 items-stretch w-full max-w-4xl will-change-transform sm:hidden"
                 >
                   {/* Item 1 */}
                     <div className="flex flex-col sm:flex-row items-center sm:items-center gap-1.5 sm:gap-3 p-2 sm:p-4 rounded-xl sm:rounded-2xl bg-white sm:bg-white/95 shadow-sm sm:shadow-md border border-slate-100 hover:shadow-lg transition-all duration-300 group w-full h-full">
@@ -695,7 +697,110 @@ export function Home() {
               </div>
             </div>
         </motion.section>
-
+        <div className="hidden sm:block mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 pb-2">
+          {greeting && (
+            <p className="text-sm text-slate-600/80 mb-2">
+              {greeting}
+            </p>
+          )}
+          <h2 className="text-4xl lg:text-5xl font-black leading-tight text-slate-900 mb-6">
+            <span className="inline-block">
+              {isEnglish ? (
+                <>
+                  <span>
+                    {heroArea
+                      ? "Professional Cleaning in "
+                      : "LokaClean – Premium Cleaning Service in "}
+                  </span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
+                    {heroArea ?? "Lombok"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span>
+                    {heroArea
+                      ? "Cleaning Profesional di "
+                      : "LokaClean – Solusi Cleaning Premium di "}
+                  </span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-tropical-500 via-tropical-600 to-ocean-500">
+                    {heroArea ?? "Lombok"}
+                  </span>
+                </>
+              )}
+            </span>
+          </h2>
+          <p className="text-lg text-slate-800/80 font-medium leading-relaxed mb-6 max-w-2xl bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/50">
+            {t("home.hero.subtitle")}
+          </p>
+          <div className="flex flex-row justify-start mb-5">
+            <Link
+              to="/home"
+              className={`group relative overflow-hidden rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-9 h-14 text-base font-semibold tracking-wide text-white shadow-md hover:shadow-lg transition-transform duration-300 hover:scale-105 active:scale-97 flex items-center justify-center whitespace-nowrap ${
+                ctaHighlight ? "ring-2 ring-offset-2 ring-teal-300/80" : ""
+              }`}
+            >
+              <span className="relative z-10 flex items-center gap-2 will-change-transform">
+                {isEnglish ? "Open App" : "Buka Aplikasi"}
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
+          </div>
+          <div className="flex flex-row items-center gap-3 text-xs text-slate-600/80">
+            <div className="flex items-center gap-1.5">
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+              <span>{t("home.rating.scoreText")}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <span>{t("home.rating.pill1")}</span>
+              <span className="text-slate-400">•</span>
+              <span>{t("home.rating.pill2")}</span>
+              <span className="text-slate-400">•</span>
+              <span>{t("home.rating.pill3")}</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 mt-6">
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-white shadow-md border border-slate-100">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                <MapPin className="h-6 w-6" strokeWidth={2.5} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-slate-900 text-base leading-tight">
+                  {t("home.hero.feature1.title")}
+                </h3>
+                <p className="text-sm text-slate-500 font-medium leading-tight">
+                  {t("home.hero.feature1.desc")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-white shadow-md border border-slate-100">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-50 text-green-600">
+                <Leaf className="h-6 w-6" strokeWidth={2.5} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-slate-900 text-base leading-tight">
+                  {t("home.hero.feature2.title")}
+                </h3>
+                <p className="text-sm text-slate-500 font-medium leading-tight">
+                  {t("home.hero.feature2.desc")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-white shadow-md border border-slate-100">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
+                <Handshake className="h-6 w-6" strokeWidth={2.5} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-slate-900 text-base leading-tight">
+                  {t("home.hero.feature3.title")}
+                </h3>
+                <p className="text-sm text-slate-500 font-medium leading-tight">
+                  {t("home.hero.feature3.desc")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
         {/* SEO Text Section - Cleaning Services in Lombok */}
         <section className="w-full bg-gradient-to-r from-white via-tropical-50/70 to-white border-y border-tropical-100/80 py-12 px-4 sm:px-6 lg:px-8 mb-12">
           <div className="max-w-5xl mx-auto text-center">
