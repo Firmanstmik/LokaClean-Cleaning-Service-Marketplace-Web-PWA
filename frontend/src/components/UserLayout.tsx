@@ -1008,7 +1008,7 @@ export function UserLayout() {
             >
               <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-tropical-400/30 via-ocean-400/25 to-sun-400/30 blur-lg" />
               <motion.div
-                  className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-center border border-white"
+                  className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl flex items-center justify-center"
                 >
                   <motion.img
                     src="/img/Logo_LokaClean_fixed.jpg"
@@ -1019,7 +1019,7 @@ export function UserLayout() {
             </motion.div>
             
             {/* Premium Brand Typography */}
-            <div className="min-w-0 flex flex-col">
+            <div className="hidden sm:flex min-w-0 flex-col">
               <motion.div
                 className="relative"
                 initial={{ opacity: 0, y: -10 }}
