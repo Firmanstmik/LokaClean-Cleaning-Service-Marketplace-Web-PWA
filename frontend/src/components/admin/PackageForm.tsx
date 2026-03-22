@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   FileText,
   DollarSign,
@@ -37,6 +37,9 @@ export function PackageForm({
   const [description, setDescription] = useState(initialValues?.description || "");
   const [descriptionEn, setDescriptionEn] = useState(initialValues?.description_en || "");
   const [price, setPrice] = useState<number>(initialValues?.price || 0);
+  const [estimatedDuration, setEstimatedDuration] = useState<number>(
+    initialValues?.estimated_duration ?? 60,
+  );
   const [image, setImage] = useState<File | null>(null);
 
   const initialPreview = (() => {
@@ -81,6 +84,7 @@ export function PackageForm({
     formData.append("description", description);
     if (descriptionEn) formData.append("description_en", descriptionEn);
     formData.append("price", String(price));
+    formData.append("estimated_duration", String(estimatedDuration));
     if (image) {
       formData.append("image", image);
     }
@@ -138,6 +142,22 @@ export function PackageForm({
           value={price}
           onChange={(e) => setPrice(Number(e.target.value))}
           placeholder="500000"
+        />
+      </label>
+
+      <label className="block">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
+          <FileText className="h-3.5 w-3.5 text-slate-500" />
+          Estimasi Durasi (menit)
+        </div>
+        <input
+          className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
+          type="number"
+          min={0}
+          step={1}
+          value={estimatedDuration}
+          onChange={(e) => setEstimatedDuration(Number(e.target.value))}
+          placeholder="60"
         />
       </label>
 
