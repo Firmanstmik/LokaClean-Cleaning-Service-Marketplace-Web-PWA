@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Star, Tag, CheckCircle2, ShieldCheck, Zap, Droplets, Bed, ArrowRight, Wallet, Home, Square, Box, Wand2 } from "lucide-react";
+import { X, Star, Tag, CheckCircle2, ShieldCheck, Zap, Droplets, Bed, ArrowRight, Wallet, Home, Square, Box, Wand2, Sparkles } from "lucide-react";
 import { PaketCleaning } from "../types/api";
 import { getPackageImage, getPackageImageAlt } from "../utils/packageImage";
 import { Link, useNavigate } from "react-router-dom";
