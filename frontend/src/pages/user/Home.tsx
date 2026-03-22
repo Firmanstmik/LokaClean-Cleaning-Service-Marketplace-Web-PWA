@@ -205,12 +205,12 @@ export function UserHomePage() {
   };
 
   // Helper for Badges
-  const getBadgeConfig = (pkg: PaketCleaning) => {
+  const getBadgeConfig = (pkg: PaketCleaning, displayPrice: number) => {
     if ((pkg.totalReviews || 0) > 20 && (pkg.averageRating || 0) >= 4.5) return { label: t("packages.badges.bestSeller"), icon: <Flame className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-orange-500 to-red-600", textColor: "text-white" };
     const lowerName = pkg.name.toLowerCase();
     if (lowerName.includes("deep") || lowerName.includes("total") || lowerName.includes("komplit")) return { label: t("packages.badges.deepClean"), icon: <Sparkles className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-violet-600 to-indigo-600", textColor: "text-white" };
-    if (pkg.price < 150000) return { label: t("packages.badges.save"), icon: <Tag className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-emerald-500 to-teal-600", textColor: "text-white" };
-    if (pkg.price > 400000) return { label: t("packages.badges.premium"), icon: <Crown className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-slate-900 to-black", textColor: "text-white" };
+    if (displayPrice > 0 && displayPrice < 150000) return { label: t("packages.badges.save"), icon: <Tag className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-emerald-500 to-teal-600", textColor: "text-white" };
+    if (displayPrice > 400000) return { label: t("packages.badges.premium"), icon: <Crown className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-slate-900 to-black", textColor: "text-white" };
     if ((pkg.averageRating || 0) >= 4.7) return { label: t("packages.badges.recommended"), icon: <Trophy className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-blue-500 to-cyan-600", textColor: "text-white" };
     return { label: t("packages.badges.new"), icon: <Sparkles className="w-3 h-3 fill-current" />, className: "bg-gradient-to-r from-pink-500 to-rose-600", textColor: "text-white" };
   };
@@ -366,65 +366,96 @@ export function UserHomePage() {
             >
               {items.map((pkg, i) => {
                 const displayName = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
-                const badge = getBadgeConfig(pkg);
+                const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
+                const hasDiscount =
+                  pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
+                const discountEdition = pkg.discount_edition?.trim();
+                const badge = getBadgeConfig(pkg, displayPrice);
                 
                 return (
-                  <div 
-                    key={pkg.id} 
-                    className="snap-center shrink-0 w-[85vw] max-w-[340px]"
-                    onClick={() => navigate(`/orders/new?paket_id=${pkg.id}`)}
-                  >
-                    <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 ring-1 ring-slate-900/5 h-full flex flex-col relative group transition-all duration-300 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)]">
-                      <div className="relative h-56 w-full bg-slate-100 transform-gpu">
-                        <OptimizedImage 
-                          src={getPackageImage(pkg.name, pkg.image)} 
-                          alt={displayName}
-                          className="w-full h-full object-cover will-change-transform transition-transform duration-700 group-hover:scale-110"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
-                        
-                        <div className="absolute top-4 left-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${badge.className} ${badge.textColor} shadow-lg`}>
-                            {badge.label}
-                          </span>
-                        </div>
-                        
-                        <div className="absolute bottom-4 left-4 right-4">
-                           <h4 className="text-xl font-bold text-white leading-tight mb-1">{displayName}</h4>
-                           <div className="flex items-center gap-1 text-white/90 text-xs">
-                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                             <span className="font-bold">{pkg.averageRating ? Number(pkg.averageRating).toFixed(1) : "5.0"}</span>
-                             <span className="opacity-70">({pkg.totalReviews || 0} reviews)</span>
-                           </div>
-                        </div>
-                      </div>
-                      
-                      {/* Content Area */}
-                      <div className="p-5 flex flex-col flex-1">
-                        <div className="flex flex-wrap gap-2 mb-4">
-                           {extractFeatures(pkg.description).slice(0, 3).map((feat, idx) => (
-                             <span key={idx} className={`text-xs px-2 py-1 rounded-md font-medium bg-slate-50 text-slate-600 border border-slate-100`}>
-                               {feat.text}
-                             </span>
-                           ))}
-                        </div>
-                        
-                        <div className="mt-auto flex items-end justify-between">
-                          <div>
-                            <p className="text-sm text-slate-400 font-medium">{t("packages.startingFrom")}</p>
-                            <p className="text-2xl font-black text-slate-900">
-                              <span className="text-sm font-bold align-top mr-0.5">Rp</span>
-                              {pkg.price.toLocaleString("id-ID")}
-                            </p>
+                    <div 
+                      key={pkg.id} 
+                      className="snap-center shrink-0 w-[85vw] max-w-[340px]"
+                      onClick={() => navigate(`/orders/new?paket_id=${pkg.id}`)}
+                    >
+                      <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 ring-1 ring-slate-900/5 h-full flex flex-col relative group transition-all duration-300 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)]">
+                        <div className="relative aspect-[4/3] w-full bg-slate-100 transform-gpu">
+                          <OptimizedImage 
+                            src={getPackageImage(pkg.name, pkg.image)} 
+                            alt={displayName}
+                            className="w-full h-full object-cover will-change-transform transition-transform duration-700 group-hover:scale-110"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity" />
+                          
+                          {/* Top Right: Discount Badge */}
+                          {hasDiscount && (
+                            <div className="absolute top-2 right-2 z-20">
+                              <div className="bg-rose-100/90 backdrop-blur-sm border border-rose-200 px-2 py-0.5 rounded-lg shadow-sm">
+                                <span className="text-[11px] font-black text-rose-600">
+                                  -{pkg.discount_percentage}%
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Bottom Right: Promo Edition Badge */}
+                        {discountEdition && (
+                          <div className="absolute bottom-2 right-2 z-20">
+                            <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-500 via-rose-500 to-rose-600 px-2 py-1 text-[9px] font-black tracking-tight text-white uppercase shadow-lg shadow-rose-500/30 border border-white/40 backdrop-blur-sm animate-pulse-subtle">
+                              <Tag className="w-2.5 h-2.5 text-white fill-white/10" />
+                              <span>PROMO {discountEdition}</span>
+                            </div>
                           </div>
-                          <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-lg group-active:scale-95 transition-transform">
-                            <Plus className="w-5 h-5" />
+                        )}
+                        </div>
+                        
+                        {/* Content Area */}
+                        <div className="p-4 flex flex-col flex-1">
+                          <div className="mb-1.5">
+                             <h4 className="text-base font-black text-slate-900 leading-tight mb-1">{displayName}</h4>
+                             <div className="flex items-center gap-1 text-slate-500 text-[10px] font-medium">
+                               <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                               <span className="font-bold text-slate-700">{pkg.averageRating ? Number(pkg.averageRating).toFixed(1) : "5.0"}</span>
+                               <span className="opacity-70">({pkg.totalReviews || 0} reviews)</span>
+                             </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1.5 mb-3 mt-1.5">
+                             {extractFeatures(pkg.description).slice(0, 3).map((feat, idx) => (
+                               <span key={idx} className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-slate-50 text-slate-500 border border-slate-100 uppercase tracking-wider`}>
+                                 {feat.text}
+                               </span>
+                             ))}
+                          </div>
+                          
+                          <div className="mt-auto pt-3 border-t border-slate-50 flex items-end justify-between">
+                            <div>
+                              {displayPrice > 0 ? (
+                                <div className="flex flex-col leading-tight">
+                                  {hasDiscount && (
+                                    <span className="text-[10px] font-bold text-slate-400 line-through">
+                                      Rp {pkg.base_price.toLocaleString("id-ID")}
+                                    </span>
+                                  )}
+                                  <p className="text-xl font-black text-teal-700 tracking-tight">
+                                    <span className="text-xs font-bold align-top mr-0.5">Rp</span>
+                                    {displayPrice.toLocaleString("id-ID")}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="text-[10px] font-bold text-slate-700">
+                                  {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
+                                </p>
+                              )}
+                            </div>
+                            <div className="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-lg shadow-teal-600/20 group-active:scale-95 transition-transform">
+                              <Plus className="w-5 h-5" />
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
                 );
               })}
             </div>
@@ -459,7 +490,11 @@ export function UserHomePage() {
                   const isCenter = dist === 0;
                   const absDist = Math.abs(dist);
                   const displayName = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
-                  const badge = getBadgeConfig(pkg);
+                  const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
+                  const hasDiscount =
+                    pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
+                  const discountEdition = pkg.discount_edition?.trim();
+                  const badge = getBadgeConfig(pkg, displayPrice);
                   
                   return (
                     <motion.div
@@ -485,42 +520,72 @@ export function UserHomePage() {
                       <div className="bg-white rounded-[40px] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 h-[500px] flex flex-col transform transition-transform hover:-translate-y-2 duration-300">
                         <div className="relative h-64 bg-slate-100 overflow-hidden">
                            <OptimizedImage src={getPackageImage(pkg.name, pkg.image)} alt={displayName} className="w-full h-full object-cover" />
-                           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent" />
-                           <div className="absolute top-6 left-6">
-                             <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase ${badge.className} ${badge.textColor} shadow-lg`}>
-                               {badge.label}
-                             </span>
-                           </div>
-                           <div className="absolute bottom-6 left-6 right-6">
-                             <h3 className="text-2xl font-black text-white leading-none mb-2">{displayName}</h3>
+                           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-40" />
+                           
+                           {/* Top Right: Discount Badge */}
+                           {hasDiscount && (
+                             <div className="absolute top-4 right-4 z-20">
+                               <div className="bg-rose-100/95 backdrop-blur-sm border border-rose-200 px-2.5 py-1 rounded-xl shadow-md">
+                                 <span className="text-xs font-black text-rose-600">
+                                   -{pkg.discount_percentage}%
+                                 </span>
+                               </div>
+                             </div>
+                           )}
+
+                           {/* Bottom Right: Promo Edition Badge */}
+                           {discountEdition && (
+                             <div className="absolute bottom-3 right-4 z-20">
+                               <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 via-rose-500 to-rose-600 px-3 py-1.5 text-[10px] font-black tracking-tight text-white uppercase shadow-lg shadow-rose-500/30 border border-white/40 backdrop-blur-sm animate-pulse-subtle">
+                                 <Tag className="w-3 h-3 text-white fill-white/10" />
+                                 <span>PROMO {discountEdition}</span>
+                               </div>
+                             </div>
+                           )}
+                        </div>
+                        <div className="p-6 flex flex-col flex-1 bg-white">
+                           <div className="mb-4">
+                             <h3 className="text-2xl font-black text-slate-900 leading-tight mb-1">{displayName}</h3>
                              <div className="flex items-center gap-2">
-                               <div className="flex bg-white/20 backdrop-blur-md rounded-full px-2 py-0.5">
-                                 <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                 <span className="text-white text-xs font-bold ml-1">{pkg.averageRating ? Number(pkg.averageRating).toFixed(1) : "5.0"}</span>
+                               <div className="flex items-center">
+                                 <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                                 <span className="text-slate-700 text-sm font-black ml-1">{pkg.averageRating ? Number(pkg.averageRating).toFixed(1) : "5.0"}</span>
+                                 <span className="text-slate-400 text-xs ml-1 font-medium">({pkg.totalReviews || 0} reviews)</span>
                                </div>
                              </div>
                            </div>
-                        </div>
-                        <div className="p-6 flex flex-col flex-1 bg-white">
-                           <div className="space-y-3 mb-6">
+
+                           <div className="flex flex-wrap gap-2 mb-6">
                              {extractFeatures(pkg.description).slice(0, 3).map((feat, i) => (
-                               <div key={i} className="flex items-center gap-3 text-slate-600">
-                                 <div className={`w-8 h-8 rounded-full ${feat.bgColor} flex items-center justify-center shrink-0`}>
-                                   <feat.icon className={`w-4 h-4 ${feat.color}`} />
-                                 </div>
-                                 <span className="text-sm font-medium">{feat.text}</span>
+                               <div key={i} className="flex items-center gap-2 px-2 py-1 bg-slate-50 border border-slate-100 rounded-lg">
+                                 <feat.icon className={`w-3.5 h-3.5 ${feat.color}`} />
+                                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{feat.text}</span>
                                </div>
                              ))}
                            </div>
-                           <div className="mt-auto flex items-end justify-between border-t border-slate-100 pt-4">
+
+                           <div className="mt-auto flex items-end justify-between border-t border-slate-50 pt-5">
                              <div>
-                               <p className="text-xs text-slate-400 uppercase font-bold tracking-wider">Harga Mulai</p>
-                               <p className="text-3xl font-black text-slate-900 tracking-tight">
-                                Rp {pkg.price.toLocaleString("id-ID")}
-                              </p>
+                               {displayPrice > 0 ? (
+                                 <div className="flex flex-col">
+                                   {hasDiscount && (
+                                     <span className="text-sm font-bold text-slate-400 line-through">
+                                       Rp {pkg.base_price.toLocaleString("id-ID")}
+                                     </span>
+                                   )}
+                                   <p className="text-3xl font-black text-teal-700 tracking-tight">
+                                     <span className="text-base font-bold align-top mr-0.5">Rp</span>
+                                     {displayPrice.toLocaleString("id-ID")}
+                                   </p>
+                                 </div>
+                               ) : (
+                                 <p className="text-sm font-bold text-slate-700">
+                                   {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
+                                 </p>
+                               )}
                              </div>
-                             <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg hover:bg-slate-800 transition-colors">
-                               <ArrowRight className="w-6 h-6" />
+                             <div className="w-14 h-14 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-xl shadow-teal-600/20 hover:bg-teal-500 hover:scale-105 transition-all cursor-pointer">
+                               <Plus className="w-8 h-8" />
                              </div>
                            </div>
                         </div>

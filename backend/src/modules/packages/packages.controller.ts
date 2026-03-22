@@ -4,6 +4,7 @@
 
 import type { Request, Response } from "express";
 import translate from "google-translate-api-x";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "../../db/prisma";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -18,7 +19,10 @@ const packageSelect = {
   name_en: true,
   description: true,
   description_en: true,
-  price: true,
+  base_price: true,
+  discount_percentage: true,
+  final_price: true,
+  pricing_note: true,
   estimated_duration: true,
   image: true,
   category: true,
@@ -27,14 +31,43 @@ const packageSelect = {
   updated_at: true
 };
 
+async function getDiscountEditionMap(ids: number[]) {
+  if (!ids.length) return new Map<number, string | null>();
+  try {
+    const rows = await prisma.$queryRaw<Array<{ id: number; discount_edition: string | null }>>(
+      Prisma.sql`SELECT id, discount_edition FROM "PaketCleaning" WHERE id IN (${Prisma.join(ids)})`
+    );
+    return new Map(rows.map((r) => [r.id, r.discount_edition]));
+  } catch (error) {
+    console.error(`[getDiscountEditionMap] Failed for ids ${ids}:`, error);
+    return new Map<number, string | null>();
+  }
+}
+
+async function setDiscountEdition(id: number, value: string | null) {
+  try {
+    const result = await prisma.$executeRaw(
+      Prisma.sql`UPDATE "PaketCleaning" SET discount_edition = ${value} WHERE id = ${id}`
+    );
+    console.log(`[setDiscountEdition] Updated id ${id} to ${value}, result: ${result}`);
+  } catch (error) {
+    console.error(`[setDiscountEdition] Failed for id ${id}:`, error);
+    return;
+  }
+}
+
 export const listPackagesHandler = asyncHandler(async (_req: Request, res: Response) => {
-  const items = await prisma.paketCleaning.findMany({
+  const items: any[] = await (prisma as any).paketCleaning.findMany({
     orderBy: { created_at: "desc" },
     select: packageSelect
   });
 
   // Get ratings for each package
   const packageIds = items.map(p => p.id);
+  const discountEditionMap = await getDiscountEditionMap(packageIds);
+  for (const pkg of items) {
+    pkg.discount_edition = discountEditionMap.get(pkg.id) ?? null;
+  }
   const ratings = await prisma.rating.findMany({
     where: {
       pesanan: {
@@ -77,32 +110,47 @@ export const listPackagesHandler = asyncHandler(async (_req: Request, res: Respo
   return ok(res, { items: ratingsByPackage });
 });
 
+function computeFinalPrice(basePrice: number, discountPercentage: number) {
+  const base = Number.isFinite(basePrice) ? basePrice : 0;
+  const discount = Number.isFinite(discountPercentage) ? discountPercentage : 0;
+  const final = Math.round(base - (base * discount) / 100);
+  return Math.max(0, final);
+}
+
 export const createPackageHandler = asyncHandler(async (req: Request, res: Response) => {
-  console.log("Create Package Body:", req.body);
   const data = createPackageSchema.parse(req.body);
-  
-  // Auto-translate if English fields are missing or empty
-  if ((!data.name_en || data.name_en.trim() === "") && data.name) {
-    console.log("Auto-translating name:", data.name);
-    data.name_en = await autoTranslate(data.name);
-    console.log("Translated name:", data.name_en);
-  }
-  if ((!data.description_en || data.description_en.trim() === "") && data.description) {
-    console.log("Auto-translating description:", data.description);
-    data.description_en = await autoTranslate(data.description);
-    console.log("Translated description:", data.description_en);
-  }
 
   // Handle image upload if provided
   const imagePath = req.file ? fileToPublicPath(req.file) : null;
-  
-  const item = await prisma.paketCleaning.create({ 
+  const basePrice = typeof data.base_price === "number" ? data.base_price : 0;
+  const discountPercentage =
+    typeof data.discount_percentage === "number" ? data.discount_percentage : 0;
+  const pricingNote = typeof data.pricing_note === "string" ? data.pricing_note.trim() : "";
+  const discountEdition =
+    typeof data.discount_edition === "string" ? data.discount_edition.trim() : "";
+  const estimatedDuration = typeof data.estimated_duration === "number" ? data.estimated_duration : 60;
+
+  const resolvedDiscount = basePrice > 0 ? discountPercentage : 0;
+  const finalPrice = basePrice > 0 ? computeFinalPrice(basePrice, resolvedDiscount) : 0;
+
+  const item = await (prisma as any).paketCleaning.create({ 
     data: {
-      ...data,
+      name: data.name,
+      name_en: data.name_en,
+      description: data.description,
+      description_en: data.description_en,
+      base_price: basePrice,
+      discount_percentage: resolvedDiscount,
+      final_price: finalPrice,
+      pricing_note: pricingNote.length ? pricingNote : null,
+      estimated_duration: estimatedDuration,
       image: imagePath
     }, 
     select: packageSelect 
   });
+  const resolvedEdition = discountEdition.length ? discountEdition : null;
+  await setDiscountEdition(item.id, resolvedEdition);
+  item.discount_edition = resolvedEdition;
   return created(res, { item });
 });
 
@@ -110,32 +158,71 @@ export const updatePackageHandler = asyncHandler(async (req: Request, res: Respo
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) throw new HttpError(400, "Invalid id");
 
-  console.log("Update Package Body:", req.body);
   const data = updatePackageSchema.parse(req.body);
-  
-  // Auto-translate if name/desc updated but en fields missing or empty
-  if (data.name && (!data.name_en || data.name_en.trim() === "")) {
-    console.log("Auto-translating name (update):", data.name);
-    data.name_en = await autoTranslate(data.name);
-  }
-  if (data.description && (!data.description_en || data.description_en.trim() === "")) {
-    console.log("Auto-translating description (update):", data.description);
-    data.description_en = await autoTranslate(data.description);
-  }
+  const existing = await (prisma as any).paketCleaning.findUnique({
+    where: { id },
+    select: {
+      base_price: true,
+      discount_percentage: true,
+      pricing_note: true,
+      estimated_duration: true
+    }
+  });
+  if (!existing) throw new HttpError(404, "Package not found");
+  const existingDiscountEdition = (await getDiscountEditionMap([id])).get(id) ?? null;
 
   // Handle image upload if provided
   const imagePath = req.file ? fileToPublicPath(req.file) : undefined;
-  
-  const updateData: any = { ...data };
+
+  const nextBasePrice =
+    typeof data.base_price === "number" ? data.base_price : existing.base_price;
+  const nextPricingNote =
+    typeof data.pricing_note === "string"
+      ? data.pricing_note.trim()
+      : (existing.pricing_note ?? "");
+  const nextDiscountEdition =
+    data.discount_edition !== undefined
+      ? (typeof data.discount_edition === "string" ? data.discount_edition.trim() : "")
+      : (existingDiscountEdition ?? "");
+  const nextDiscountPercentage =
+    nextBasePrice > 0
+      ? (typeof data.discount_percentage === "number"
+          ? data.discount_percentage
+          : existing.discount_percentage)
+      : 0;
+  const nextFinalPrice =
+    nextBasePrice > 0 ? computeFinalPrice(nextBasePrice, nextDiscountPercentage) : 0;
+  const nextEstimatedDuration =
+    typeof data.estimated_duration === "number" ? data.estimated_duration : existing.estimated_duration;
+
+  if (nextBasePrice <= 0 && nextPricingNote.length === 0) {
+    throw new HttpError(400, "base_price is required when pricing_note is empty");
+  }
+
+  const updateData: any = {
+    ...data,
+    base_price: nextBasePrice,
+    discount_percentage: nextDiscountPercentage,
+    final_price: nextFinalPrice,
+    pricing_note: nextPricingNote.length ? nextPricingNote : null,
+    estimated_duration: nextEstimatedDuration
+  };
+  delete updateData.discount_edition;
   if (imagePath !== undefined) {
     updateData.image = imagePath;
   }
   
-  const item = await prisma.paketCleaning.update({ 
+  const item = await (prisma as any).paketCleaning.update({ 
     where: { id }, 
     data: updateData, 
     select: packageSelect 
   });
+  const resolvedEdition = nextDiscountEdition.length ? nextDiscountEdition : null;
+  await setDiscountEdition(id, resolvedEdition);
+  
+  // Re-fetch the item to make sure we have the latest from DB if possible
+  // or at least manually attach the new edition
+  item.discount_edition = resolvedEdition;
   return ok(res, { item });
 });
 
@@ -144,7 +231,7 @@ export const deletePackageHandler = asyncHandler(async (req: Request, res: Respo
   if (!Number.isFinite(id)) throw new HttpError(400, "Invalid id");
 
   // Check if package exists
-  const packageExists = await prisma.paketCleaning.findUnique({ where: { id } });
+  const packageExists = await (prisma as any).paketCleaning.findUnique({ where: { id } });
   if (!packageExists) {
     throw new HttpError(404, "Package not found");
   }
@@ -158,7 +245,7 @@ export const deletePackageHandler = asyncHandler(async (req: Request, res: Respo
     throw new HttpError(400, `Cannot delete package. It is used in ${ordersCount} order(s). Please delete or update those orders first.`);
   }
 
-  await prisma.paketCleaning.delete({ where: { id } });
+  await (prisma as any).paketCleaning.delete({ where: { id } });
   return ok(res, { deleted: true, message: "Package deleted successfully" });
 });
 

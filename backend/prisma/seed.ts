@@ -56,7 +56,6 @@ async function main() {
       data: {
         full_name: adminFullName,
         email: adminEmail,
-        // @ts-ignore
         phone_number: adminPhone, // Add phone
         password: passwordHash,
         role: Role.ADMIN
@@ -80,30 +79,38 @@ async function main() {
 
   const packageCount = await prisma.paketCleaning.count();
   if (packageCount === 0) {
-    await prisma.paketCleaning.createMany({
+    await (prisma as any).paketCleaning.createMany({
       data: [
         {
           name: "Pembersihan Rumah Baru",
           description: "Pembersihan rumah baru jadi untuk siap ditempati. Termasuk pembersihan menyeluruh seluruh area rumah, dapur, kamar mandi, dan ruangan lainnya.",
-          price: 1500000,
+          base_price: 1500000,
+          discount_percentage: 0,
+          final_price: 1500000,
           estimated_duration: 240
         },
         {
           name: "Pembersihan 1 Kamar",
           description: "Pembersihan dan perapian untuk 1 kamar. Termasuk pembersihan lantai, kamar mandi, area tidur, dan penataan barang.",
-          price: 300000,
+          base_price: 300000,
+          discount_percentage: 0,
+          final_price: 300000,
           estimated_duration: 90
         },
         {
           name: "Pembersihan 2 Kamar",
           description: "Pembersihan dan perapian untuk 2 kamar. Termasuk pembersihan lantai, kamar mandi, area tidur, dan penataan barang untuk kedua kamar.",
-          price: 400000,
+          base_price: 400000,
+          discount_percentage: 0,
+          final_price: 400000,
           estimated_duration: 150
         },
         {
           name: "Pembersihan 3 Kamar",
           description: "Pembersihan dan perapian untuk 3 kamar. Termasuk pembersihan lantai, kamar mandi, area tidur, dan penataan barang untuk ketiga kamar.",
-          price: 500000,
+          base_price: 500000,
+          discount_percentage: 0,
+          final_price: 500000,
           estimated_duration: 210
         }
       ]

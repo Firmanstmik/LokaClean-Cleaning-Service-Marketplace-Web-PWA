@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
-  Search, Sparkles, ArrowRight, Star, Plus
+  Search, Tag, ArrowRight, Star, Plus, Sparkles
 } from "lucide-react";
 import { api } from "../../lib/api";
 import { getApiErrorMessage } from "../../lib/apiError";
@@ -153,11 +153,15 @@ export function AllPackagesPage() {
 
         {/* 3. PACKAGE GRID - Home Page Design */}
         {!loading && !error && (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {items.map((pkg, index) => {
               const name = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
               const image = getPackageImage(pkg.name, pkg.image);
               const alt = getPackageImageAlt(name);
+              const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
+              const hasDiscount =
+                pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
+              const discountEdition = pkg.discount_edition?.trim();
 
               return (
                 <motion.div
@@ -169,41 +173,76 @@ export function AllPackagesPage() {
                   className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-md border border-slate-300 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] hover:border-teal-500/50 transition-all duration-300"
                 >
                   <div 
-                    className="relative aspect-[4/3] sm:aspect-video overflow-hidden cursor-pointer bg-slate-100"
+                    className="relative aspect-[4/3] overflow-hidden cursor-pointer bg-slate-100"
                     onClick={() => navigate(`/orders/new?paket_id=${pkg.id}`)}
                   >
                     <OptimizedImage 
                       src={image} 
                       alt={alt}
                       priority={index < 2} 
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity" />
                     
-                    {/* Floating Price Badge */}
-                    <div className="absolute bottom-2 left-2 right-auto sm:bottom-3 sm:left-3 bg-white sm:bg-white/90 sm:backdrop-blur-sm px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg shadow-sm border border-white/50">
-                       <p className="text-xs sm:text-sm font-bold text-teal-700">
-                         Rp {pkg.price.toLocaleString("id-ID")}
-                      </p>
-                    </div>
+                    {/* Top Right: Discount Badge */}
+                    {hasDiscount && (
+                      <div className="absolute top-2 right-2 z-20">
+                        <div className="bg-rose-100/90 backdrop-blur-sm border border-rose-200 px-2 py-0.5 rounded-lg shadow-sm">
+                          <span className="text-[11px] font-black text-rose-600">
+                            -{pkg.discount_percentage}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Bottom Right: Promo Edition Badge */}
+                    {discountEdition && (
+                      <div className="absolute bottom-2 right-2 z-20">
+                        <div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-500 via-rose-500 to-rose-600 px-2 py-1 text-[9px] font-black tracking-tight text-white uppercase shadow-lg shadow-rose-500/30 border border-white/40 backdrop-blur-sm animate-pulse-subtle">
+                          <Tag className="w-2.5 h-2.5 text-white fill-white/10" />
+                          <span>PROMO {discountEdition}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex flex-1 flex-col p-3 sm:p-5">
-                    <div className="mb-2 sm:mb-3">
-                      <h3 className="text-sm sm:text-lg font-bold text-slate-800 leading-tight mb-1 line-clamp-1 group-hover:text-teal-600 transition-colors">{name}</h3>
-                      <div className="h-0.5 w-8 sm:w-12 bg-teal-500/30 rounded-full" />
+                  <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+                    <div className="mb-2">
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 leading-tight mb-1 line-clamp-1 group-hover:text-teal-600 transition-colors tracking-tight">{name}</h3>
+                      <div className="h-0.5 w-8 bg-teal-500 rounded-full" />
                     </div>
                     
-                    <p className="mb-4 text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed">
+                    <p className="mb-2 text-[11px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed font-medium">
                       {pkg.description}
                     </p>
+
+                    {/* Price Section below description */}
+                    <div className="mb-3">
+                      {displayPrice > 0 ? (
+                        <div className="flex flex-col leading-tight">
+                          {hasDiscount && (
+                            <span className="text-[10px] font-bold text-slate-400 line-through">
+                              Rp {pkg.base_price.toLocaleString("id-ID")}
+                            </span>
+                          )}
+                          <span className="text-base font-black text-teal-700 tracking-tight">
+                            Rp {displayPrice.toLocaleString("id-ID")}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] font-black text-slate-700">
+                          {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
+                        </p>
+                      )}
+                    </div>
                     
                     <div className="mt-auto flex items-center gap-2">
                       <button
                         onClick={() => setSelectedPackage(pkg)}
-                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-slate-50 border border-slate-200 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 transition-all duration-300 group/btn"
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-slate-50 border border-slate-200 py-2 text-[11px] font-black text-slate-600 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200 transition-all duration-300 group/btn"
                       >
                         <span>{t("orders.viewDetails")}</span>
+                        <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
                       </button>
 
                       <button
@@ -211,7 +250,7 @@ export function AllPackagesPage() {
                           e.stopPropagation();
                           navigate(`/orders/new?paket_id=${pkg.id}`);
                         }}
-                        className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-teal-600 text-white shadow-lg shadow-teal-600/20 hover:bg-teal-500 hover:scale-105 active:scale-95 transition-all duration-300"
+                        className="flex items-center justify-center w-9 h-9 rounded-xl bg-teal-600 text-white shadow-lg shadow-teal-600/30 hover:bg-teal-500 hover:scale-105 active:scale-95 transition-all duration-300"
                         title={isEnglish ? "Book Now" : "Pesan Sekarang"}
                       >
                         <Plus className="w-5 h-5" />

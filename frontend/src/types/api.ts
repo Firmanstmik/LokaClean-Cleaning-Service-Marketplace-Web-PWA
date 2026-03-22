@@ -37,7 +37,11 @@ export type PaketCleaning = {
   name_en?: string | null;
   description: string;
   description_en?: string | null;
-  price: number;
+  base_price: number;
+  discount_percentage: number;
+  discount_edition?: string | null;
+  final_price: number;
+  pricing_note?: string | null;
   estimated_duration: number;
   image?: string | null; // Optional image path for package
   category: "SERVICE" | "PRODUCT";

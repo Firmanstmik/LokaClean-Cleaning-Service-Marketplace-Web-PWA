@@ -428,16 +428,23 @@ export function NewOrderPage() {
                     const isSelected = paketId === pkg.id;
                     const name = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
                     const desc = isEnglish && pkg.description_en ? pkg.description_en : pkg.description;
+                    const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
+                    const hasDiscount =
+                      pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
+                    const discountEdition = pkg.discount_edition?.trim();
+                    const canOrder = displayPrice > 0;
 
                     return (
                       <div
                         key={pkg.id}
                         onClick={() => {
+                          if (!canOrder) return;
                           setPaketId(pkg.id);
                           scrollToBottomAction();
                         }}
                         className={`
                           relative flex items-center gap-4 p-3 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden
+                          ${canOrder ? "" : "opacity-70 cursor-not-allowed"}
                           ${isSelected 
                             ? "border-teal-500 bg-teal-50 shadow-md shadow-teal-500/10" 
                             : "border-transparent bg-white shadow-sm hover:border-teal-100"
@@ -458,10 +465,35 @@ export function NewOrderPage() {
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-bold text-slate-800 mb-1">{name}</h3>
                           <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-2">{desc}</p>
+                          {discountEdition ? (
+                            <div className="mb-1 inline-flex items-center rounded-full bg-gradient-to-r from-orange-500 to-rose-600 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-white">
+                              Edisi {discountEdition}
+                            </div>
+                          ) : null}
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-teal-600">
-                              Rp {pkg.price.toLocaleString("id-ID")}
-                            </span>
+                            {displayPrice > 0 ? (
+                              hasDiscount ? (
+                                <div className="flex flex-col leading-tight">
+                                  <span className="text-[11px] font-semibold text-slate-400 line-through">
+                                    Rp {pkg.base_price.toLocaleString("id-ID")}
+                                  </span>
+                                  <span className="text-sm font-bold text-teal-600">
+                                    Rp {displayPrice.toLocaleString("id-ID")}
+                                  </span>
+                                  <span className="text-[11px] font-bold text-orange-600">
+                                    Save {pkg.discount_percentage}%
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-sm font-bold text-teal-600">
+                                  Rp {displayPrice.toLocaleString("id-ID")}
+                                </span>
+                              )
+                            ) : (
+                              <span className="text-xs font-bold text-slate-600">
+                                {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
+                              </span>
+                            )}
                             {isSelected && (
                               <div className="w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center text-white">
                                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -901,11 +933,18 @@ export function NewOrderPage() {
                         <span className="text-sm text-slate-300">{t("newOrder.totalPayment")}</span>
                         <div className="text-right">
                           <span className="text-xl font-bold block">
-                            Rp {(selectedPackage.price + selectedExtras.reduce((acc, curr) => acc + curr.price, 0)).toLocaleString("id-ID")}
+                            Rp {(
+                              (selectedPackage.final_price > 0
+                                ? selectedPackage.final_price
+                                : selectedPackage.base_price) +
+                              selectedExtras.reduce((acc, curr) => acc + curr.price, 0)
+                            ).toLocaleString("id-ID")}
                           </span>
                           {selectedExtras.length > 0 && (
                             <span className="text-[10px] text-slate-400 font-normal">
-                              (Paket: {selectedPackage.price.toLocaleString()} + Extra: {selectedExtras.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()})
+                              (Paket: {(selectedPackage.final_price > 0
+                                ? selectedPackage.final_price
+                                : selectedPackage.base_price).toLocaleString()} + Extra: {selectedExtras.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()})
                             </span>
                           )}
                         </div>

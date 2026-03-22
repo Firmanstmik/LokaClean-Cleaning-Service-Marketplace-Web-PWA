@@ -1,15 +1,6 @@
-import { useState } from "react";
-import {
-  FileText,
-  DollarSign,
-  ImageIcon,
-  Upload,
-  X,
-  Save,
-  Plus,
-  Loader2,
-} from "lucide-react";
-import { simpleTranslate } from "../../utils/translateHelper";
+import { useMemo, useState } from "react";
+import { DollarSign, FileText, ImageIcon, Loader2, Plus, Save, Upload, X } from "lucide-react";
+
 import { toAbsoluteUrl } from "../../lib/urls";
 import type { PaketCleaning } from "../../types/api";
 
@@ -23,6 +14,9 @@ interface PackageFormProps {
   isEditing?: boolean;
 }
 
+const formatRupiah = (amount: number) =>
+  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount);
+
 export function PackageForm({
   initialValues,
   onSubmit,
@@ -33,13 +27,17 @@ export function PackageForm({
   isEditing = false,
 }: PackageFormProps) {
   const [name, setName] = useState(initialValues?.name || "");
-  const [nameEn, setNameEn] = useState(initialValues?.name_en || "");
   const [description, setDescription] = useState(initialValues?.description || "");
-  const [descriptionEn, setDescriptionEn] = useState(initialValues?.description_en || "");
-  const [price, setPrice] = useState<number>(initialValues?.price || 0);
-  const [estimatedDuration, setEstimatedDuration] = useState<number>(
-    initialValues?.estimated_duration ?? 60,
-  );
+
+  const initialBasePrice =
+    typeof initialValues?.base_price === "number" && initialValues.base_price > 0
+      ? String(initialValues.base_price)
+      : "";
+  const [basePriceInput, setBasePriceInput] = useState(initialBasePrice);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(initialValues?.discount_percentage ?? 0);
+  const [discountEdition, setDiscountEdition] = useState(initialValues?.discount_edition ?? "");
+  const [pricingNote, setPricingNote] = useState(initialValues?.pricing_note ?? "");
+
   const [image, setImage] = useState<File | null>(null);
 
   const initialPreview = (() => {
@@ -50,153 +48,147 @@ export function PackageForm({
 
   const [imagePreview, setImagePreview] = useState<string | null>(initialPreview);
 
-  const [isTranslatingName, setIsTranslatingName] = useState(false);
-  const [isTranslatingDesc, setIsTranslatingDesc] = useState(false);
+  const basePrice = useMemo(() => {
+    const raw = basePriceInput.trim();
+    if (!raw) return 0;
+    const num = Number(raw);
+    return Number.isFinite(num) && num > 0 ? Math.floor(num) : 0;
+  }, [basePriceInput]);
 
-  const handleAutoTranslate = async (text: string, field: "name" | "description") => {
-    if (!text) return;
-    
-    // Only translate if English field is empty
-    if (field === "name" && nameEn.trim() !== "") return;
-    if (field === "description" && descriptionEn.trim() !== "") return;
+  const resolvedDiscount = useMemo(() => {
+    if (basePrice <= 0) return 0;
+    const num = Number.isFinite(discountPercentage) ? discountPercentage : 0;
+    return Math.max(0, Math.min(100, Math.floor(num)));
+  }, [basePrice, discountPercentage]);
 
-    if (field === "name") setIsTranslatingName(true);
-    else setIsTranslatingDesc(true);
+  const finalPrice = useMemo(() => {
+    if (basePrice <= 0) return 0;
+    return Math.max(0, Math.round(basePrice - (basePrice * resolvedDiscount) / 100));
+  }, [basePrice, resolvedDiscount]);
 
-    try {
-      // Use local helper instead of API
-      const translated = await simpleTranslate(text, "en");
-      
-      if (field === "name") setNameEn(translated);
-      else setDescriptionEn(translated);
-    } catch (e) {
-      console.error("Auto-translate failed", e);
-    } finally {
-      if (field === "name") setIsTranslatingName(false);
-      else setIsTranslatingDesc(false);
-    }
-  };
+  const canSubmit =
+    name.trim().length > 0 &&
+    description.trim().length > 0 &&
+    (basePrice > 0 || pricingNote.trim().length > 0);
 
   const handleSubmit = async () => {
     const formData = new FormData();
     formData.append("name", name);
-    if (nameEn) formData.append("name_en", nameEn);
     formData.append("description", description);
-    if (descriptionEn) formData.append("description_en", descriptionEn);
-    formData.append("price", String(price));
-    formData.append("estimated_duration", String(estimatedDuration));
+
+    if (basePrice > 0) {
+      formData.append("base_price", String(basePrice));
+      formData.append("discount_percentage", String(resolvedDiscount));
+    }
+
+    formData.append("discount_edition", discountEdition.trim());
+    formData.append("pricing_note", pricingNote.trim());
+
     if (image) {
       formData.append("image", image);
     }
+
     await onSubmit(formData);
   };
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <label className="block">
+      <label className="block sm:col-span-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <FileText className="h-3.5 w-3.5 text-slate-500" />
-          Package Name (ID)
+          Package Name
         </div>
         <input
           className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onBlur={() => handleAutoTranslate(name, "name")}
           placeholder="e.g., Pembersihan Mendalam"
         />
       </label>
 
-      <label className="block">
+      <label className="block sm:col-span-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <FileText className="h-3.5 w-3.5 text-slate-500" />
-          Package Name (EN){" "}
-          {isTranslatingName ? (
-            <span className="flex items-center gap-1 ml-auto text-[10px] text-indigo-500 font-medium">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Translating...
-            </span>
-          ) : (
-            <span className="text-[10px] text-slate-400 font-normal ml-auto">
-              Auto-translate if empty
-            </span>
-          )}
+          Description
         </div>
-        <input
-          className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-          value={nameEn}
-          onChange={(e) => setNameEn(e.target.value)}
-          placeholder="e.g., Deep Clean Premium"
+        <textarea
+          className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none resize-none"
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Describe what this package includes..."
         />
       </label>
 
       <label className="block">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
-          Price (Rp)
+          Original Price
         </div>
         <input
           className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none"
           type="number"
           min={0}
-          value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
-          placeholder="500000"
+          value={basePriceInput}
+          onChange={(e) => setBasePriceInput(e.target.value)}
+          placeholder="200000"
         />
       </label>
 
       <label className="block">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <FileText className="h-3.5 w-3.5 text-slate-500" />
-          Estimasi Durasi (menit)
+          Discount (%)
+        </div>
+        <input
+          className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none disabled:opacity-60"
+          type="number"
+          min={0}
+          max={100}
+          step={1}
+          disabled={basePrice <= 0}
+          value={resolvedDiscount}
+          onChange={(e) => setDiscountPercentage(Number(e.target.value))}
+          placeholder="0"
+        />
+      </label>
+
+      <label className="block">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
+          <FileText className="h-3.5 w-3.5 text-slate-500" />
+          Final Price
+        </div>
+        <input
+          className="w-full rounded-lg border-2 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900"
+          readOnly
+          value={basePrice > 0 ? formatRupiah(finalPrice) : ""}
+          placeholder="Auto-calculated"
+        />
+      </label>
+
+      <label className="block">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
+          <FileText className="h-3.5 w-3.5 text-slate-500" />
+          Edisi Discount (Optional)
         </div>
         <input
           className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-          type="number"
-          min={0}
-          step={1}
-          value={estimatedDuration}
-          onChange={(e) => setEstimatedDuration(Number(e.target.value))}
-          placeholder="60"
+          value={discountEdition}
+          onChange={(e) => setDiscountEdition(e.target.value)}
+          placeholder="e.g., Ramadhan, Lebaran, Year End Sale"
         />
       </label>
 
       <label className="block sm:col-span-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
           <FileText className="h-3.5 w-3.5 text-slate-500" />
-          Description (ID)
+          Pricing Note (Optional)
         </div>
-        <textarea
-          className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none resize-none"
-          rows={2}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          onBlur={() => handleAutoTranslate(description, "description")}
-          placeholder="Describe what this package includes..."
-        />
-      </label>
-
-      <label className="block sm:col-span-2">
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
-          <FileText className="h-3.5 w-3.5 text-slate-500" />
-          Description (EN){" "}
-          {isTranslatingDesc ? (
-            <span className="flex items-center gap-1 ml-auto text-[10px] text-indigo-500 font-medium">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Translating...
-            </span>
-          ) : (
-            <span className="text-[10px] text-slate-400 font-normal ml-auto">
-              Auto-translate if empty
-            </span>
-          )}
-        </div>
-        <textarea
-          className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none resize-none"
-          rows={2}
-          value={descriptionEn}
-          onChange={(e) => setDescriptionEn(e.target.value)}
-          placeholder="Description in English..."
+        <input
+          className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
+          value={pricingNote}
+          onChange={(e) => setPricingNote(e.target.value)}
+          placeholder="e.g., Price negotiable based on property size"
         />
       </label>
 
@@ -210,11 +202,7 @@ export function PackageForm({
             <div className="relative">
               <label className="block cursor-pointer">
                 <div className="relative w-full h-40 overflow-hidden rounded-lg border-2 border-slate-200">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/25">
                     <span className="rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-slate-50">
                       klik untuk ubah gambar
@@ -290,7 +278,7 @@ export function PackageForm({
         )}
         <button
           className="relative flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-          disabled={busy}
+          disabled={busy || !canSubmit}
           onClick={handleSubmit}
         >
           <span className="relative z-10 flex items-center justify-center gap-2">

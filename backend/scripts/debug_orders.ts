@@ -36,7 +36,10 @@ async function main() {
       id: true,
       name: true,
       description: true,
-      price: true,
+      base_price: true,
+      discount_percentage: true,
+      final_price: true,
+      pricing_note: true,
       estimated_duration: true,
       created_at: true,
       updated_at: true

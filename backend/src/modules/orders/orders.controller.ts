@@ -56,7 +56,10 @@ const packageSelect = {
   name_en: true,
   description: true,
   description_en: true,
-  price: true,
+  base_price: true,
+  discount_percentage: true,
+  final_price: true,
+  pricing_note: true,
   estimated_duration: true,
   image: true,
   created_at: true,
@@ -173,9 +176,9 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
 
   const [serviceArea, paket] = await Promise.all([
     checkServiceArea(input.location_latitude, input.location_longitude),
-    prisma.paketCleaning.findUnique({
+    (prisma as any).paketCleaning.findUnique({
       where: { id: input.paket_id },
-      select: { id: true, price: true }
+      select: { id: true, base_price: true, final_price: true, pricing_note: true }
     })
   ]);
   if (!serviceArea) {
@@ -216,13 +219,16 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
   const DISTANCE_RATE_PER_KM = 2000; // Rp 2.000 per km
   const distancePrice = Math.ceil(distanceMeters / 1000) * DISTANCE_RATE_PER_KM;
   const surgeMultiplier = 1.0; // Placeholder for future logic
-  const basePrice = paket.price;
+  const packagePrice = paket.final_price > 0 ? paket.final_price : paket.base_price;
+  if (packagePrice <= 0) {
+    throw new HttpError(400, "Paket ini belum memiliki harga tetap. Hubungi admin untuk penawaran.");
+  }
   
   // Calculate Extra Services Price
   const extraServices = input.extras || [];
   const extraPrice = extraServices.reduce((sum, item) => sum + item.price, 0);
 
-  const totalPrice = Math.ceil((basePrice + distancePrice + extraPrice) * surgeMultiplier);
+  const totalPrice = Math.ceil((packagePrice + distancePrice + extraPrice) * surgeMultiplier);
   
   // ETA: Assume 30km/h average speed in city = 500 meters/minute
   const estimatedEta = distanceMeters > 0 ? Math.ceil(distanceMeters / 500) : 30; // Default 30 mins if unknown
@@ -250,7 +256,7 @@ export const createOrderHandler = asyncHandler(async (req: Request, res: Respons
       scheduled_date: input.scheduled_date,
       
       // Pricing fields
-      base_price: basePrice,
+      base_price: packagePrice,
       distance_price: distancePrice,
       extra_price: extraPrice,
       surge_multiplier: surgeMultiplier,
@@ -360,9 +366,9 @@ export const createGuestOrderHandler = asyncHandler(async (req: Request, res: Re
 
   const [serviceArea, paket] = await Promise.all([
     checkServiceArea(input.location_latitude, input.location_longitude),
-    prisma.paketCleaning.findUnique({
+    (prisma as any).paketCleaning.findUnique({
       where: { id: input.paket_id },
-      select: { id: true, price: true }
+      select: { id: true, base_price: true, final_price: true, pricing_note: true }
     })
   ]);
   if (!serviceArea) {
@@ -397,12 +403,15 @@ export const createGuestOrderHandler = asyncHandler(async (req: Request, res: Re
   const DISTANCE_RATE_PER_KM = 2000;
   const distancePrice = Math.ceil(distanceMeters / 1000) * DISTANCE_RATE_PER_KM;
   const surgeMultiplier = 1.0;
-  const basePrice = paket.price;
+  const packagePrice = paket.final_price > 0 ? paket.final_price : paket.base_price;
+  if (packagePrice <= 0) {
+    throw new HttpError(400, "Paket ini belum memiliki harga tetap. Hubungi admin untuk penawaran.");
+  }
 
   const extraServices = input.extras || [];
   const extraPrice = extraServices.reduce((sum, item) => sum + item.price, 0);
 
-  const totalPrice = Math.ceil((basePrice + distancePrice + extraPrice) * surgeMultiplier);
+  const totalPrice = Math.ceil((packagePrice + distancePrice + extraPrice) * surgeMultiplier);
 
   const estimatedEta = distanceMeters > 0 ? Math.ceil(distanceMeters / 500) : 30;
 
@@ -427,7 +436,7 @@ export const createGuestOrderHandler = asyncHandler(async (req: Request, res: Re
       location_longitude: input.location_longitude,
       address: input.address,
       scheduled_date: input.scheduled_date,
-      base_price: basePrice,
+      base_price: packagePrice,
       distance_price: distancePrice,
       extra_price: extraPrice,
       surge_multiplier: surgeMultiplier,

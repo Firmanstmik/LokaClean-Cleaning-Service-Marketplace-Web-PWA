@@ -34,6 +34,7 @@ interface PackageWithMetrics extends PaketCleaning {
   revenue: number;
   conversionRate: number;
   status: PackageStatus;
+  displayPrice: number;
 }
 
 const formatCurrency = (value: number) =>
@@ -142,14 +143,15 @@ export function AdminPackagesPage() {
   const packagesWithMetrics = useMemo<PackageWithMetrics[]>(() => {
     return items.map((pkg) => {
       const orders = pkg.totalReviews ?? 0;
-      const revenue = orders * pkg.price;
+      const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
+      const revenue = orders * displayPrice;
       let conversionRate = 0;
       if (orders > 0) {
         const base = pkg.averageRating ?? 3;
         conversionRate = Math.min(95, Math.max(5, Math.round(base * 15)));
       }
       const status: PackageStatus = pkg.stock === 0 ? "INACTIVE" : "ACTIVE";
-      return { ...pkg, orders, revenue, conversionRate, status };
+      return { ...pkg, orders, revenue, conversionRate, status, displayPrice };
     });
   }, [items]);
 
@@ -173,9 +175,9 @@ export function AdminPackagesPage() {
 
     if (priceFilter !== "ALL") {
       result = result.filter((pkg) => {
-        if (priceFilter === "LOW") return pkg.price < 100_000;
-        if (priceFilter === "MID") return pkg.price >= 100_000 && pkg.price <= 300_000;
-        return pkg.price > 300_000;
+        if (priceFilter === "LOW") return pkg.displayPrice < 100_000;
+        if (priceFilter === "MID") return pkg.displayPrice >= 100_000 && pkg.displayPrice <= 300_000;
+        return pkg.displayPrice > 300_000;
       });
     }
 
@@ -196,7 +198,7 @@ export function AdminPackagesPage() {
         return a.name.localeCompare(b.name) * dir;
       }
       if (sortBy === "price") {
-        return (a.price - b.price) * dir;
+        return (a.displayPrice - b.displayPrice) * dir;
       }
       if (sortBy === "orders") {
         return (a.orders - b.orders) * dir;
@@ -311,6 +313,16 @@ export function AdminPackagesPage() {
       .map((pkg, index) => {
         const statusLabel = pkg.status === "ACTIVE" ? "Aktif" : "Non-aktif";
         const rowClass = index % 2 === 0 ? "row-even" : "row-odd";
+        const priceText =
+          pkg.displayPrice > 0
+            ? `Rp ${pkg.displayPrice.toLocaleString("id-ID")}${
+                pkg.discount_percentage > 0 && pkg.base_price > 0
+                  ? ` <span class="muted">(Save ${pkg.discount_percentage}%)</span>`
+                  : ""
+              }`
+            : pkg.pricing_note
+              ? pkg.pricing_note
+              : "-";
         return `
           <tr class="${rowClass}">
             <td>${pkg.id}</td>
@@ -322,7 +334,7 @@ export function AdminPackagesPage() {
                   : ""
               }
             </td>
-            <td>Rp ${pkg.price.toLocaleString("id-ID")}</td>
+            <td>${priceText}</td>
             <td>${pkg.orders.toLocaleString("id-ID")}</td>
             <td>Rp ${pkg.revenue.toLocaleString("id-ID")}</td>
             <td>${pkg.conversionRate}%</td>
@@ -851,9 +863,27 @@ export function AdminPackagesPage() {
                             <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
                               {pkg.name}
                             </div>
-                            <div className="mt-0.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
-                              {formatCurrency(pkg.price)}
-                            </div>
+                            {pkg.displayPrice > 0 ? (
+                              <div className="mt-0.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                                {pkg.discount_percentage > 0 && pkg.base_price > 0 ? (
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span className="text-slate-400 line-through dark:text-slate-500">
+                                      {formatCurrency(pkg.base_price)}
+                                    </span>
+                                    <span>{formatCurrency(pkg.displayPrice)}</span>
+                                    <span className="text-[11px] font-bold text-orange-600 dark:text-orange-300">
+                                      Save {pkg.discount_percentage}%
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span>{formatCurrency(pkg.displayPrice)}</span>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="mt-0.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                {pkg.pricing_note ?? "Hubungi kami untuk harga"}
+                              </div>
+                            )}
                           </div>
                           <div className="flex flex-col items-end gap-1">
                             <span
@@ -1196,7 +1226,25 @@ export function AdminPackagesPage() {
                                 </div>
                               </td>
                               <td className="whitespace-nowrap px-4 py-3 text-right align-top text-sm text-slate-900 dark:text-slate-50">
-                                {formatCurrency(pkg.price)}
+                                {pkg.displayPrice > 0 ? (
+                                  pkg.discount_percentage > 0 && pkg.base_price > 0 ? (
+                                    <div className="flex flex-col items-end gap-0.5">
+                                      <span className="text-xs text-slate-400 line-through dark:text-slate-500">
+                                        {formatCurrency(pkg.base_price)}
+                                      </span>
+                                      <span className="font-semibold">{formatCurrency(pkg.displayPrice)}</span>
+                                      <span className="text-[11px] font-bold text-orange-600 dark:text-orange-300">
+                                        Save {pkg.discount_percentage}%
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="font-semibold">{formatCurrency(pkg.displayPrice)}</span>
+                                  )
+                                ) : (
+                                  <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                                    {pkg.pricing_note ?? "Hubungi kami untuk harga"}
+                                  </span>
+                                )}
                               </td>
                               <td className="whitespace-nowrap px-4 py-3 text-right align-top text-sm text-slate-700 dark:text-slate-200">
                                 {pkg.orders}

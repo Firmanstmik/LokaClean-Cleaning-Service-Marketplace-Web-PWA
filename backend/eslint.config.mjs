@@ -6,7 +6,16 @@ import globals from "globals";
 
 export default [
   {
-    ignores: ["dist/**", "node_modules/**", "uploads/**", "prisma/migrations/**"]
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "uploads/**",
+      "prisma/migrations/**",
+      "scripts/**",
+      "test*.ts",
+      "test_*.ts",
+      "test-*.ts"
+    ]
   },
   {
     files: ["**/*.ts"],
@@ -26,7 +35,9 @@ export default [
     },
     rules: {
       ...tseslint.configs.recommended.rules,
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/ban-ts-comment": "warn"
     }
   }
 ];

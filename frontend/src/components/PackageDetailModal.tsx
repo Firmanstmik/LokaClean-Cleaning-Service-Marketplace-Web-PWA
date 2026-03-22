@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Star, Sparkles, CheckCircle2, ShieldCheck, Zap, Droplets, Bed, ArrowRight, Wallet, Home, Square, Box, Wand2 } from "lucide-react";
+import { X, Star, Tag, CheckCircle2, ShieldCheck, Zap, Droplets, Bed, ArrowRight, Wallet, Home, Square, Box, Wand2 } from "lucide-react";
 import { PaketCleaning } from "../types/api";
 import { getPackageImage, getPackageImageAlt } from "../utils/packageImage";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,6 +22,10 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
   const description = isEnglish && pkg.description_en ? pkg.description_en : pkg.description;
   const image = getPackageImage(pkg.name, pkg.image);
   const alt = getPackageImageAlt(name);
+
+  const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
+  const hasDiscount = pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
+  const discountEdition = pkg.discount_edition?.trim();
   
   // Extract features (simplified logic for modal)
   const features = React.useMemo(() => {
@@ -139,56 +143,81 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
             className="fixed inset-x-0 bottom-24 z-[70] flex h-[75vh] flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-[0_-18px_45px_rgba(15,23,42,0.28)] md:inset-0 md:bottom-0 md:m-auto md:h-fit md:max-h-[80vh] md:w-full md:max-w-xl md:rounded-[2rem] md:shadow-2xl md:top-10"
           >
             {/* Header Image Section */}
-            <div className="relative h-56 md:h-64 shrink-0">
+            <div className="relative aspect-video md:h-80 shrink-0 overflow-hidden">
               <img
                 src={image}
                 alt={alt}
                 className="h-full w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40" />
               
+              {/* Top Right: Discount Badge */}
+              {hasDiscount && (
+                <div className="absolute top-4 right-14 z-20">
+                  <div className="bg-rose-100/95 backdrop-blur-sm border border-rose-200 px-2.5 py-1 rounded-xl shadow-md">
+                    <span className="text-xs font-black text-rose-600">
+                      -{pkg.discount_percentage}%
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom Right: Promo Edition Badge */}
+              {discountEdition && (
+                <div className="absolute bottom-3 right-4 z-20">
+                  <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 via-rose-500 to-rose-600 px-3 py-1.5 text-[10px] font-black tracking-tight text-white uppercase shadow-lg shadow-rose-500/30 border border-white/40 backdrop-blur-sm animate-pulse-subtle">
+                    <Tag className="w-3 h-3 text-white fill-white/10" />
+                    <span>PROMO {discountEdition}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 rounded-full bg-black/20 backdrop-blur-md p-2 text-white hover:bg-black/40 transition-colors"
+                className="absolute right-4 top-4 z-30 rounded-full bg-black/20 backdrop-blur-md p-2 text-white hover:bg-black/40 transition-colors"
               >
                 <X className="h-6 w-6" />
               </button>
-
-              {/* Title & Price Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="rounded-lg bg-amber-400/20 backdrop-blur-md px-2.5 py-1 text-xs font-bold text-amber-300 border border-amber-400/30 flex items-center gap-1.5">
-                        <Star className="h-3.5 w-3.5 fill-amber-300" />
-                        {pkg.averageRating ? pkg.averageRating.toFixed(1) : "5.0"}
-                      </span>
-                      <span className="text-xs font-medium text-white/80">
-                        ({pkg.totalReviews || 0} {isEnglish ? "Reviews" : "Ulasan"})
-                      </span>
-                    </div>
-                    <h2 className="text-xl font-semibold leading-tight md:text-2xl">{name}</h2>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto bg-white px-6 py-4 pb-28 md:pb-6">
-              <div className="mb-4 flex items-center justify-center rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-tropical-100 text-tropical-600">
-                    <Wallet className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-medium text-slate-500">
-                      {isEnglish ? "Starting from" : "Harga Mulai"}
-                    </p>
-                    <p className="text-lg font-semibold text-slate-900">
-                      Rp {pkg.price.toLocaleString("id-ID")}
-                    </p>
-                  </div>
+              <div className="mb-6">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-black text-amber-600 border border-amber-200 flex items-center gap-1.5">
+                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                    {pkg.averageRating ? Number(pkg.averageRating).toFixed(1) : "5.0"}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">
+                    ({pkg.totalReviews || 0} {isEnglish ? "Reviews" : "Ulasan"})
+                  </span>
                 </div>
+                <h2 className="text-2xl font-black text-slate-900 leading-tight md:text-3xl mb-2">{name}</h2>
+                <div className="h-1.5 w-12 bg-teal-500 rounded-full" />
+              </div>
+
+              {/* Price Section below Title */}
+              <div className="mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{isEnglish ? "Price starting from" : "Harga mulai dari"}</p>
+                {displayPrice > 0 ? (
+                  <div className="flex flex-col">
+                    {hasDiscount && (
+                      <span className="text-sm font-bold text-slate-400 line-through">
+                        Rp {pkg.base_price.toLocaleString("id-ID")}
+                      </span>
+                    )}
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-bold text-teal-700">Rp</span>
+                      <span className="text-4xl font-black text-teal-700 tracking-tight">
+                        {displayPrice.toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-lg font-black text-slate-700">
+                    {pkg.pricing_note || (isEnglish ? "Contact us for pricing" : "Hubungi kami untuk harga")}
+                  </p>
+                )}
               </div>
 
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
