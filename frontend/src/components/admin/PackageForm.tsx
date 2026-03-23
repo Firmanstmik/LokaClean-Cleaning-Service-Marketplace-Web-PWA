@@ -80,10 +80,15 @@ export function PackageForm({
     if (!text.trim()) return;
     setIsTranslate(true);
     try {
-      const resp = await api.post("/admin/packages/translate", { text });
+      // We change the direction to EN -> ID
+      const resp = await api.post("/admin/packages/translate", { 
+        text,
+        source: "en",
+        target: "id" 
+      });
       const translated = resp.data.data.translated;
-      if (target === "name") setNameEn(translated);
-      else setDescriptionEn(translated);
+      if (target === "name") setName(translated);
+      else setDescription(translated);
     } catch (err) {
       console.error("Translation failed", err);
     } finally {
@@ -116,17 +121,14 @@ export function PackageForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="block sm:col-span-1">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
-            <FileText className="h-3.5 w-3.5 text-slate-500" />
-            Package Name (Indonesian)
+            <FileText className="h-3.5 w-3.5 text-indigo-500" />
+            Package Name (English - Primary)
           </div>
           <input
-            className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              // Auto-translate to EN when ID changes (Debounced or on blur would be better, but let's do manual trigger for now)
-            }}
-            placeholder="Nama Paket (Bahasa Indonesia)"
+            className="w-full rounded-lg border-2 border-indigo-100 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
+            value={nameEn}
+            onChange={(e) => setNameEn(e.target.value)}
+            placeholder="Main package name in English"
           />
         </label>
 
@@ -134,23 +136,23 @@ export function PackageForm({
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
               <FileText className="h-3.5 w-3.5 text-slate-500" />
-              Package Name (English)
+              Nama Paket (Indonesian)
             </div>
             <button
               type="button"
-              onClick={() => handleTranslate(name, "name")}
-              disabled={isTranslating || !name.trim()}
-              className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 disabled:opacity-50 flex items-center gap-1"
+              onClick={() => handleTranslate(nameEn, "name")}
+              disabled={isTranslating || !nameEn.trim()}
+              className="text-[10px] font-bold text-teal-600 hover:text-teal-700 disabled:opacity-50 flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-100 transition-colors"
             >
-              {isTranslating ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Plus className="h-2.5 w-2.5 rotate-45" />}
-              Translate from ID
+              {isTranslating ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Plus className="h-2.5 w-2.5" />}
+              Translate to ID
             </button>
           </div>
           <input
-            className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none"
-            value={nameEn}
-            onChange={(e) => setNameEn(e.target.value)}
-            placeholder="Package Name (English)"
+            className="w-full rounded-lg border-2 border-slate-200 bg-slate-50/50 px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Terjemahan Bahasa Indonesia"
           />
         </label>
       </div>
@@ -158,15 +160,15 @@ export function PackageForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
         <label className="block sm:col-span-1">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1.5">
-            <FileText className="h-3.5 w-3.5 text-slate-500" />
-            Description (Indonesian)
+            <FileText className="h-3.5 w-3.5 text-indigo-500" />
+            Description (English - Primary)
           </div>
           <textarea
-            className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none resize-none"
+            className="w-full rounded-lg border-2 border-indigo-100 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none resize-none"
             rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Deskripsi Paket (Bahasa Indonesia)"
+            value={descriptionEn}
+            onChange={(e) => setDescriptionEn(e.target.value)}
+            placeholder="Main description in English"
           />
         </label>
 
@@ -174,24 +176,24 @@ export function PackageForm({
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
               <FileText className="h-3.5 w-3.5 text-slate-500" />
-              Description (English)
+              Deskripsi (Indonesian)
             </div>
             <button
               type="button"
-              onClick={() => handleTranslate(description, "desc")}
-              disabled={isTranslating || !description.trim()}
-              className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 disabled:opacity-50 flex items-center gap-1"
+              onClick={() => handleTranslate(descriptionEn, "desc")}
+              disabled={isTranslating || !descriptionEn.trim()}
+              className="text-[10px] font-bold text-teal-600 hover:text-teal-700 disabled:opacity-50 flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-100 transition-colors"
             >
-              {isTranslating ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Plus className="h-2.5 w-2.5 rotate-45" />}
-              Translate from ID
+              {isTranslating ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Plus className="h-2.5 w-2.5" />}
+              Translate to ID
             </button>
           </div>
           <textarea
-            className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 focus:outline-none resize-none"
+            className="w-full rounded-lg border-2 border-slate-200 bg-slate-50/50 px-3 py-2 text-sm font-medium text-slate-900 transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-200 focus:outline-none resize-none"
             rows={3}
-            value={descriptionEn}
-            onChange={(e) => setDescriptionEn(e.target.value)}
-            placeholder="Package Description (English)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Terjemahan Bahasa Indonesia"
           />
         </label>
       </div>
