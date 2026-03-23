@@ -390,7 +390,7 @@ export const MapPicker = memo(function MapPicker({
   isOpen,
   onSaveRequest,
   onRefresh,
-  mapHeight = "h-[400px]",
+  mapHeight = "h-[280px] sm:h-[320px]",
   savedAddresses: externalSavedAddresses,
   hideSearch = false,
   hideSaveButton = false
@@ -494,6 +494,32 @@ export const MapPicker = memo(function MapPicker({
   const [showSimpleModal, setShowSimpleModal] = useState(false);
   const [mainLocation, setMainLocation] = useState<SavedAddress | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
+  const fetchIpLocation = async (): Promise<LatLng | null> => {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data.latitude === "number" && typeof data.longitude === "number") {
+          return { lat: data.latitude, lng: data.longitude };
+        }
+      }
+    } catch {}
+    try {
+      const res = await fetch("https://ipinfo.io/json");
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.loc && typeof data.loc === "string") {
+          const [latStr, lngStr] = data.loc.split(",");
+          const lat = parseFloat(latStr);
+          const lng = parseFloat(lngStr);
+          if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+            return { lat, lng };
+          }
+        }
+      }
+    } catch {}
+    return null;
+  };
 
   useEffect(() => {
     if (savedAddresses.length > 0) {
@@ -824,6 +850,30 @@ export const MapPicker = memo(function MapPicker({
       }
     })();
   }, [value?.lat, value?.lng]);
+
+  useEffect(() => {
+    if (value) return;
+    try {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          const newLoc = { lat: latitude, lng: longitude };
+          setForcedZoom(18);
+          onChange(newLoc);
+          setGeoLocked(true);
+        },
+        async () => {
+          const ipLoc = await fetchIpLocation();
+          if (ipLoc) {
+            setForcedZoom(12);
+            onChange(ipLoc);
+            setGeoLocked(true);
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } catch {}
+  }, []);
 
   const handleManualPick = (v: LatLng) => {
     setGeoError(null);
@@ -1368,6 +1418,7 @@ export const MapPicker = memo(function MapPicker({
           center={center}
           zoom={value ? 17 : initialZoom}
           scrollWheelZoom
+          zoomAnimation={true}
           className={`${mapHeight} w-full bg-slate-50`}
           style={{ zIndex: 0 }}
         >
@@ -1386,6 +1437,14 @@ export const MapPicker = memo(function MapPicker({
                   attribution="&copy; Google Maps"
                   maxZoom={20}
                 />
+             </LayersControl.BaseLayer>
+
+             <LayersControl.BaseLayer name="ESRI World Imagery">
+               <TileLayer
+                 url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                 attribution="Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+                 maxZoom={20}
+               />
              </LayersControl.BaseLayer>
 
              <LayersControl.BaseLayer name="OpenStreetMap">
@@ -1607,7 +1666,7 @@ export const MapPicker = memo(function MapPicker({
                   className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900/90 px-3 py-2 text-[10px] font-bold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-900 active:scale-95 transition-all"
                 >
                   <MapPin className="w-3.5 h-3.5" />
-                  <span>View Lokasi</span>
+                  <span>Adjust Location</span>
                 </button>
               ) : null}
             </div>
@@ -1639,6 +1698,7 @@ export const MapPicker = memo(function MapPicker({
                 center={value}
                 zoom={18}
                 scrollWheelZoom={true}
+                zoomAnimation={true}
                 className="h-full w-full"
                 zoomControl={true}
               >
@@ -1654,6 +1714,13 @@ export const MapPicker = memo(function MapPicker({
                     <TileLayer
                       url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
                       attribution="&copy; Google Maps"
+                      maxZoom={20}
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="ESRI World Imagery">
+                    <TileLayer
+                      url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                      attribution="Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
                       maxZoom={20}
                     />
                   </LayersControl.BaseLayer>
