@@ -250,19 +250,33 @@ export const deletePackageHandler = asyncHandler(async (req: Request, res: Respo
 });
 
 export const translateTextHandler = asyncHandler(async (req: Request, res: Response) => {
-  const { text } = req.body;
+  const { text, target } = req.body;
   if (!text || typeof text !== "string") {
     throw new HttpError(400, "Text is required and must be a string");
   }
-  const translated = await autoTranslate(text);
+  const translated = await autoTranslate(text, (target || "id") as string);
   return ok(res, { translated });
 });
 
 
-async function autoTranslate(text: string): Promise<string> {
+async function autoTranslate(text: string, targetLang: string = "id"): Promise<string> {
   try {
-    const res = await translate(text, { to: "en", autoCorrect: true });
-    return res.text;
+    // If target is ID, we want a more natural translation for cleaning services
+    const res = await translate(text, { to: targetLang, autoCorrect: true });
+    
+    let result = res.text;
+    
+    // Simple post-processing for Indonesian to make it less stiff if needed
+    if (targetLang === "id") {
+      // Common stiff translations from Google Translate for cleaning services
+      result = result
+        .replace(/Layanan pembersihan/gi, "Jasa Bersih-bersih")
+        .replace(/Pembersihan cepat per jam/gi, "Bersih Cepat Per Jam")
+        .replace(/Sempurna untuk/gi, "Sangat cocok untuk")
+        .replace(/Termasuk/gi, "Sudah termasuk");
+    }
+    
+    return result;
   } catch (error) {
     console.error("Auto-translation failed:", error);
     // Fallback to original text if translation fails
