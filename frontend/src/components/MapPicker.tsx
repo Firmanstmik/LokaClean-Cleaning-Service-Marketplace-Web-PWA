@@ -187,6 +187,21 @@ function SmartMapUpdater({ center, accuracy, zoom }: { center: LatLng; accuracy:
   return null;
 }
 
+function ForceCenter({ center, zoom }: { center: LatLng; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom, { animate: false });
+    map.invalidateSize();
+    const t1 = window.setTimeout(() => map.invalidateSize(), 50);
+    const t2 = window.setTimeout(() => map.invalidateSize(), 250);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [center.lat, center.lng, zoom, map]);
+  return null;
+}
+
 function formatMeters(m: number) {
   if (!Number.isFinite(m)) return "";
   if (m < 1000) return `${Math.round(m)} m`;
@@ -1006,10 +1021,14 @@ export const MapPicker = memo(function MapPicker({
       locateTimeoutRef.current = null;
     }
 
-    const GOOD_ACCURACY = 25;
-    const ACCEPT_MAX_ACCURACY = 150;
-    const NEAR_DISTANCE = 12;
+    const GOOD_ACCURACY = 20;
+    const LOCK_ACCURACY = 60;
+    const ACCEPT_MAX_ACCURACY = 120;
+    const NEAR_DISTANCE = 15;
     const MAX_HUNT_MS = 30000;
+    const MIN_HUNT_BEFORE_LOCK_MS = 4500;
+    const huntStart = Date.now();
+    let acceptedCount = 0;
 
     const acceptPosition = (latitude: number, longitude: number, accuracy: number, now: number) => {
       if (!Number.isFinite(accuracy) || accuracy <= 0) return;
@@ -1030,18 +1049,28 @@ export const MapPicker = memo(function MapPicker({
 
       if (accuracy < bestAccuracyRef.current) bestAccuracyRef.current = accuracy;
       lastAcceptedRef.current = { lat: latitude, lng: longitude, ts: now, accuracy };
+      acceptedCount += 1;
 
       onChange(next);
       setAccuracyMeters(accuracy);
       onDetailsChange?.({ notes: "" });
 
+      const isStableEnough = accuracy <= LOCK_ACCURACY && isNearLast;
       if (accuracy <= GOOD_ACCURACY && isNearLast) {
         stableHitsRef.current += 1;
+      } else if (isStableEnough) {
+        stableHitsRef.current = Math.max(0, stableHitsRef.current) + 1;
       } else {
         stableHitsRef.current = 0;
       }
 
-      if (stableHitsRef.current >= 3) {
+      const canLockNow =
+        now - huntStart >= MIN_HUNT_BEFORE_LOCK_MS &&
+        bestAccuracyRef.current <= LOCK_ACCURACY &&
+        acceptedCount >= 3 &&
+        stableHitsRef.current >= 3;
+
+      if (canLockNow) {
         if (watchIdRef.current !== null) {
           navigator.geolocation.clearWatch(watchIdRef.current);
           watchIdRef.current = null;
@@ -1091,7 +1120,7 @@ export const MapPicker = memo(function MapPicker({
 
     watchIdRef.current = navigator.geolocation.watchPosition(success, error, {
       enableHighAccuracy: true,
-      timeout: 15000, 
+      timeout: 20000, 
       maximumAge: 0 
     });
 
@@ -1701,6 +1730,7 @@ export const MapPicker = memo(function MapPicker({
 
             <div className="relative h-[65vh] sm:h-[70vh]">
               <MapContainer
+                key={`modal-map-${showViewModal ? 1 : 0}-${value.lat}-${value.lng}`}
                 center={value}
                 zoom={18}
                 scrollWheelZoom={true}
@@ -1740,7 +1770,8 @@ export const MapPicker = memo(function MapPicker({
                 </LayersControl>
                 
                 <MapResizer isOpen={showViewModal} />
-                <InitialFlyTo trigger={true} zoom={18} />
+                <SmartMapUpdater center={value} accuracy={accuracyMeters} zoom={18} />
+                <ForceCenter center={value} zoom={18} />
 
                 <GeoJSON 
                   data={NTB_GEOJSON} 
