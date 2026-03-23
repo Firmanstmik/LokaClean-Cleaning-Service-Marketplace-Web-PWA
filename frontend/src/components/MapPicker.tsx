@@ -1699,7 +1699,7 @@ export const MapPicker = memo(function MapPicker({
               </button>
             </div>
 
-            <div className="relative flex-1 min-h-0">
+            <div className="relative h-[65vh] sm:h-[70vh]">
               <MapContainer
                 center={value}
                 zoom={18}
@@ -1709,14 +1709,14 @@ export const MapPicker = memo(function MapPicker({
                 zoomControl={true}
               >
                 <LayersControl position="topright">
-                  <LayersControl.BaseLayer checked name="Google Maps">
+                  <LayersControl.BaseLayer name="Google Maps">
                     <TileLayer
                       url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
                       attribution="&copy; Google Maps"
                       maxZoom={20}
                     />
                   </LayersControl.BaseLayer>
-                  <LayersControl.BaseLayer name="Satellite Hybrid">
+                  <LayersControl.BaseLayer checked name="Satellite Hybrid">
                     <TileLayer
                       url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
                       attribution="&copy; Google Maps"
@@ -1738,6 +1738,9 @@ export const MapPicker = memo(function MapPicker({
                     />
                   </LayersControl.BaseLayer>
                 </LayersControl>
+                
+                <MapResizer isOpen={showViewModal} />
+                <InitialFlyTo trigger={true} zoom={18} />
 
                 <GeoJSON 
                   data={NTB_GEOJSON} 
