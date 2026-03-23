@@ -852,30 +852,6 @@ export const MapPicker = memo(function MapPicker({
     })();
   }, [value?.lat, value?.lng]);
 
-  useEffect(() => {
-    if (value) return;
-    try {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const { latitude, longitude } = pos.coords;
-          const newLoc = { lat: latitude, lng: longitude };
-          setForcedZoom(18);
-          onChange(newLoc);
-          setGeoLocked(true);
-        },
-        async () => {
-          const ipLoc = await fetchIpLocation();
-          if (ipLoc) {
-            setForcedZoom(12);
-            onChange(ipLoc);
-            setGeoLocked(true);
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    } catch {}
-  }, []);
-
   const handleManualPick = (v: LatLng) => {
     setGeoError(null);
     setAccuracyMeters(null);
@@ -1030,9 +1006,15 @@ export const MapPicker = memo(function MapPicker({
       locateTimeoutRef.current = null;
     }
 
-    const success = (position: GeolocationPosition) => {
-      const { latitude, longitude, accuracy } = position.coords;
-      const now = Date.now();
+    const GOOD_ACCURACY = 25;
+    const ACCEPT_MAX_ACCURACY = 150;
+    const NEAR_DISTANCE = 12;
+    const MAX_HUNT_MS = 30000;
+
+    const acceptPosition = (latitude: number, longitude: number, accuracy: number, now: number) => {
+      if (!Number.isFinite(accuracy) || accuracy <= 0) return;
+      if (accuracy > ACCEPT_MAX_ACCURACY && bestAccuracyRef.current !== Infinity) return;
+
       const next = { lat: latitude, lng: longitude };
 
       const last = lastAcceptedRef.current;
@@ -1041,11 +1023,9 @@ export const MapPicker = memo(function MapPicker({
         : Infinity;
       const prevBest = bestAccuracyRef.current;
 
-      const isAccuracyImproving = accuracy + 1 < prevBest;
-      const isNearLast = distance <= 8;
-      const isGoodAccuracy = accuracy <= 25;
-
-      const shouldAccept = !last || isAccuracyImproving || (isGoodAccuracy && isNearLast);
+      const isAccuracyImproving = accuracy + 5 < prevBest;
+      const isNearLast = distance <= NEAR_DISTANCE;
+      const shouldAccept = !last || isAccuracyImproving || (isNearLast && accuracy <= (last.accuracy + 15));
       if (!shouldAccept) return;
 
       if (accuracy < bestAccuracyRef.current) bestAccuracyRef.current = accuracy;
@@ -1055,13 +1035,13 @@ export const MapPicker = memo(function MapPicker({
       setAccuracyMeters(accuracy);
       onDetailsChange?.({ notes: "" });
 
-      if (isGoodAccuracy && isNearLast) {
+      if (accuracy <= GOOD_ACCURACY && isNearLast) {
         stableHitsRef.current += 1;
       } else {
         stableHitsRef.current = 0;
       }
 
-      if (stableHitsRef.current >= 2) {
+      if (stableHitsRef.current >= 3) {
         if (watchIdRef.current !== null) {
           navigator.geolocation.clearWatch(watchIdRef.current);
           watchIdRef.current = null;
@@ -1076,13 +1056,38 @@ export const MapPicker = memo(function MapPicker({
       }
     };
 
+    const success = (position: GeolocationPosition) => {
+      const { latitude, longitude, accuracy } = position.coords;
+      const now = Date.now();
+      acceptPosition(latitude, longitude, accuracy, now);
+    };
+
     const error = (err: GeolocationPositionError) => {
       console.warn("GPS Error:", err);
       if (bestAccuracyRef.current === Infinity) {
         setLocating(false);
-        setGeoError(t("map.gpsError").replace("{error}", err.message));
+        fetchIpLocation().then((ipLoc) => {
+          if (ipLoc) {
+            setForcedZoom(12);
+            onChange(ipLoc);
+            setGeoLocked(true);
+            setShowApproxCard(true);
+            setGeoError(null);
+            return;
+          }
+          setGeoError(t("map.gpsError").replace("{error}", err.message));
+        });
       }
     };
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        acceptPosition(latitude, longitude, accuracy, Date.now());
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
 
     watchIdRef.current = navigator.geolocation.watchPosition(success, error, {
       enableHighAccuracy: true,
@@ -1096,12 +1101,12 @@ export const MapPicker = memo(function MapPicker({
         watchIdRef.current = null;
       }
       setLocating(false);
-      if (lastAcceptedRef.current) {
+      if (lastAcceptedRef.current && lastAcceptedRef.current.accuracy <= ACCEPT_MAX_ACCURACY) {
         setGeoLocked(true);
         setShowApproxCard(true);
       }
       locateTimeoutRef.current = null;
-    }, 12000);
+    }, MAX_HUNT_MS);
   };
 
   const handleClearLocation = () => {
@@ -1660,7 +1665,7 @@ export const MapPicker = memo(function MapPicker({
                 )}
               </button>
 
-              {value && geoLocked ? (
+              {value && !locating ? (
                 <button
                   type="button"
                   onClick={() => setShowViewModal(true)}
