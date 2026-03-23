@@ -413,7 +413,7 @@ export function UserHomePage() {
                         {/* Content Area */}
                         <div className="p-4 flex flex-col flex-1">
                           <div className="mb-1.5">
-                             <h4 className="text-base font-black text-slate-900 leading-tight mb-1">{displayName}</h4>
+                             <h4 className="text-base font-black text-slate-900 leading-tight mb-1">{name}</h4>
                              <div className="flex items-center gap-1 text-slate-500 text-[10px] font-medium">
                                <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
                                <span className="font-bold text-slate-700">{pkg.averageRating ? Number(pkg.averageRating).toFixed(1) : "5.0"}</span>
@@ -422,7 +422,7 @@ export function UserHomePage() {
                           </div>
 
                           <div className="flex flex-wrap gap-1.5 mb-3 mt-1.5">
-                             {extractFeatures(pkg.description).slice(0, 3).map((feat, idx) => (
+                             {extractFeatures(description).slice(0, 3).map((feat, idx) => (
                                <span key={idx} className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-slate-50 text-slate-500 border border-slate-100 uppercase tracking-wider`}>
                                  {feat.text}
                                </span>
@@ -501,6 +501,8 @@ export function UserHomePage() {
                   const hasDiscount =
                     pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
                   const discountEdition = pkg.discount_edition?.trim();
+                  const name = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
+                  const description = isEnglish && pkg.description_en ? pkg.description_en : pkg.description;
                   const badge = getBadgeConfig(pkg, displayPrice);
                   
                   return (
@@ -552,7 +554,7 @@ export function UserHomePage() {
                         </div>
                         <div className="p-6 flex flex-col flex-1 bg-white">
                            <div className="mb-4">
-                             <h3 className="text-2xl font-black text-slate-900 leading-tight mb-1">{displayName}</h3>
+                             <h3 className="text-2xl font-black text-slate-900 leading-tight mb-1">{name}</h3>
                              <div className="flex items-center gap-2">
                                <div className="flex items-center">
                                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
@@ -563,7 +565,7 @@ export function UserHomePage() {
                            </div>
 
                            <div className="flex flex-wrap gap-2 mb-6">
-                             {extractFeatures(pkg.description).slice(0, 3).map((feat, i) => (
+                             {extractFeatures(description).slice(0, 3).map((feat, i) => (
                                <div key={i} className="flex items-center gap-2 px-2 py-1 bg-slate-50 border border-slate-100 rounded-lg">
                                  <feat.icon className={`w-3.5 h-3.5 ${feat.color}`} />
                                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{feat.text}</span>

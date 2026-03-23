@@ -1032,6 +1032,8 @@ export function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto">
             {packages.map((pkg, index) => {
+              const name = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
+              const description = isEnglish && pkg.description_en ? pkg.description_en : pkg.description;
               const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
               const hasDiscount =
                 pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
@@ -1083,13 +1085,13 @@ export function Home() {
                   <div className="flex flex-1 flex-col p-3.5 sm:p-4">
                     <div className="mb-2">
                       <h3 className="text-sm sm:text-base font-black text-slate-900 leading-tight mb-1 line-clamp-1 group-hover:text-teal-600 transition-colors tracking-tight">
-                        {pkg.name}
+                        {name}
                       </h3>
                       <div className="h-0.5 w-8 bg-teal-500 rounded-full" />
                     </div>
 
                     <p className="mb-2 text-[11px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed font-medium">
-                      {pkg.description}
+                      {description}
                     </p>
 
                     {/* Price Section below description */}

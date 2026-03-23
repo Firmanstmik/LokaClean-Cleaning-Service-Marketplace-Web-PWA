@@ -146,6 +146,7 @@ export function AllPackagesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {items.map((pkg, index) => {
               const name = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
+              const description = isEnglish && pkg.description_en ? pkg.description_en : pkg.description;
               const image = getPackageImage(pkg.name, pkg.image);
               const alt = getPackageImageAlt(name);
               const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
@@ -203,7 +204,7 @@ export function AllPackagesPage() {
                     </div>
                     
                     <p className="mb-2 text-[11px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed font-medium">
-                      {pkg.description}
+                      {description}
                     </p>
 
                     {/* Price Section below description */}
