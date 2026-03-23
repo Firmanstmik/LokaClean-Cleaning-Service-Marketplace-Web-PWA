@@ -364,14 +364,14 @@ export function UserHomePage() {
               onTouchStart={handleMobileTouchStart}
               onTouchEnd={handleMobileTouchEnd}
             >
-              {items.map((pkg, i) => {
-                const displayName = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
+              {items.map((pkg) => {
                 const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
                 const hasDiscount =
                   pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
                 const discountEdition = pkg.discount_edition?.trim();
-                const badge = getBadgeConfig(pkg, displayPrice);
-                
+                const name = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
+                const description = isEnglish && pkg.description_en ? pkg.description_en : pkg.description;
+
                 return (
                     <div 
                       key={pkg.id} 
@@ -382,7 +382,7 @@ export function UserHomePage() {
                         <div className="relative aspect-[4/3] w-full bg-slate-100 transform-gpu">
                           <OptimizedImage 
                             src={getPackageImage(pkg.name, pkg.image)} 
-                            alt={displayName}
+                            alt={name}
                             className="w-full h-full object-cover will-change-transform transition-transform duration-700 group-hover:scale-110"
                             loading="lazy"
                           />
@@ -528,7 +528,12 @@ export function UserHomePage() {
                     >
                       <div className="bg-white rounded-[40px] overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-white/50 h-[500px] flex flex-col transform transition-transform hover:-translate-y-2 duration-300">
                         <div className="relative h-64 bg-slate-100 overflow-hidden">
-                           <OptimizedImage src={getPackageImage(pkg.name, pkg.image)} alt={displayName} className="w-full h-full object-cover" />
+                           <OptimizedImage 
+                            src={getPackageImage(pkg.name, pkg.image)} 
+                            alt={name}
+                            className="w-full h-full object-cover will-change-transform transition-transform duration-700 group-hover:scale-110"
+                            loading="lazy"
+                          />
                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-40" />
                            
                            {/* Top Right: Discount Badge */}
