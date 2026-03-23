@@ -415,6 +415,7 @@ export const MapPicker = memo(function MapPicker({
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [accuracyMeters, setAccuracyMeters] = useState<number | null>(null);
+  const [geoLocked, setGeoLocked] = useState(false);
 
   const [resolving, setResolving] = useState(false);
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
@@ -453,6 +454,10 @@ export const MapPicker = memo(function MapPicker({
   const onAddressChangeRef = useRef<typeof onAddressChange>(onAddressChange);
   const mapKeyRef = useRef(`map-${Date.now()}-${Math.random()}`);
   const locatingHintTimeoutRef = useRef<number | null>(null);
+  const locateTimeoutRef = useRef<number | null>(null);
+  const bestAccuracyRef = useRef<number>(Infinity);
+  const lastAcceptedRef = useRef<{ lat: number; lng: number; ts: number; accuracy: number } | null>(null);
+  const stableHitsRef = useRef(0);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 640);
@@ -488,6 +493,7 @@ export const MapPicker = memo(function MapPicker({
   // Simple Flow State
   const [showSimpleModal, setShowSimpleModal] = useState(false);
   const [mainLocation, setMainLocation] = useState<SavedAddress | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
 
   useEffect(() => {
     if (savedAddresses.length > 0) {
@@ -827,7 +833,12 @@ export const MapPicker = memo(function MapPicker({
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
+    if (locateTimeoutRef.current !== null) {
+      window.clearTimeout(locateTimeoutRef.current);
+      locateTimeoutRef.current = null;
+    }
     setLocating(false);
+    setGeoLocked(true);
     onChange(v);
     onDetailsChange?.({ notes: "" });
   };
@@ -936,6 +947,10 @@ export const MapPicker = memo(function MapPicker({
     setGeoError(null);
     setAccuracyMeters(null);
     setForcedZoom(18); // Zoom in for my location
+    setGeoLocked(false);
+    bestAccuracyRef.current = Infinity;
+    lastAcceptedRef.current = null;
+    stableHitsRef.current = 0;
 
     if (!window.isSecureContext) {
       // Allow localhost
@@ -959,37 +974,60 @@ export const MapPicker = memo(function MapPicker({
       watchIdRef.current = null;
     }
 
-    let bestAccuracy = Infinity;
-    let huntStartTime = Date.now();
-    const HUNT_DURATION = 10000;
+    if (locateTimeoutRef.current !== null) {
+      window.clearTimeout(locateTimeoutRef.current);
+      locateTimeoutRef.current = null;
+    }
 
     const success = (position: GeolocationPosition) => {
       const { latitude, longitude, accuracy } = position.coords;
       const now = Date.now();
-      
-      console.log(`[GPS] Signal: Acc=${accuracy}m, Lat=${latitude}`);
+      const next = { lat: latitude, lng: longitude };
 
-      if (accuracy < bestAccuracy || (now - huntStartTime > HUNT_DURATION)) {
-        bestAccuracy = accuracy;
-        const newLoc = { lat: latitude, lng: longitude };
-        
-        onChange(newLoc);
-        setAccuracyMeters(accuracy);
-        onDetailsChange?.({ notes: "" });
-        
-        if (accuracy < 15) {
-           setLocating(false);
-        }
+      const last = lastAcceptedRef.current;
+      const distance = last
+        ? L.latLng(last.lat, last.lng).distanceTo(L.latLng(latitude, longitude))
+        : Infinity;
+      const prevBest = bestAccuracyRef.current;
+
+      const isAccuracyImproving = accuracy + 1 < prevBest;
+      const isNearLast = distance <= 8;
+      const isGoodAccuracy = accuracy <= 25;
+
+      const shouldAccept = !last || isAccuracyImproving || (isGoodAccuracy && isNearLast);
+      if (!shouldAccept) return;
+
+      if (accuracy < bestAccuracyRef.current) bestAccuracyRef.current = accuracy;
+      lastAcceptedRef.current = { lat: latitude, lng: longitude, ts: now, accuracy };
+
+      onChange(next);
+      setAccuracyMeters(accuracy);
+      onDetailsChange?.({ notes: "" });
+
+      if (isGoodAccuracy && isNearLast) {
+        stableHitsRef.current += 1;
+      } else {
+        stableHitsRef.current = 0;
       }
 
-      if (now - huntStartTime > 3000 && bestAccuracy < 100) {
+      if (stableHitsRef.current >= 2) {
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+          watchIdRef.current = null;
+        }
+        if (locateTimeoutRef.current !== null) {
+          window.clearTimeout(locateTimeoutRef.current);
+          locateTimeoutRef.current = null;
+        }
         setLocating(false);
+        setGeoLocked(true);
+        setShowApproxCard(true);
       }
     };
 
     const error = (err: GeolocationPositionError) => {
       console.warn("GPS Error:", err);
-      if (bestAccuracy === Infinity) {
+      if (bestAccuracyRef.current === Infinity) {
         setLocating(false);
         setGeoError(t("map.gpsError").replace("{error}", err.message));
       }
@@ -1001,7 +1039,18 @@ export const MapPicker = memo(function MapPicker({
       maximumAge: 0 
     });
 
-    setTimeout(() => setLocating(false), 10000);
+    locateTimeoutRef.current = window.setTimeout(() => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      setLocating(false);
+      if (lastAcceptedRef.current) {
+        setGeoLocked(true);
+        setShowApproxCard(true);
+      }
+      locateTimeoutRef.current = null;
+    }, 12000);
   };
 
   const handleClearLocation = () => {
@@ -1009,7 +1058,12 @@ export const MapPicker = memo(function MapPicker({
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
+    if (locateTimeoutRef.current !== null) {
+      window.clearTimeout(locateTimeoutRef.current);
+      locateTimeoutRef.current = null;
+    }
     setLocating(false);
+    setGeoLocked(false);
     onChange(null);
     setAccuracyMeters(null);
     setResolvedAddress(null);
@@ -1545,10 +1599,132 @@ export const MapPicker = memo(function MapPicker({
                   <span className="absolute inset-0 rounded-2xl animate-ping bg-indigo-400 opacity-20"></span>
                 )}
               </button>
+
+              {value && geoLocked ? (
+                <button
+                  type="button"
+                  onClick={() => setShowViewModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900/90 px-3 py-2 text-[10px] font-bold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-900 active:scale-95 transition-all"
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>View Lokasi</span>
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
       </div>
+
+      {showViewModal && value ? (
+        <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-sm p-3 sm:p-4 flex items-center justify-center">
+          <div className="w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-white/30">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+              <div className="min-w-0">
+                <div className="text-sm font-extrabold text-slate-900">View Lokasi</div>
+                <div className="text-[11px] text-slate-500 truncate">
+                  {resolvedAddress ?? `${value.lat.toFixed(6)}, ${value.lng.toFixed(6)}`}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowViewModal(false)}
+                className="h-9 w-9 inline-flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="relative h-[70vh]">
+              <MapContainer
+                center={value}
+                zoom={18}
+                scrollWheelZoom={true}
+                className="h-full w-full"
+                zoomControl={true}
+              >
+                <LayersControl position="topright">
+                  <LayersControl.BaseLayer checked name="Google Maps">
+                    <TileLayer
+                      url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                      attribution="&copy; Google Maps"
+                      maxZoom={20}
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="Satellite Hybrid">
+                    <TileLayer
+                      url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                      attribution="&copy; Google Maps"
+                      maxZoom={20}
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="OpenStreetMap">
+                    <TileLayer
+                      attribution={TILE_ATTR}
+                      url={TILE_URL}
+                      maxZoom={20}
+                    />
+                  </LayersControl.BaseLayer>
+                </LayersControl>
+
+                <GeoJSON 
+                  data={NTB_GEOJSON} 
+                  style={{
+                    color: "#2EC4B6",
+                    weight: 2,
+                    fillOpacity: 0.06,
+                    dashArray: "4 4"
+                  }} 
+                />
+
+                <ClickToPick onPick={handleManualPick} />
+
+                <Marker
+                  key={`modal-marker-${value.lat}-${value.lng}`}
+                  position={value}
+                  draggable={true}
+                  icon={premiumMarkerIcon}
+                  eventHandlers={{
+                    dragend: (e) => {
+                      const marker = e.target;
+                      const position = marker.getLatLng();
+                      handleManualPick({ lat: position.lat, lng: position.lng });
+                    }
+                  }}
+                />
+
+                {accuracyMeters ? (
+                  <Circle
+                    key={`modal-circle-${value.lat}-${value.lng}-${accuracyMeters}`}
+                    center={value}
+                    radius={accuracyMeters}
+                    pathOptions={{ color: "#4f46e5", fillColor: "#4f46e5", fillOpacity: 0.1, weight: 1, dashArray: "4 4" }}
+                  />
+                ) : null}
+              </MapContainer>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 flex items-center justify-between gap-3">
+              <div className="text-[11px] text-slate-600 font-medium">
+                {accuracyMeters != null ? (
+                  <span className={accuracyMeters <= 20 ? "text-emerald-700" : "text-amber-700"}>
+                    Akurasi: ±{formatMeters(accuracyMeters)}
+                  </span>
+                ) : (
+                  <span>Geser pin untuk menyesuaikan lokasi</span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowViewModal(false)}
+                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 px-4 py-2.5 text-[12px] font-extrabold text-white shadow-lg shadow-teal-500/20 active:scale-[0.98] transition-all"
+              >
+                <Check className="w-4 h-4" />
+                <span>Gunakan Lokasi Ini</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Save Address Modal */}
       <SaveAddressModal

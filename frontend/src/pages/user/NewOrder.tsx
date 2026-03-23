@@ -22,10 +22,13 @@ import { toDatetimeLocalValueWITA } from "../../utils/date";
 import { t, getLanguage, useCurrentLanguage } from "../../lib/i18n";
 import { getPackageImage, getPackageImageAlt } from "../../utils/packageImage";
 import { playOrderNotificationSound } from "../../utils/sound";
+import { normalizeWhatsAppPhone } from "../../lib/phone";
 import type { PaketCleaning, PaymentMethod, User } from "../../types/api";
 
 // --- Types ---
 type Step = 1 | 2 | 3;
+
+const ADMIN_WHATSAPP_NUMBER = "6281236893055";
 
 // --- Helper: Generate Dates for Current Month Only ---
 const generateCurrentMonthDates = () => {
@@ -151,6 +154,67 @@ export function NewOrderPage() {
     }
   }, [beforePhotos]);
 
+  const isNegotiationPackage = (pkg: PaketCleaning | undefined | null) => {
+    if (!pkg) return false;
+    const displayPrice = pkg.final_price > 0 ? pkg.final_price : pkg.base_price;
+    return displayPrice <= 0;
+  };
+
+  const openNegotiationWhatsApp = (pkg: PaketCleaning) => {
+    const adminNormalized = normalizeWhatsAppPhone(ADMIN_WHATSAPP_NUMBER);
+    const adminDigits = (adminNormalized ?? `+${ADMIN_WHATSAPP_NUMBER}`).replace(/^\+/, "");
+
+    const displayName = isEnglish && pkg.name_en ? pkg.name_en : pkg.name;
+
+    const customerName = (user?.full_name ?? guestName).trim();
+    const customerPhoneRaw = (user?.phone_number ?? guestPhone).trim();
+    const customerPhone = normalizeWhatsAppPhone(customerPhoneRaw) ?? customerPhoneRaw;
+
+    const scheduleLabel = `${selectedDate.toLocaleDateString(
+      language === "en" ? "en-US" : "id-ID",
+      { weekday: "short", day: "numeric", month: "short", year: "numeric" }
+    )}, ${selectedTime ?? "-"} WITA`;
+
+    const message = isEnglish
+      ? [
+          "Hello Admin LokaClean, I'd like to negotiate / discuss pricing.",
+          "",
+          `Service: ${displayName}`,
+          `Schedule: ${scheduleLabel}`,
+          `Address: ${address.trim() || "-"}`,
+          houseNotes.trim() ? `Notes: ${houseNotes.trim()}` : null,
+          "",
+          `Name: ${customerName || "-"}`,
+          `WhatsApp: ${customerPhone || "-"}`,
+          "",
+          "Thank you."
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : [
+          "Halo Admin LokaClean, saya ingin negosiasi / konsultasi harga.",
+          "",
+          `Paket: ${displayName}`,
+          `Jadwal: ${scheduleLabel}`,
+          `Alamat: ${address.trim() || "-"}`,
+          houseNotes.trim() ? `Catatan: ${houseNotes.trim()}` : null,
+          "",
+          `Nama: ${customerName || "-"}`,
+          `WhatsApp: ${customerPhone || "-"}`,
+          "",
+          "Terima kasih."
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+    const url = `https://wa.me/${adminDigits}?text=${encodeURIComponent(message)}`;
+    try {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      window.location.href = url;
+    }
+  };
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -260,6 +324,12 @@ export function NewOrderPage() {
 
     if (isGuest && (!guestName.trim() || !guestPhone.trim())) {
       setError(t("newOrder.guestValidationError"));
+      return;
+    }
+
+    const selectedPkg = packages.find((p) => p.id === paketId);
+    if (isNegotiationPackage(selectedPkg)) {
+      openNegotiationWhatsApp(selectedPkg as PaketCleaning);
       return;
     }
 
@@ -432,19 +502,16 @@ export function NewOrderPage() {
                     const hasDiscount =
                       pkg.discount_percentage > 0 && pkg.base_price > 0 && displayPrice > 0;
                     const discountEdition = pkg.discount_edition?.trim();
-                    const canOrder = displayPrice > 0;
 
                     return (
                       <div
                         key={pkg.id}
                         onClick={() => {
-                          if (!canOrder) return;
                           setPaketId(pkg.id);
                           scrollToBottomAction();
                         }}
                         className={`
                           relative flex items-center gap-4 p-3 rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden
-                          ${canOrder ? "" : "opacity-70 cursor-not-allowed"}
                           ${isSelected 
                             ? "border-teal-500 bg-teal-50 shadow-md shadow-teal-500/10" 
                             : "border-transparent bg-white shadow-sm hover:border-teal-100"
@@ -932,20 +999,28 @@ export function NewOrderPage() {
                       <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
                         <span className="text-sm text-slate-300">{t("newOrder.totalPayment")}</span>
                         <div className="text-right">
-                          <span className="text-xl font-bold block">
-                            Rp {(
-                              (selectedPackage.final_price > 0
-                                ? selectedPackage.final_price
-                                : selectedPackage.base_price) +
-                              selectedExtras.reduce((acc, curr) => acc + curr.price, 0)
-                            ).toLocaleString("id-ID")}
-                          </span>
-                          {selectedExtras.length > 0 && (
-                            <span className="text-[10px] text-slate-400 font-normal">
-                              (Paket: {(selectedPackage.final_price > 0
-                                ? selectedPackage.final_price
-                                : selectedPackage.base_price).toLocaleString()} + Extra: {selectedExtras.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()})
+                          {isNegotiationPackage(selectedPackage) ? (
+                            <span className="text-sm font-bold block text-amber-200">
+                              {selectedPackage.pricing_note || (isEnglish ? "Negotiation / Contact us for pricing" : "Negosiasi / Hubungi admin untuk harga")}
                             </span>
+                          ) : (
+                            <>
+                              <span className="text-xl font-bold block">
+                                Rp {(
+                                  (selectedPackage.final_price > 0
+                                    ? selectedPackage.final_price
+                                    : selectedPackage.base_price) +
+                                  selectedExtras.reduce((acc, curr) => acc + curr.price, 0)
+                                ).toLocaleString("id-ID")}
+                              </span>
+                              {selectedExtras.length > 0 && (
+                                <span className="text-[10px] text-slate-400 font-normal">
+                                  (Paket: {(selectedPackage.final_price > 0
+                                    ? selectedPackage.final_price
+                                    : selectedPackage.base_price).toLocaleString()} + Extra: {selectedExtras.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()})
+                                </span>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
