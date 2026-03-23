@@ -64,7 +64,7 @@ export function AdminLogin() {
             <div className="mb-5 sm:mb-6 text-center">
               <div className="relative mx-auto mb-3 sm:mb-4 flex h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24 items-center justify-center rounded-xl sm:rounded-2xl bg-white shadow-xl sm:shadow-2xl overflow-hidden">
                 <img
-                  src="/img/Logo_LokaClean_fixed.webp"
+                  src="/img/logo.jpg"
                   alt="LokaClean Logo"
                   className="h-full w-full object-contain p-1 scale-110"
                 />

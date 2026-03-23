@@ -6,7 +6,7 @@
 - **Category:** `House Cleaning Service` (Primary), `Carpet Cleaning Service`, `Pool Cleaning Service` (Secondary).
 - **Location:** Pin exactly at Kuta Mandalika center or your office.
 - **Service Areas:** Add `Kuta Mandalika`, `Praya`, `Lombok Barat`, `Mataram`, `Rembitan`.
-- **Photos:** Upload `logo.jpg`, `hero.png`, and real "Before/After" photos of your work.
+- **Photos:** Upload `Logo_LokaClean_fixed.webp`, `herolokacleanutama.webp`, and real "Before/After" photos of your work.
 - **Description:** 
   > "LokaClean adalah jasa kebersihan profesional di Kuta Mandalika & Lombok. Melayani villa cleaning, housekeeping harian, dan deep cleaning dengan standar hotel. Booking mudah via aplikasi. Terpercaya, transparan, dan berkualitas."
 

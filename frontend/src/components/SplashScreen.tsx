@@ -38,7 +38,7 @@ export function SplashScreen({ visible, onFinished }: SplashScreenProps) {
               <div className="relative flex flex-col items-center gap-4 text-center">
                 <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-3xl flex items-center justify-center overflow-hidden transition-transform duration-500 hover:scale-105">
                   <img
-                    src="/img/Logo_LokaClean_fixed.webp"
+                    src="/img/Logo_LokaClean_fixed.jpg"
                     alt="LokaClean"
                     className="h-full w-full object-contain mix-blend-multiply"
                     loading="eager"

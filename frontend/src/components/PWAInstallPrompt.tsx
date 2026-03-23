@@ -25,9 +25,9 @@ export function PWAInstallPrompt(props: PWAInstallPromptProps) {
           <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[0_18px_60px_rgba(15,23,42,0.25)] border border-slate-100">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900/90">
               <img
-                src="/img/Logo_LokaClean_fixed.webp"
+                src="/img/logo.jpg"
                 alt="LokaClean"
-                className="h-10 w-10 rounded-xl object-contain mix-blend-multiply"
+                className="h-10 w-10 rounded-xl object-cover"
                 loading="lazy"
               />
             </div>

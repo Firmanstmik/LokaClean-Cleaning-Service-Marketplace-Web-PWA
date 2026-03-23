@@ -54,7 +54,7 @@ export function UserRegister() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="/img/hero.png" 
+            src="/img/herolokacleanutama.webp" 
             alt="LokaClean Hero" 
             className="w-full h-full object-cover object-center opacity-80"
           />
@@ -110,7 +110,7 @@ export function UserRegister() {
         {/* Mobile Background - Premium Brand Gradient */}
         <div className="absolute inset-0 lg:hidden z-0 bg-slate-900">
           <img 
-            src="/img/hero.png" 
+            src="/img/herolokacleanutama.webp" 
             alt="Background" 
             className="w-full h-[44%] object-cover object-top opacity-90"
           />

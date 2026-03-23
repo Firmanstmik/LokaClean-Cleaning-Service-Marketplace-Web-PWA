@@ -34,9 +34,9 @@ export function MobileWelcome() {
         >
           <div className="relative w-28 h-28 mb-6 rounded-[2rem] shadow-2xl shadow-slate-950/50 overflow-hidden ring-1 ring-white/10 bg-slate-900">
              <img 
-               src="/img/Logo_LokaClean_fixed.webp" 
+               src="/img/Logo_LokaClean_fixed.jpg" 
                alt="LokaClean Logo" 
-               className="w-full h-full object-contain mix-blend-multiply"
+               className="w-full h-full object-cover"
              />
           </div>
 

@@ -309,7 +309,7 @@ export function UserHomePage() {
             >
               <div className="absolute inset-0 bg-gradient-to-br from-teal-200/20 to-blue-200/20 rounded-[40px] transform rotate-3 scale-105 blur-2xl" />
               <img 
-                src="/img/hero.png" 
+                src="/img/herolokacleanutama.webp" 
                 alt="LokaClean Hero" 
                 className="relative w-full h-auto max-h-[500px] object-contain drop-shadow-2xl z-10"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

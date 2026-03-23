@@ -28,11 +28,11 @@ import { Skeleton } from "../components/ui/Skeleton";
 import { Helmet } from "react-helmet-async";
 
 const HERO_SLIDES = [
-  "/img/herolokacleanutama.png",
-  "/img/3ruangan.png",
-  "/img/kamartidur.png",
-  "/img/rumahbaru.png",
-  "/img/kamarmandi.png"
+  "/img/herolokacleanutama.webp",
+  "/img/3ruangan.webp",
+  "/img/kamartidur.webp",
+  "/img/rumahbaru.webp",
+  "/img/kamarmandi.webp"
 ] as const;
 
 interface BeforeInstallPromptEvent extends Event {
@@ -302,7 +302,7 @@ export function Home() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={seoTitle} />
         <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content="https://lokaclean.com/img/hero.png" />
+        <meta name="twitter:image" content="https://lokaclean.com/img/herolokacleanutama.webp" />
 
         <link rel="canonical" href="https://lokaclean.com" />
 
@@ -312,7 +312,7 @@ export function Home() {
               "@context": "https://schema.org",
               "@type": ["LocalBusiness", "CleaningService"],
               "name": "LokaClean Cleaning Service Lombok",
-              "image": "https://lokaclean.com/img/Logo_LokaClean_fixed.webp",
+              "image": "https://lokaclean.com/img/logo.jpg",
               "description": "LokaClean menyediakan jasa cleaning service profesional di Lombok untuk villa, rumah, dan daily housekeeping standar hotel bintang 5.",
               "address": {
                 "@type": "PostalAddress",
@@ -445,9 +445,9 @@ export function Home() {
                   className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-center border border-white"
                 >
                   <motion.img
-                    src="/img/Logo_LokaClean_fixed.webp"
+                    src="/img/logo.jpg"
                     alt="LokaClean Logo"
-                    className="h-full w-full object-contain mix-blend-multiply"
+                    className="h-full w-full object-cover mix-blend-multiply"
                   />
                 </motion.div>
             </motion.div>

@@ -153,7 +153,7 @@ export function SEOPage() {
       <nav className="border-b border-slate-100 bg-white/80 backdrop-blur-md fixed top-0 w-full z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-             <img src="/img/Logo_LokaClean_fixed.webp" alt="LokaClean Logo" className="h-8 w-8 rounded-lg object-contain mix-blend-multiply" />
+             <img src="/img/logo.jpg" alt="LokaClean Logo" className="h-8 w-8 rounded-lg" />
              <span className="font-bold text-lg text-slate-900">LokaClean</span>
           </Link>
           <div className="flex items-center gap-4">

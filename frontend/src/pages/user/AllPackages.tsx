@@ -63,7 +63,7 @@ export function AllPackagesPage() {
             {/* Background Image & Overlay */}
             <div className="absolute inset-0 z-0">
               <img 
-                src="/img/hero.png" 
+                src="/img/herolokacleanutama.webp" 
                 alt="Welcome Background" 
                 className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700"
               />
