@@ -293,7 +293,7 @@ export function Home() {
 
         <meta property="og:title" content={seoTitle} />
         <meta property="og:description" content={seoDescription} />
-        <meta property="og:image" content="https://lokaclean.com/img/hero.png" />
+        <meta property="og:image" content="https://lokaclean.com/img/herolokacleanutama.webp" />
         <meta property="og:url" content="https://lokaclean.com" />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content={isEnglish ? "en_US" : "id_ID"} />
@@ -312,7 +312,7 @@ export function Home() {
               "@context": "https://schema.org",
               "@type": ["LocalBusiness", "CleaningService"],
               "name": "LokaClean Cleaning Service Lombok",
-              "image": "https://lokaclean.com/img/logo.jpg",
+              "image": "https://lokaclean.com/img/Logo_LokaClean_fixed.webp",
               "description": "LokaClean menyediakan jasa cleaning service profesional di Lombok untuk villa, rumah, dan daily housekeeping standar hotel bintang 5.",
               "address": {
                 "@type": "PostalAddress",
@@ -445,9 +445,9 @@ export function Home() {
                   className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-center border border-white"
                 >
                   <motion.img
-                    src="/img/logo.jpg"
+                    src="/img/Logo_LokaClean_fixed.webp"
                     alt="LokaClean Logo"
-                    className="h-full w-full object-cover mix-blend-multiply"
+                    className="h-full w-full object-contain mix-blend-multiply"
                   />
                 </motion.div>
             </motion.div>
@@ -508,20 +508,46 @@ export function Home() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="relative w-full mb-8 sm:mb-12 min-h-[calc(100vh-80px)] sm:min-h-0 sm:h-auto overflow-visible sm:overflow-visible group"
         >
-          <div className="hidden sm:block w-full">
-            <div className="relative w-full h-[300px] md:h-[340px] lg:h-[380px] overflow-hidden bg-slate-900/5">
-              <AnimatePresence>
-                <motion.img
-                  key={HERO_SLIDES[currentSlide]}
-                  src={HERO_SLIDES[currentSlide]}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1.0, ease: "easeInOut" }}
-                  alt="LokaClean Hero"
-                  className="block w-full h-full object-contain object-center"
-                />
-              </AnimatePresence>
+          <div className="hidden sm:block w-full px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl">
+              <div className="relative w-full h-[360px] md:h-[420px] lg:h-[460px] overflow-hidden rounded-[28px] bg-slate-900/5 shadow-2xl shadow-slate-200 border border-white/70">
+                <AnimatePresence>
+                  <motion.div
+                    key={HERO_SLIDES[currentSlide]}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 1.0, ease: "easeInOut" }}
+                    className="absolute inset-0"
+                  >
+                    <img
+                      src={HERO_SLIDES[currentSlide]}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover scale-110 blur-2xl opacity-60"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-white/40" />
+                    <img
+                      src={HERO_SLIDES[currentSlide]}
+                      alt="LokaClean Hero"
+                      className="absolute inset-0 h-full w-full object-contain object-center"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur px-3 py-1.5 shadow-lg border border-white/60">
+                  {HERO_SLIDES.map((_, idx) => (
+                    <button
+                      key={`hero-dot-${idx}`}
+                      type="button"
+                      onClick={() => setCurrentSlide(idx)}
+                      className={`h-1.5 rounded-full transition-all ${
+                        idx === currentSlide ? "w-6 bg-slate-900/80" : "w-2.5 bg-slate-400/60 hover:bg-slate-500/70"
+                      }`}
+                      aria-label={`Hero slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -529,19 +555,43 @@ export function Home() {
           <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center pb-8 sm:hidden">
             <div className="max-w-5xl pt-0">
                 {/* Mobile Hero Slider (Top Position) */}
-                <div className="w-full mb-6 sm:mb-1 sm:hidden flex justify-center relative h-[260px] rounded-2xl overflow-hidden shadow-lg bg-white/50 backdrop-blur-sm border border-white/40">
+                <div className="w-full mb-6 sm:mb-1 sm:hidden relative h-[220px] rounded-2xl overflow-hidden shadow-lg bg-white/50 backdrop-blur-sm border border-white/40">
                   <AnimatePresence>
-                    <motion.img
+                    <motion.div
                       key={`mobile-${HERO_SLIDES[currentSlide]}`}
-                      src={HERO_SLIDES[currentSlide]}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 1.0, ease: "easeInOut" }}
-                      alt="LokaClean Hero"
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+                      className="absolute inset-0"
+                    >
+                      <img
+                        src={HERO_SLIDES[currentSlide]}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover scale-110 blur-2xl opacity-60"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-white/35" />
+                      <img
+                        src={HERO_SLIDES[currentSlide]}
+                        alt="LokaClean Hero"
+                        className="absolute inset-0 h-full w-full object-contain object-center"
+                      />
+                    </motion.div>
                   </AnimatePresence>
+
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur px-2.5 py-1 shadow-md border border-white/60">
+                    {HERO_SLIDES.map((_, idx) => (
+                      <button
+                        key={`hero-dot-mobile-${idx}`}
+                        type="button"
+                        onClick={() => setCurrentSlide(idx)}
+                        className={`h-1.5 rounded-full transition-all ${
+                          idx === currentSlide ? "w-5 bg-slate-900/80" : "w-2.5 bg-slate-400/60 hover:bg-slate-500/70"
+                        }`}
+                        aria-label={`Hero slide ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
                 </div>
 
                 {showHeroSkeleton ? (
