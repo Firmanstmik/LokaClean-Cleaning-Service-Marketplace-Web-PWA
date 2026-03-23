@@ -230,6 +230,7 @@ export function UserLayout() {
   }, []);
 
   const fetchNotifications = useCallback(async () => {
+    if (!user) return;
     try {
       const resp = await api.get("/notifications");
       const notifs = resp.data.data.notifications as Notification[];
@@ -609,6 +610,7 @@ export function UserLayout() {
   // Check for orders that need after photo upload reminder
   // This function is called every 10 minutes to show reminder notifications
   const checkReminderNotifications = useCallback(async () => {
+    if (!user) return;
     try {
       const resp = await api.get("/orders");
       const orders = resp.data.data.items as Array<{ 
@@ -669,6 +671,8 @@ export function UserLayout() {
   }, [location.pathname]); // Reset and restart timer when route changes
 
   useEffect(() => {
+    if (!user) return;
+
     fetchNotifications();
     checkReminderNotifications();
 
@@ -683,6 +687,13 @@ export function UserLayout() {
       checkReminderNotifications();
     }, 30000); // 30 seconds
 
+    return () => {
+      clearInterval(interval);
+      clearInterval(reminderInterval);
+    };
+  }, [user, fetchNotifications, checkReminderNotifications]);
+
+  useEffect(() => {
     // Listen for profile update events to refresh navbar photo
     const handleProfileUpdate = () => {
       refreshUser();
@@ -690,20 +701,20 @@ export function UserLayout() {
     
     // Listen for order updates to refresh notifications immediately
     const handleOrderUpdate = () => {
-      fetchNotifications();
-      checkReminderNotifications();
+      if (user) {
+        fetchNotifications();
+        checkReminderNotifications();
+      }
     };
     
     window.addEventListener("profileUpdated", handleProfileUpdate);
     window.addEventListener("orderUpdated", handleOrderUpdate);
 
     return () => {
-      clearInterval(interval);
-      clearInterval(reminderInterval);
       window.removeEventListener("profileUpdated", handleProfileUpdate);
       window.removeEventListener("orderUpdated", handleOrderUpdate);
     };
-  }, [fetchNotifications, checkReminderNotifications, refreshUser]);
+  }, [user, fetchNotifications, checkReminderNotifications, refreshUser]);
 
   // Refresh notifications when modal is opened
   useEffect(() => {

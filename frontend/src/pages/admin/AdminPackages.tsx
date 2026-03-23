@@ -1219,9 +1219,18 @@ export function AdminPackagesPage() {
                                     <div className="truncate text-sm font-medium text-slate-900 dark:text-slate-50">
                                       {pkg.name}
                                     </div>
-                                    {pkg.name_en && pkg.name_en !== pkg.name && (
+                                    {pkg.name_en && pkg.name_en !== pkg.name ? (
+                                      <div className="flex flex-col">
+                                        <div className="text-[10px] text-rose-500 font-bold uppercase tracking-wider mb-0.5">
+                                          ⚠️ Inconsistent English Name
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 font-bold italic bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                          EN: {pkg.name_en}
+                                        </div>
+                                      </div>
+                                    ) : (
                                       <div className="text-[10px] text-slate-400 font-medium italic">
-                                        EN: {pkg.name_en}
+                                        EN: {pkg.name_en || "Same as ID"}
                                       </div>
                                     )}
                                     <div className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">

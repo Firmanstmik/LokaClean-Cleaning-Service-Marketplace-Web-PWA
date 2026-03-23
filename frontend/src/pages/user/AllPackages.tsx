@@ -31,36 +31,26 @@ export function AllPackagesPage() {
   const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
-    let alive = true;
-    (async () => {
+    const loadData = async () => {
       try {
-        const [packagesResp, userResp] = await Promise.allSettled([
+        setLoading(true);
+        const [packagesResp] = await Promise.allSettled([
           api.get("/packages"),
-          api.get("/users/me")
         ]);
 
-        if (alive) {
-          if (packagesResp.status === "fulfilled") {
-            setItems(packagesResp.value.data.data.items as PaketCleaning[]);
-          } else {
-            setError(getApiErrorMessage(packagesResp.reason));
-          }
-
-          if (userResp.status === "fulfilled") {
-             // Handle nested user object if present (common in this codebase)
-             const userData = userResp.value.data.data;
-             const name = userData?.user?.full_name || userData?.full_name;
-             setUserName(name);
-          }
+        if (packagesResp.status === "fulfilled") {
+          setItems(packagesResp.value.data.data.items as PaketCleaning[]);
         }
       } catch (err) {
-        if (alive) setError(getApiErrorMessage(err));
+        console.error("Failed to load packages", err);
+        setError(t("common.error"));
       } finally {
-        if (alive) setLoading(false);
+        setLoading(false);
       }
-    })();
-    return () => { alive = false; };
-  }, []);
+    };
+
+    loadData();
+  }, [t]);
 
   return (
     <div className="min-h-screen w-full bg-[#F8FAFC] pb-24 selection:bg-teal-200 selection:text-teal-900">
