@@ -15,7 +15,7 @@ import { LocateFixed, Loader2, MapPin, Navigation, Search, CheckCircle2, Home, B
 import L from "leaflet";
 
 import { api } from "../lib/api";
-import { t } from "../lib/i18n";
+import { getLanguage, t } from "../lib/i18n";
 import { SaveAddressModal } from "./SaveAddressModal";
 
 export type LatLng = { lat: number; lng: number };
@@ -410,6 +410,7 @@ export const MapPicker = memo(function MapPicker({
   hideSearch?: boolean;
   hideSaveButton?: boolean;
 }) {
+  const isEnglish = getLanguage() === "en";
   const defaultLabel = t("common.location");
   const defaultHelperText = t("map.tapToSetLocation");
   const [locating, setLocating] = useState(false);
@@ -1666,7 +1667,7 @@ export const MapPicker = memo(function MapPicker({
                   className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900/90 px-3 py-2 text-[10px] font-bold text-white shadow-lg shadow-slate-900/20 hover:bg-slate-900 active:scale-95 transition-all"
                 >
                   <MapPin className="w-3.5 h-3.5" />
-                  <span>Adjust Location</span>
+                  <span>{isEnglish ? "Adjust Location" : "Sesuaikan Lokasi"}</span>
                 </button>
               ) : null}
             </div>
@@ -1675,8 +1676,8 @@ export const MapPicker = memo(function MapPicker({
       </div>
 
       {showViewModal && value ? (
-        <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-sm p-3 sm:p-4 flex items-center justify-center">
-          <div className="w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-white/30">
+        <div className="fixed inset-0 z-[3000] bg-black/60 backdrop-blur-sm p-3 sm:p-4 flex items-end sm:items-center justify-center">
+          <div className="w-full max-w-3xl bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl border border-white/30 max-h-[70vh] sm:max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
               <div className="min-w-0">
                 <div className="text-sm font-extrabold text-slate-900">View Lokasi</div>
@@ -1693,7 +1694,7 @@ export const MapPicker = memo(function MapPicker({
               </button>
             </div>
 
-            <div className="relative h-[70vh]">
+            <div className="relative flex-1 min-h-0">
               <MapContainer
                 center={value}
                 zoom={18}
