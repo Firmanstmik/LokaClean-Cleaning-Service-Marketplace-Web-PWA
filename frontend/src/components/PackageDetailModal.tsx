@@ -139,11 +139,11 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-24 z-[70] flex h-[75vh] flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-[0_-18px_45px_rgba(15,23,42,0.28)] md:inset-0 md:bottom-0 md:m-auto md:h-fit md:max-h-[80vh] md:w-full md:max-w-xl md:rounded-[2rem] md:shadow-2xl md:top-10"
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed inset-x-0 bottom-0 z-[70] flex h-[92vh] flex-col overflow-hidden rounded-t-[2.5rem] bg-white shadow-[0_-20px_50px_rgba(15,23,42,0.3)] md:inset-0 md:m-auto md:h-fit md:max-h-[85vh] md:w-full md:max-w-xl md:rounded-[2.5rem] md:shadow-2xl md:top-0"
           >
             {/* Header Image Section */}
-            <div className="relative aspect-video md:h-80 shrink-0 overflow-hidden">
+            <div className="relative aspect-[16/10] md:h-80 shrink-0 overflow-hidden">
               <img
                 src={image}
                 alt={alt}
@@ -153,7 +153,7 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
               
               {/* Top Right: Discount Badge */}
               {hasDiscount && (
-                <div className="absolute top-4 right-14 z-20">
+                <div className="absolute top-5 right-16 z-20">
                   <div className="bg-rose-100/95 backdrop-blur-sm border border-rose-200 px-2.5 py-1 rounded-xl shadow-md">
                     <span className="text-xs font-black text-rose-600">
                       -{pkg.discount_percentage}%
@@ -164,7 +164,7 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
 
               {/* Bottom Right: Promo Edition Badge */}
               {discountEdition && (
-                <div className="absolute bottom-3 right-4 z-20">
+                <div className="absolute bottom-4 right-5 z-20">
                   <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 via-rose-500 to-rose-600 px-3 py-1.5 text-[10px] font-black tracking-tight text-white uppercase shadow-lg shadow-rose-500/30 border border-white/40 backdrop-blur-sm animate-pulse-subtle">
                     <Tag className="w-3 h-3 text-white fill-white/10" />
                     <span>PROMO {discountEdition}</span>
@@ -175,13 +175,16 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 z-30 rounded-full bg-black/20 backdrop-blur-md p-2 text-white hover:bg-black/40 transition-colors"
+                className="absolute right-5 top-5 z-30 rounded-full bg-black/30 backdrop-blur-md p-2.5 text-white hover:bg-black/50 transition-all active:scale-90"
               >
                 <X className="h-6 w-6" />
               </button>
+              
+              {/* Handle Bar for Mobile */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-white/40 md:hidden" />
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-white px-6 py-4 pb-28 md:pb-6">
+            <div className="flex-1 overflow-y-auto bg-white px-6 py-6 pb-36 md:pb-8">
               <div className="mb-6">
                 <div className="mb-2 flex items-center gap-2">
                   <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-xs font-black text-amber-600 border border-amber-200 flex items-center gap-1.5">
@@ -197,26 +200,26 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
               </div>
 
               {/* Price Section below Title */}
-              <div className="mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{isEnglish ? "Price starting from" : "Harga mulai dari"}</p>
+              <div className="mb-8 p-5 rounded-3xl bg-slate-50 border border-slate-100 shadow-inner">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2">{isEnglish ? "Price starting from" : "Harga mulai dari"}</p>
                 <div className="flex flex-wrap items-baseline gap-3">
                   {displayPrice > 0 ? (
                     <>
                       <div className="flex flex-col">
                         {hasDiscount && (
-                          <span className="text-sm font-bold text-slate-400 line-through">
+                          <span className="text-sm font-bold text-slate-400 line-through mb-0.5">
                             Rp {pkg.base_price.toLocaleString("id-ID")}
                           </span>
                         )}
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-lg font-bold text-teal-700">Rp</span>
-                          <span className="text-4xl font-black text-teal-700 tracking-tight">
+                          <span className="text-lg font-black text-teal-700">Rp</span>
+                          <span className="text-4xl font-black text-teal-700 tracking-tighter">
                             {displayPrice.toLocaleString("id-ID")}
                           </span>
                         </div>
                       </div>
                       {pkg.pricing_note && (
-                        <span className="text-sm font-bold text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200 italic">
+                        <span className="text-[11px] font-bold text-slate-500 bg-white px-2.5 py-1 rounded-xl border border-slate-200 italic shadow-sm">
                           {pkg.pricing_note}
                         </span>
                       )}
@@ -229,14 +232,14 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
                 </div>
               </div>
 
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 font-medium text-emerald-700">
+              <div className="mb-6 flex flex-wrap items-center gap-3 text-[11px] text-slate-600">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 font-bold text-emerald-700 border border-emerald-100">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   <span>
                     {isEnglish ? "Clean Guarantee" : "Garansi Bersih Tuntas"}
                   </span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 font-bold text-amber-700 border border-amber-100">
                   <Sparkles className="h-3.5 w-3.5" />
                   <span>
                     {isEnglish ? "Hotel-inspired finish" : "Sentuhan ala hotel"}
@@ -244,33 +247,33 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
                 </div>
               </div>
 
-              <div className="mb-6">
-                <h3 className="mb-1 text-sm font-semibold text-slate-800">
+              <div className="mb-8">
+                <h3 className="mb-2 text-sm font-black text-slate-800 uppercase tracking-wider">
                   {isEnglish ? "About this service" : "Tentang layanan ini"}
                 </h3>
-                <p className="text-[13px] leading-relaxed text-slate-600">
+                <p className="text-sm leading-relaxed text-slate-600 font-medium">
                   {description}
                 </p>
               </div>
 
               <div className="mb-6">
-                <h3 className="mb-2 text-sm font-semibold text-slate-800">
+                <h3 className="mb-3 text-sm font-black text-slate-800 uppercase tracking-wider">
                   {isEnglish ? "What you get" : "Yang Anda Dapatkan"}
                 </h3>
-                <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                <div className="grid grid-cols-2 gap-3">
                   {features.map((feature, idx) => {
                     const bgColor = feature.bgColor || `bg-${feature.color.split("-")[1]}-50`;
 
                     return (
                       <div
                         key={idx}
-                        className={`flex h-full items-center gap-2 rounded-xl border ${bgColor} p-3 sm:p-3.5`}
+                        className={`flex h-full items-center gap-2.5 rounded-2xl border ${bgColor} p-4 transition-transform active:scale-95 shadow-sm`}
                       >
                         <feature.icon
-                          className={`h-4 w-4 flex-shrink-0 sm:h-5 sm:w-5 ${feature.color}`}
+                          className={`h-5 w-5 flex-shrink-0 ${feature.color}`}
                         />
                         <span
-                          className={`text-xs font-semibold leading-relaxed sm:text-sm ${feature.color}`}
+                          className={`text-xs font-black leading-tight ${feature.color}`}
                         >
                           {feature.text}
                         </span>
@@ -281,25 +284,28 @@ export function PackageDetailModal({ isOpen, onClose, pkg, onBook }: PackageDeta
               </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-white px-6 py-3.5 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] md:relative md:shadow-none md:border-t-0">
-              <p className="mb-2 text-center text-[11px] text-slate-500">
-                {isEnglish
-                  ? "Secure your preferred time slot – weekend slots fill up fast."
-                  : "Amankan jadwal favorit Anda – slot akhir pekan cepat penuh."}
-              </p>
-              <button
-                onClick={() => {
-                  if (onBook) {
-                    onBook();
-                  } else {
-                    navigate(`/orders/new?paket_id=${pkg.id}`);
-                  }
-                }}
-                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-tropical-500 to-ocean-500 py-3.5 text-sm font-semibold text-white shadow-xl shadow-tropical-500/30 transition-all hover:scale-[1.02] hover:shadow-tropical-500/50 active:scale-[0.98]"
-              >
-                <span>{isEnglish ? "Book Now" : "Pesan Sekarang"}</span>
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </button>
+            {/* Bottom Action Bar */}
+            <div className="absolute bottom-0 left-0 right-0 border-t border-slate-100 bg-white/95 backdrop-blur-md px-6 py-5 pb-8 shadow-[0_-15px_40px_rgba(0,0,0,0.08)] md:relative md:shadow-none md:border-t-0 md:pb-6">
+              <div className="max-w-md mx-auto">
+                <p className="mb-3 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  {isEnglish
+                    ? "Secure your preferred time slot today"
+                    : "Amankan jadwal favorit Anda sekarang"}
+                </p>
+                <button
+                  onClick={() => {
+                    if (onBook) {
+                      onBook();
+                    } else {
+                      navigate(`/orders/new?paket_id=${pkg.id}`);
+                    }
+                  }}
+                  className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-tropical-600 to-ocean-600 py-4 text-sm font-black text-white shadow-xl shadow-tropical-600/30 transition-all hover:scale-[1.02] hover:shadow-tropical-600/50 active:scale-[0.98]"
+                >
+                  <span>{isEnglish ? "Book This Package" : "Pesan Paket Ini"}</span>
+                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
             </div>
           </motion.div>
         </>
