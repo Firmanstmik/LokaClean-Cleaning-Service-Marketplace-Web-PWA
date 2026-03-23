@@ -45,15 +45,15 @@ export default defineConfig({
         description: "Layanan Kebersihan Profesional di Lombok",
         icons: [
           {
-            src: "/img/logo_full.png",
+            src: "/img/Logo_LokaClean_fixed.webp",
             sizes: "192x192",
-            type: "image/png",
+            type: "image/webp",
             purpose: "any"
           },
           {
-            src: "/img/logo_full.png",
+            src: "/img/Logo_LokaClean_fixed.webp",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/webp",
             purpose: "any"
           }
         ]

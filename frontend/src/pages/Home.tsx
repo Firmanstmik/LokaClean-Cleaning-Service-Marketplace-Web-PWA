@@ -312,7 +312,7 @@ export function Home() {
               "@context": "https://schema.org",
               "@type": ["LocalBusiness", "CleaningService"],
               "name": "LokaClean Cleaning Service Lombok",
-              "image": "https://lokaclean.com/img/logo.jpg",
+              "image": "https://lokaclean.com/img/Logo_LokaClean_fixed.webp",
               "description": "LokaClean menyediakan jasa cleaning service profesional di Lombok untuk villa, rumah, dan daily housekeeping standar hotel bintang 5.",
               "address": {
                 "@type": "PostalAddress",
@@ -445,9 +445,9 @@ export function Home() {
                   className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-slate-50 to-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] flex items-center justify-center border border-white"
                 >
                   <motion.img
-                    src="/img/logo.jpg"
+                    src="/img/Logo_LokaClean_fixed.webp"
                     alt="LokaClean Logo"
-                    className="h-full w-full object-cover mix-blend-multiply"
+                    className="h-full w-full object-contain mix-blend-multiply"
                   />
                 </motion.div>
             </motion.div>

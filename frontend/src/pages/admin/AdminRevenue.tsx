@@ -527,7 +527,7 @@ export function AdminRevenuePage() {
             <div class="title-block">
               <div class="brand">
                 <div class="brand-logo-wrap">
-                  <img src="/img/logo.jpg" alt="LokaClean Logo" class="brand-logo" />
+                  <img src="/img/Logo_LokaClean_fixed.webp" alt="LokaClean Logo" class="brand-logo" />
                 </div>
                 <div>
                   <div class="brand-title">LOKACLEAN</div>

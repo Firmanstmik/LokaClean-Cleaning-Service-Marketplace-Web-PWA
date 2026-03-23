@@ -38,9 +38,9 @@ export function Footer({ variant = "all" }: FooterProps) {
               <div className="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-2xl bg-white flex items-center justify-center overflow-hidden border border-slate-700 flex-shrink-0 shadow-xl shadow-black/20 relative group">
                  <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100 opacity-50" />
                  <img
-                  src="/img/logo.jpg"
+                  src="/img/Logo_LokaClean_fixed.webp"
                   alt="LokaClean Logo"
-                  className="relative z-10 h-full w-full object-cover mix-blend-multiply"
+                  className="relative z-10 h-full w-full object-contain mix-blend-multiply"
                 />
               </div>
               <div className="text-left">

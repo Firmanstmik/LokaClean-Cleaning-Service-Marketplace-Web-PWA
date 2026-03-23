@@ -363,8 +363,8 @@ export function UserLayout() {
                     navigator.serviceWorker.ready.then((registration) => {
                       registration.showNotification(friendlyMsg.title, {
                         body: friendlyMsg.message,
-                        icon: '/img/logo_full.png',
-                        badge: '/img/logo_full.png',
+                        icon: '/img/Logo_LokaClean_fixed.webp',
+                        badge: '/img/Logo_LokaClean_fixed.webp',
                         tag: `notification-${notif.id}`,
                         requireInteraction: false,
                         data: {
@@ -379,8 +379,8 @@ export function UserLayout() {
                       // Fallback to direct Notification API if service worker not ready
                   const browserNotification = new Notification(friendlyMsg.title, {
                     body: friendlyMsg.message,
-                    icon: '/img/logo_full.png',
-                    badge: '/img/logo_full.png',
+                    icon: '/img/Logo_LokaClean_fixed.webp',
+                    badge: '/img/Logo_LokaClean_fixed.webp',
                     tag: `notification-${notif.id}`,
                     requireInteraction: false,
                     data: {
@@ -403,8 +403,8 @@ export function UserLayout() {
                     // Fallback to direct Notification API if service worker not supported
                     const browserNotification = new Notification(friendlyMsg.title, {
                       body: friendlyMsg.message,
-                      icon: '/img/logo_full.png',
-                      badge: '/img/logo_full.png',
+                      icon: '/img/Logo_LokaClean_fixed.webp',
+                      badge: '/img/Logo_LokaClean_fixed.webp',
                       tag: `notification-${notif.id}`,
                       requireInteraction: false,
                       data: {
@@ -1022,9 +1022,9 @@ export function UserLayout() {
                   className="relative z-10 h-full w-full overflow-hidden rounded-xl sm:rounded-2xl flex items-center justify-center"
                 >
                   <motion.img
-                    src="/img/Logo_LokaClean_fixed.jpg"
+                    src="/img/Logo_LokaClean_fixed.webp"
                     alt="LokaClean Logo"
-                    className="h-full w-full object-cover mix-blend-multiply"
+                    className="h-full w-full object-contain mix-blend-multiply"
                   />
                 </motion.div>
             </motion.div>

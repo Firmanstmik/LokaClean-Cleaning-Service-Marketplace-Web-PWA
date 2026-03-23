@@ -77,9 +77,9 @@ export function WelcomeScreen({ onComplete }: { onComplete: () => void }) {
           >
             <div className="relative w-24 h-24 mb-4 rounded-3xl overflow-hidden shadow-2xl shadow-teal-900/20 ring-1 ring-white/10 bg-slate-900">
               <img 
-                src="/img/Logo_LokaClean_fixed.jpg" 
+                src="/img/Logo_LokaClean_fixed.webp" 
                 alt="LokaClean" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain mix-blend-multiply"
               />
             </div>
             
